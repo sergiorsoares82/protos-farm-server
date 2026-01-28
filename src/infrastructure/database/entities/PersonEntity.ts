@@ -1,14 +1,15 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, OneToOne, ManyToOne, JoinColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, OneToOne, ManyToOne, JoinColumn, Index } from 'typeorm';
 import { UserEntity } from './UserEntity.js';
-import type { ClientEntity } from './ClientEntity.js';
-import type { SupplierEntity } from './SupplierEntity.js';
-import type { WorkerEntity } from './WorkerEntity.js';
-import type { FarmOwnerEntity } from './FarmOwnerEntity.js';
+import { OrganizationEntity } from './OrganizationEntity.js';
 
 @Entity('persons')
 export class PersonEntity {
   @PrimaryGeneratedColumn('uuid')
   id!: string;
+
+  @Column({ type: 'uuid', name: 'tenant_id' })
+  @Index() // Important for query performance
+  tenantId!: string;
 
   @Column({ type: 'uuid', name: 'user_id', nullable: true })
   userId!: string | null;
@@ -33,18 +34,22 @@ export class PersonEntity {
 
   // Relations to role entities
   @OneToOne('ClientEntity', (client: any) => client.person, { eager: false, cascade: true })
-  client?: ClientEntity;
+  client?: any;
 
   @OneToOne('SupplierEntity', (supplier: any) => supplier.person, { eager: false, cascade: true })
-  supplier?: SupplierEntity;
+  supplier?: any;
 
   @OneToOne('WorkerEntity', (worker: any) => worker.person, { eager: false, cascade: true })
-  worker?: WorkerEntity;
+  worker?: any;
 
   @OneToOne('FarmOwnerEntity', (farmOwner: any) => farmOwner.person, { eager: false, cascade: true })
-  farmOwner?: FarmOwnerEntity;
+  farmOwner?: any;
 
-  @ManyToOne(() => UserEntity, { nullable: true })
+  @OneToOne(() => UserEntity, user => user.person, { nullable: true })
   @JoinColumn({ name: 'user_id' })
   user?: UserEntity;
+
+  @ManyToOne(() => OrganizationEntity)
+  @JoinColumn({ name: 'tenant_id' })
+  tenant!: OrganizationEntity;
 }

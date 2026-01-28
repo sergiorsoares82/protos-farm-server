@@ -1,9 +1,34 @@
 services:
+  # Development service with hot-reload
   app:
     build:
       context: .
       dockerfile: Dockerfile
+      target: development
     container_name: protos-farm-app
+    ports:
+      - "3000:3000"
+    depends_on:
+      - db
+    volumes:
+      - ./src:/app/src
+      - ./tsconfig.json:/app/tsconfig.json
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+      - DB_HOST=db
+      - DB_PORT=5432
+    env_file:
+      - .env/.env
+    restart: unless-stopped
+
+  # Production service (use with 'docker-compose --profile production up')
+  app-prod:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production
+    container_name: protos-farm-app-prod
     ports:
       - "3000:3000"
     depends_on:
@@ -15,6 +40,8 @@ services:
     env_file:
       - .env/.env
     restart: unless-stopped
+    profiles:
+      - production
 
   db:
     image: postgres:15-alpine

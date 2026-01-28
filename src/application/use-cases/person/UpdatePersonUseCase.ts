@@ -4,16 +4,16 @@ import type { UpdatePersonRequestDTO, PersonResponseDTO } from '../../dtos/Perso
 export class UpdatePersonUseCase {
   constructor(private personRepository: IPersonRepository) {}
 
-  async execute(personId: string, request: UpdatePersonRequestDTO): Promise<PersonResponseDTO> {
-    // Get person
-    const person = await this.personRepository.findById(personId);
+  async execute(personId: string, request: UpdatePersonRequestDTO, tenantId: string): Promise<PersonResponseDTO> {
+    // Get person within tenant
+    const person = await this.personRepository.findById(personId, tenantId);
     if (!person) {
       throw new Error('Person not found');
     }
 
-    // Check if email is being changed and if it's already taken
+    // Check if email is being changed and if it's already taken within tenant
     if (request.email && request.email !== person.getEmail()) {
-      const emailTaken = await this.personRepository.existsByEmail(request.email);
+      const emailTaken = await this.personRepository.existsByEmail(request.email, tenantId);
       if (emailTaken) {
         throw new Error('Email already in use');
       }
@@ -27,8 +27,8 @@ export class UpdatePersonUseCase {
       request.phone !== undefined ? request.phone : person.getPhone()
     );
 
-    // Save updated person
-    const updatedPerson = await this.personRepository.save(person);
+    // Save updated person with tenant context
+    const updatedPerson = await this.personRepository.save(person, tenantId);
 
     const userId = updatedPerson.getUserId();
     const phone = updatedPerson.getPhone();

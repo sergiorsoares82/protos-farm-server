@@ -24,13 +24,38 @@ export class PersonController {
   }
 
   /**
+   * Get all persons
+   * GET /api/persons
+   */
+  async getAllPersons(req: Request, res: Response): Promise<void> {
+    try {
+      const tenantId = req.tenant!.tenantId;
+      const persons = await this.getPersonUseCase.executeAll(tenantId);
+
+      res.status(200).json({
+        success: true,
+        data: persons,
+      });
+    } catch (error) {
+      console.error('Get all persons error:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Failed to get persons';
+
+      res.status(400).json({
+        success: false,
+        error: errorMessage,
+      });
+    }
+  }
+
+  /**
    * Create a new person
    * POST /api/persons
    */
   async createPerson(req: Request, res: Response): Promise<void> {
     try {
+      const tenantId = req.tenant!.tenantId;
       const requestData: CreatePersonRequestDTO = req.body;
-      const person = await this.createPersonUseCase.execute(requestData);
+      const person = await this.createPersonUseCase.execute(requestData, tenantId);
 
       res.status(201).json({
         success: true,
@@ -63,7 +88,8 @@ export class PersonController {
         return;
       }
       
-      const person = await this.getPersonUseCase.execute(id);
+      const tenantId = req.tenant!.tenantId;
+      const person = await this.getPersonUseCase.execute(id, tenantId);
 
       res.status(200).json({
         success: true,
@@ -97,8 +123,9 @@ export class PersonController {
         return;
       }
       
+      const tenantId = req.tenant!.tenantId;
       const requestData: UpdatePersonRequestDTO = req.body;
-      const person = await this.updatePersonUseCase.execute(id, requestData);
+      const person = await this.updatePersonUseCase.execute(id, requestData, tenantId);
 
       res.status(200).json({
         success: true,
@@ -133,8 +160,9 @@ export class PersonController {
         return;
       }
       
+      const tenantId = req.tenant!.tenantId;
       const requestData: AssignRoleRequestDTO = req.body;
-      const person = await this.assignRoleUseCase.execute(id, requestData);
+      const person = await this.assignRoleUseCase.execute(id, requestData, tenantId);
 
       res.status(200).json({
         success: true,
@@ -179,7 +207,8 @@ export class PersonController {
         return;
       }
 
-      const person = await this.removeRoleUseCase.execute(id, role as PersonRole);
+      const tenantId = req.tenant!.tenantId;
+      const person = await this.removeRoleUseCase.execute(id, role as PersonRole, tenantId);
 
       res.status(200).json({
         success: true,
@@ -206,21 +235,28 @@ export class PersonController {
     try {
       const { id } = req.params;
 
-      // Note: This is a simple implementation. In a real app, you might want to:
-      // 1. Check if person has associated data that should prevent deletion
-      // 2. Soft delete instead of hard delete
-      // 3. Add authorization checks
-      
-      // For now, we'll just return not implemented
-      res.status(501).json({
-        success: false,
-        error: 'Delete operation not yet implemented',
+      if (!id || typeof id !== 'string') {
+        res.status(400).json({
+          success: false,
+          error: 'Invalid ID parameter',
+        });
+        return;
+      }
+
+      const tenantId = req.tenant!.tenantId;
+      // Note: This will delete the person and cascade to all roles
+      await this.createPersonUseCase['personRepository'].delete(id, tenantId);
+
+      res.status(200).json({
+        success: true,
+        message: 'Person deleted successfully',
       });
     } catch (error) {
       console.error('Delete person error:', error);
       const errorMessage = error instanceof Error ? error.message : 'Failed to delete person';
+      const statusCode = errorMessage.includes('not found') ? 404 : 400;
 
-      res.status(400).json({
+      res.status(statusCode).json({
         success: false,
         error: errorMessage,
       });

@@ -11,51 +11,57 @@ import type { FarmOwner } from '../value-objects/roles/FarmOwner.js';
  */
 export interface IPersonRepository {
   /**
-   * Find a person by their ID
+   * Find all persons for a tenant
    */
-  findById(id: string): Promise<Person | null>;
+  findAll(tenantId: string): Promise<Person[]>;
 
   /**
-   * Find a person by their email
+   * Find a person by their ID within a tenant
    */
-  findByEmail(email: string): Promise<Person | null>;
+  findById(id: string, tenantId: string): Promise<Person | null>;
 
   /**
-   * Find a person by their user ID
+   * Find a person by their email within a tenant
    */
-  findByUserId(userId: string): Promise<Person | null>;
+  findByEmail(email: string, tenantId: string): Promise<Person | null>;
 
   /**
-   * Find all persons with a specific role
+   * Find a person by their user ID within a tenant
    */
-  findByRole(role: PersonRole): Promise<Person[]>;
+  findByUserId(userId: string, tenantId: string): Promise<Person | null>;
 
   /**
-   * Save a person (create or update)
+   * Find all persons with a specific role within a tenant
    */
-  save(person: Person): Promise<Person>;
+  findByRole(role: PersonRole, tenantId: string): Promise<Person[]>;
 
   /**
-   * Assign a role to a person
+   * Save a person (create or update) within a tenant
+   */
+  save(person: Person, tenantId: string): Promise<Person>;
+
+  /**
+   * Assign a role to a person within a tenant
    */
   assignRole(
     personId: string,
     role: PersonRole,
-    roleData: Client | Supplier | Worker | FarmOwner
+    roleData: Client | Supplier | Worker | FarmOwner,
+    tenantId: string
   ): Promise<void>;
 
   /**
    * Remove a role from a person
    */
-  removeRole(personId: string, role: PersonRole): Promise<void>;
+  removeRole(personId: string, role: PersonRole, tenantId: string): Promise<void>;
 
   /**
-   * Delete a person (and all their roles)
+   * Delete a person (and all their roles) within a tenant
    */
-  delete(id: string): Promise<void>;
+  delete(id: string, tenantId: string): Promise<void>;
 
   /**
-   * Check if email is already taken
+   * Check if email is already taken within a tenant
    */
-  existsByEmail(email: string): Promise<boolean>;
+  existsByEmail(email: string, tenantId: string): Promise<boolean>;
 }

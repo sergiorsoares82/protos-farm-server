@@ -1,0 +1,5 @@
+export enum CostCenterType {
+    PRODUCTIVE = 'PRODUCTIVE',
+    ADMINISTRATIVE = 'ADMINISTRATIVE',
+    SHARED = 'SHARED'
+}

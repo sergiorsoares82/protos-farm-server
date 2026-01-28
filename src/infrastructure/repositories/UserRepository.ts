@@ -50,14 +50,56 @@ export class UserRepository implements IUserRepository {
     return count > 0;
   }
 
+  async findAll(tenantId?: string): Promise<User[]> {
+    const where = tenantId ? { tenantId } : {};
+    const entities = await this.repository.find({
+      where,
+      order: { createdAt: 'DESC' },
+    });
+    
+    return entities.map(entity => this.toDomain(entity));
+  }
+
+  async findByTenant(tenantId: string): Promise<User[]> {
+    const entities = await this.repository.find({
+      where: { tenantId },
+      order: { createdAt: 'DESC' },
+    });
+    
+    return entities.map(entity => this.toDomain(entity));
+  }
+
+  async findByIdWithPerson(id: string): Promise<UserEntity | null> {
+    return await this.repository.findOne({
+      where: { id },
+      relations: ['person'],
+    });
+  }
+
+  async findAllWithPerson(tenantId?: string): Promise<UserEntity[]> {
+    const where = tenantId ? { tenantId } : {};
+    return await this.repository.find({
+      where,
+      relations: ['person'],
+      order: { createdAt: 'DESC' },
+    });
+  }
+
+  async delete(id: string): Promise<void> {
+    await this.repository.delete(id);
+  }
+
   /**
    * Convert domain User entity to TypeORM entity
    */
   private toEntity(user: User): UserEntity {
     const entity = new UserEntity();
     entity.id = user.getId();
+    entity.tenantId = user.getTenantId();
     entity.email = user.getEmail().getValue();
     entity.password = user.getPassword().getHashedValue();
+    entity.role = user.getRole();
+    entity.personId = user.getPersonId() || null;
     entity.createdAt = user.getCreatedAt();
     entity.updatedAt = user.getUpdatedAt();
     return entity;
@@ -72,8 +114,11 @@ export class UserRepository implements IUserRepository {
 
     return new User({
       id: entity.id,
+      tenantId: entity.tenantId,
       email: emailVO,
       password: passwordVO,
+      role: entity.role,
+      personId: entity.personId || undefined,
       createdAt: entity.createdAt,
       updatedAt: entity.updatedAt,
     });

@@ -1,10 +1,15 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, OneToOne, JoinColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, OneToOne, JoinColumn, ManyToOne, Index } from 'typeorm';
 import type { PersonEntity } from './PersonEntity.js';
+import { OrganizationEntity } from './OrganizationEntity.js';
 
 @Entity('farm_owners')
 export class FarmOwnerEntity {
   @PrimaryGeneratedColumn('uuid')
   id!: string;
+
+  @Column({ type: 'uuid', name: 'tenant_id' })
+  @Index() // Important for query performance
+  tenantId!: string;
 
   @Column({ type: 'uuid', name: 'person_id' })
   personId!: string;
@@ -30,4 +35,8 @@ export class FarmOwnerEntity {
   @OneToOne('PersonEntity', (person: any) => person.farmOwner, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'person_id' })
   person!: PersonEntity;
+
+  @ManyToOne(() => OrganizationEntity)
+  @JoinColumn({ name: 'tenant_id' })
+  tenant!: OrganizationEntity;
 }

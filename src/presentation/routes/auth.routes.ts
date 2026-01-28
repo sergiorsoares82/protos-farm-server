@@ -42,5 +42,14 @@ export function createAuthRoutes(): Router {
     (req, res) => authController.refresh(req, res)
   );
 
+  /**
+   * POST /api/auth/logout
+   * Logout user (client should remove tokens)
+   */
+  router.post(
+    '/logout',
+    (req, res) => authController.logout(req, res)
+  );
+
   return router;
 }

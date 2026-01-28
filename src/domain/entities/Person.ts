@@ -74,10 +74,8 @@ export class Person {
     if (!props.email || props.email.trim().length === 0) {
       throw new Error('Email is required');
     }
-    // Business rule: at least one role required
-    if (props.roles.size === 0) {
-      throw new Error('Person must have at least one role');
-    }
+    // Note: Role validation is not done here because roles may be assigned
+    // after construction. The business rule is enforced at the repository level.
   }
 
   /**
@@ -160,6 +158,17 @@ export class Person {
       throw new Error('Person is already linked to a user');
     }
     this.userId = userId;
+    this.updatedAt = new Date();
+  }
+
+  /**
+   * Unlink person from user account
+   */
+  unlinkFromUser(): void {
+    if (!this.userId) {
+      throw new Error('Person is not linked to any user');
+    }
+    delete this.userId;
     this.updatedAt = new Date();
   }
 

@@ -23,10 +23,12 @@ export class LoginUseCase {
       throw new Error('Invalid credentials');
     }
 
-    // Generate JWT tokens
+    // Generate JWT tokens with tenant ID and role
     const tokenPair = this.jwtService.generateTokenPair({
       userId: user.getId(),
       email: user.getEmail().getValue(),
+      tenantId: user.getTenantId(),
+      role: user.getRole(),
     });
 
     // Return response
@@ -36,6 +38,8 @@ export class LoginUseCase {
       user: {
         id: user.getId(),
         email: user.getEmail().getValue(),
+        role: user.getRole(),
+        tenantId: user.getTenantId(),
       },
     };
   }

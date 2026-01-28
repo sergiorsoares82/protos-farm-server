@@ -2,14 +2,31 @@ import { Router } from 'express';
 import { PersonController } from '../controllers/PersonController.js';
 import { PersonRepository } from '../../infrastructure/repositories/PersonRepository.js';
 import { validate, createPersonSchema, updatePersonSchema, assignRoleSchema } from '../middleware/validation.js';
+import { authenticate } from '../middleware/auth.js';
+import { tenantContextMiddleware, requireTenant } from '../../infrastructure/middleware/tenantContext.js';
 
 /**
  * Create and configure person routes
  */
 export function createPersonRoutes(): Router {
   const router = Router();
+  
+  // Apply authentication and tenant middleware to all person routes
+  router.use(authenticate);
+  router.use(tenantContextMiddleware);
+  router.use(requireTenant);
+  
   const personRepository = new PersonRepository();
   const personController = new PersonController(personRepository);
+
+  /**
+   * GET /api/persons
+   * Get all persons
+   */
+  router.get(
+    '/',
+    (req, res) => personController.getAllPersons(req, res)
+  );
 
   /**
    * POST /api/persons

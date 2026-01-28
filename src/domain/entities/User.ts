@@ -1,25 +1,35 @@
 import { Email } from '../value-objects/Email.js';
 import { Password } from '../value-objects/Password.js';
+import { UserRole } from '../enums/UserRole.js';
 
 export interface UserProps {
   id: string;
+  tenantId: string;
   email: Email;
   password: Password;
+  role: UserRole;
+  personId?: string | undefined;
   createdAt: Date;
   updatedAt: Date;
 }
 
 export class User {
   private readonly id: string;
+  private readonly tenantId: string;
   private email: Email;
   private password: Password;
+  private role: UserRole;
+  private personId?: string | undefined;
   private readonly createdAt: Date;
   private updatedAt: Date;
 
   constructor(props: UserProps) {
     this.id = props.id;
+    this.tenantId = props.tenantId;
     this.email = props.email;
     this.password = props.password;
+    this.role = props.role;
+    this.personId = props.personId;
     this.createdAt = props.createdAt;
     this.updatedAt = props.updatedAt;
   }
@@ -27,15 +37,17 @@ export class User {
   /**
    * Factory method to create a new user
    */
-  static async create(email: string, plainPassword: string): Promise<User> {
+  static async create(email: string, plainPassword: string, tenantId: string, role: UserRole = UserRole.USER): Promise<User> {
     const emailVO = new Email(email);
     const passwordVO = await Password.create(plainPassword);
     const now = new Date();
 
     return new User({
       id: crypto.randomUUID(),
+      tenantId,
       email: emailVO,
       password: passwordVO,
+      role,
       createdAt: now,
       updatedAt: now,
     });
@@ -69,6 +81,10 @@ export class User {
     return this.id;
   }
 
+  getTenantId(): string {
+    return this.tenantId;
+  }
+
   getEmail(): Email {
     return this.email;
   }
@@ -77,12 +93,33 @@ export class User {
     return this.password;
   }
 
+  getRole(): UserRole {
+    return this.role;
+  }
+
+  getPersonId(): string | undefined {
+    return this.personId;
+  }
+
   getCreatedAt(): Date {
     return this.createdAt;
   }
 
   getUpdatedAt(): Date {
     return this.updatedAt;
+  }
+
+  // Role helpers
+  isSuperAdmin(): boolean {
+    return this.role === UserRole.SUPER_ADMIN;
+  }
+
+  isOrgAdmin(): boolean {
+    return this.role === UserRole.ORG_ADMIN;
+  }
+
+  isRegularUser(): boolean {
+    return this.role === UserRole.USER;
   }
 
   // For serialization

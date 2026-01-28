@@ -43,45 +43,53 @@ export const refreshTokenSchema = z.object({
 });
 
 // Person validation schemas
-const clientRoleSchema = z.object({
+const clientRoleDataSchema = z.object({
   companyName: z.string().optional(),
   taxId: z.string().optional(),
   preferredPaymentMethod: z.string().optional(),
   creditLimit: z.number().nonnegative().optional(),
 });
 
-const supplierRoleSchema = z.object({
+const supplierRoleDataSchema = z.object({
   companyName: z.string().min(1, 'Company name is required'),
   taxId: z.string().min(1, 'Tax ID is required'),
   supplyCategories: z.string().optional(),
   paymentTerms: z.string().optional(),
 });
 
-const workerRoleSchema = z.object({
+const workerRoleDataSchema = z.object({
   position: z.string().min(1, 'Position is required'),
   hireDate: z.string().or(z.date()),
   hourlyRate: z.number().nonnegative().optional(),
   employmentType: z.string().min(1, 'Employment type is required'),
 });
 
-const farmOwnerRoleSchema = z.object({
+const farmOwnerRoleDataSchema = z.object({
   farmName: z.string().min(1, 'Farm name is required'),
   farmLocation: z.string().optional(),
   totalArea: z.number().nonnegative().optional(),
   ownershipType: z.string().optional(),
 });
 
-const roleDataSchema = z.union([
-  clientRoleSchema,
-  supplierRoleSchema,
-  workerRoleSchema,
-  farmOwnerRoleSchema,
+// Use discriminated union based on role type
+const roleAssignmentSchema = z.discriminatedUnion('type', [
+  z.object({
+    type: z.literal(PersonRole.CLIENT),
+    data: clientRoleDataSchema,
+  }),
+  z.object({
+    type: z.literal(PersonRole.SUPPLIER),
+    data: supplierRoleDataSchema,
+  }),
+  z.object({
+    type: z.literal(PersonRole.WORKER),
+    data: workerRoleDataSchema,
+  }),
+  z.object({
+    type: z.literal(PersonRole.FARM_OWNER),
+    data: farmOwnerRoleDataSchema,
+  }),
 ]);
-
-const roleAssignmentSchema = z.object({
-  type: z.nativeEnum(PersonRole),
-  data: roleDataSchema,
-});
 
 export const createPersonSchema = z.object({
   firstName: z.string().min(1, 'First name is required'),
@@ -99,7 +107,15 @@ export const updatePersonSchema = z.object({
   phone: z.string().optional(),
 });
 
+// For role assignment, we need a different schema structure
+const roleDataUnionSchema = z.union([
+  clientRoleDataSchema,
+  supplierRoleDataSchema,
+  workerRoleDataSchema,
+  farmOwnerRoleDataSchema,
+]).or(z.object({})); // Allow empty object for client role
+
 export const assignRoleSchema = z.object({
   role: z.nativeEnum(PersonRole),
-  roleData: roleDataSchema,
+  roleData: roleDataUnionSchema,
 });

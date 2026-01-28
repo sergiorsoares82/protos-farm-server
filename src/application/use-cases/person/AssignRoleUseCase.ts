@@ -9,9 +9,9 @@ import { PersonRole } from '../../../domain/enums/PersonRole.js';
 export class AssignRoleUseCase {
   constructor(private personRepository: IPersonRepository) {}
 
-  async execute(personId: string, request: AssignRoleRequestDTO): Promise<PersonResponseDTO> {
-    // Get person
-    const person = await this.personRepository.findById(personId);
+  async execute(personId: string, request: AssignRoleRequestDTO, tenantId: string): Promise<PersonResponseDTO> {
+    // Get person within tenant
+    const person = await this.personRepository.findById(personId, tenantId);
     if (!person) {
       throw new Error('Person not found');
     }
@@ -26,10 +26,10 @@ export class AssignRoleUseCase {
 
     // Assign role through repository (and domain entity)
     person.assignRole(request.role, roleData);
-    await this.personRepository.assignRole(personId, request.role, roleData);
+    await this.personRepository.assignRole(personId, request.role, roleData, tenantId);
 
     // Reload person with new role
-    const updatedPerson = await this.personRepository.findById(personId);
+    const updatedPerson = await this.personRepository.findById(personId, tenantId);
     if (!updatedPerson) {
       throw new Error('Failed to reload person after role assignment');
     }

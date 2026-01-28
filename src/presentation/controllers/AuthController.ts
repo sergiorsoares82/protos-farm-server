@@ -40,6 +40,32 @@ export class AuthController {
   }
 
   /**
+   * Handle logout request
+   * POST /api/auth/logout
+   * 
+   * Note: With JWT-based authentication, logout is primarily handled client-side
+   * by removing tokens from storage. This endpoint acknowledges the logout.
+   * In the future, this could be extended to:
+   * - Invalidate refresh tokens in a database
+   * - Add tokens to a blacklist
+   * - Track user sessions
+   */
+  async logout(req: Request, res: Response): Promise<void> {
+    try {
+      // Optional: Extract token from Authorization header for future blacklisting
+      // const authHeader = req.headers.authorization;
+      // const token = authHeader?.split(' ')[1];
+
+      res.status(200).json({
+        success: true,
+        message: 'Logged out successfully',
+      });
+    } catch (error) {
+      this.handleError(error, res);
+    }
+  }
+
+  /**
    * Centralized error handling
    */
   private handleError(error: unknown, res: Response): void {

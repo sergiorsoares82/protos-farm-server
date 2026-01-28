@@ -1,0 +1,72 @@
+import { CostCenter } from '../../domain/entities/CostCenter.js';
+import type { ICostCenterRepository } from '../../domain/repositories/ICostCenterRepository.js';
+import type { CreateCostCenterDTO, UpdateCostCenterDTO } from '../dtos/CostCenterDTOs.js';
+
+export class CostCenterService {
+    constructor(private readonly costCenterRepository: ICostCenterRepository) { }
+
+    async createCostCenter(tenantId: string, data: CreateCostCenterDTO): Promise<CostCenter> {
+        // Check if code already exists
+        const existing = await this.costCenterRepository.findByCode(data.code, tenantId);
+        if (existing) {
+            throw new Error(`Cost Center with code '${data.code}' already exists`);
+        }
+
+        const costCenter = CostCenter.create(
+            tenantId,
+            data.code,
+            data.description,
+            data.type,
+            data.categoryId,
+        );
+
+        return this.costCenterRepository.save(costCenter);
+    }
+
+    async getCostCenter(tenantId: string, id: string): Promise<CostCenter> {
+        const costCenter = await this.costCenterRepository.findById(id, tenantId);
+        if (!costCenter) {
+            throw new Error('Cost Center not found');
+        }
+        return costCenter;
+    }
+
+    async updateCostCenter(tenantId: string, id: string, data: UpdateCostCenterDTO): Promise<CostCenter> {
+        const costCenter = await this.getCostCenter(tenantId, id);
+
+        if (data.code && data.code !== costCenter.getCode()) {
+            const existing = await this.costCenterRepository.findByCode(data.code, tenantId);
+            if (existing) {
+                throw new Error(`Cost Center with code '${data.code}' already exists`);
+            }
+        }
+
+        if (data.code || data.description || data.type || data.categoryId !== undefined) {
+            costCenter.update(
+                data.code || costCenter.getCode(),
+                data.description || costCenter.getDescription(),
+                data.type || costCenter.getType(),
+                data.categoryId !== undefined ? data.categoryId : costCenter.getCategoryId(),
+            );
+        }
+
+        if (data.isActive !== undefined) {
+            if (data.isActive) {
+                costCenter.activate();
+            } else {
+                costCenter.deactivate();
+            }
+        }
+
+        return this.costCenterRepository.save(costCenter);
+    }
+
+    async deleteCostCenter(tenantId: string, id: string): Promise<void> {
+        // Here we might check for dependencies before deleting
+        await this.costCenterRepository.delete(id, tenantId);
+    }
+
+    async getAllCostCenters(tenantId: string): Promise<CostCenter[]> {
+        return this.costCenterRepository.findAll(tenantId);
+    }
+}

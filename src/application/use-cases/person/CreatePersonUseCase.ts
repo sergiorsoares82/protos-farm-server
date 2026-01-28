@@ -10,9 +10,9 @@ import { PersonRole } from '../../../domain/enums/PersonRole.js';
 export class CreatePersonUseCase {
   constructor(private personRepository: IPersonRepository) {}
 
-  async execute(request: CreatePersonRequestDTO): Promise<PersonResponseDTO> {
-    // Check if email already exists
-    const existingPerson = await this.personRepository.findByEmail(request.email);
+  async execute(request: CreatePersonRequestDTO, tenantId: string): Promise<PersonResponseDTO> {
+    // Check if email already exists within tenant
+    const existingPerson = await this.personRepository.findByEmail(request.email, tenantId);
     if (existingPerson) {
       throw new Error('Email already in use');
     }
@@ -37,8 +37,8 @@ export class CreatePersonUseCase {
       person.assignRole(roleAssignment.type, roleData);
     }
 
-    // Save person
-    const savedPerson = await this.personRepository.save(person);
+    // Save person with tenant context
+    const savedPerson = await this.personRepository.save(person, tenantId);
 
     return this.toDTO(savedPerson);
   }

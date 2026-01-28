@@ -28,9 +28,19 @@ export class PersonRepository implements IPersonRepository {
     this.farmOwnerRepo = AppDataSource.getRepository(FarmOwnerEntity);
   }
 
-  async findById(id: string): Promise<Person | null> {
+  async findAll(tenantId: string): Promise<Person[]> {
+    const personEntities = await this.personRepo.find({
+      where: { tenantId },
+      relations: ['client', 'supplier', 'worker', 'farmOwner'],
+      order: { createdAt: 'DESC' },
+    });
+
+    return personEntities.map((entity) => this.toDomain(entity));
+  }
+
+  async findById(id: string, tenantId: string): Promise<Person | null> {
     const personEntity = await this.personRepo.findOne({
-      where: { id },
+      where: { id, tenantId },
       relations: ['client', 'supplier', 'worker', 'farmOwner'],
     });
 
@@ -41,9 +51,9 @@ export class PersonRepository implements IPersonRepository {
     return this.toDomain(personEntity);
   }
 
-  async findByEmail(email: string): Promise<Person | null> {
+  async findByEmail(email: string, tenantId: string): Promise<Person | null> {
     const personEntity = await this.personRepo.findOne({
-      where: { email: email.toLowerCase() },
+      where: { email: email.toLowerCase(), tenantId },
       relations: ['client', 'supplier', 'worker', 'farmOwner'],
     });
 
@@ -54,9 +64,9 @@ export class PersonRepository implements IPersonRepository {
     return this.toDomain(personEntity);
   }
 
-  async findByUserId(userId: string): Promise<Person | null> {
+  async findByUserId(userId: string, tenantId: string): Promise<Person | null> {
     const personEntity = await this.personRepo.findOne({
-      where: { userId },
+      where: { userId, tenantId },
       relations: ['client', 'supplier', 'worker', 'farmOwner'],
     });
 
@@ -67,24 +77,36 @@ export class PersonRepository implements IPersonRepository {
     return this.toDomain(personEntity);
   }
 
-  async findByRole(role: PersonRole): Promise<Person[]> {
+  async findByRole(role: PersonRole, tenantId: string): Promise<Person[]> {
     let personEntities: PersonEntity[] = [];
 
     switch (role) {
       case PersonRole.CLIENT:
-        const clients = await this.clientRepo.find({ relations: ['person'] });
+        const clients = await this.clientRepo.find({ 
+          where: { tenantId },
+          relations: ['person'] 
+        });
         personEntities = clients.map((c) => c.person);
         break;
       case PersonRole.SUPPLIER:
-        const suppliers = await this.supplierRepo.find({ relations: ['person'] });
+        const suppliers = await this.supplierRepo.find({ 
+          where: { tenantId },
+          relations: ['person'] 
+        });
         personEntities = suppliers.map((s) => s.person);
         break;
       case PersonRole.WORKER:
-        const workers = await this.workerRepo.find({ relations: ['person'] });
+        const workers = await this.workerRepo.find({ 
+          where: { tenantId },
+          relations: ['person'] 
+        });
         personEntities = workers.map((w) => w.person);
         break;
       case PersonRole.FARM_OWNER:
-        const farmOwners = await this.farmOwnerRepo.find({ relations: ['person'] });
+        const farmOwners = await this.farmOwnerRepo.find({ 
+          where: { tenantId },
+          relations: ['person'] 
+        });
         personEntities = farmOwners.map((f) => f.person);
         break;
     }
@@ -93,7 +115,7 @@ export class PersonRepository implements IPersonRepository {
     const personsWithRoles = await Promise.all(
       personEntities.map((p) =>
         this.personRepo.findOne({
-          where: { id: p.id },
+          where: { id: p.id, tenantId },
           relations: ['client', 'supplier', 'worker', 'farmOwner'],
         })
       )
@@ -104,10 +126,17 @@ export class PersonRepository implements IPersonRepository {
       .map((p) => this.toDomain(p));
   }
 
-  async save(person: Person): Promise<Person> {
+  async save(person: Person, tenantId: string): Promise<Person> {
+    // Validate business rule: at least one role required
+    const roles = person.getRoles();
+    if (roles.length === 0) {
+      throw new Error('Person must have at least one role');
+    }
+
     // Save person basic info
     const personEntity = new PersonEntity();
     personEntity.id = person.getId();
+    personEntity.tenantId = tenantId;
     personEntity.userId = person.getUserId() || null;
     personEntity.firstName = person.getFirstName();
     personEntity.lastName = person.getLastName();
@@ -117,25 +146,25 @@ export class PersonRepository implements IPersonRepository {
     const savedPerson = await this.personRepo.save(personEntity);
 
     // Save each role
-    const roles = person.getRoles();
     for (const role of roles) {
-      await this.saveRole(savedPerson.id, role, person.getRole(role)!);
+      await this.saveRole(savedPerson.id, role, person.getRole(role)!, tenantId);
     }
 
     // Reload with relations
-    const reloaded = await this.findById(savedPerson.id);
+    const reloaded = await this.findById(savedPerson.id, tenantId);
     return reloaded!;
   }
 
   async assignRole(
     personId: string,
     role: PersonRole,
-    roleData: Client | Supplier | Worker | FarmOwner
+    roleData: Client | Supplier | Worker | FarmOwner,
+    tenantId: string
   ): Promise<void> {
-    await this.saveRole(personId, role, roleData);
+    await this.saveRole(personId, role, roleData, tenantId);
   }
 
-  async removeRole(personId: string, role: PersonRole): Promise<void> {
+  async removeRole(personId: string, role: PersonRole, tenantId: string): Promise<void> {
     switch (role) {
       case PersonRole.CLIENT:
         await this.clientRepo.delete({ personId });
@@ -152,13 +181,13 @@ export class PersonRepository implements IPersonRepository {
     }
   }
 
-  async delete(id: string): Promise<void> {
-    await this.personRepo.delete(id);
+  async delete(id: string, tenantId: string): Promise<void> {
+    await this.personRepo.delete({ id, tenantId });
   }
 
-  async existsByEmail(email: string): Promise<boolean> {
+  async existsByEmail(email: string, tenantId: string): Promise<boolean> {
     const count = await this.personRepo.count({
-      where: { email: email.toLowerCase() },
+      where: { email: email.toLowerCase(), tenantId },
     });
     return count > 0;
   }
@@ -166,13 +195,15 @@ export class PersonRepository implements IPersonRepository {
   private async saveRole(
     personId: string,
     role: PersonRole,
-    roleData: Client | Supplier | Worker | FarmOwner
+    roleData: Client | Supplier | Worker | FarmOwner,
+    tenantId: string
   ): Promise<void> {
     switch (role) {
       case PersonRole.CLIENT:
         const clientData = roleData as Client;
         const client = new ClientEntity();
         client.personId = personId;
+        client.tenantId = tenantId;
         client.companyName = clientData.getCompanyName() || null;
         client.taxId = clientData.getTaxId() || null;
         client.preferredPaymentMethod = clientData.getPreferredPaymentMethod() || null;
@@ -184,6 +215,7 @@ export class PersonRepository implements IPersonRepository {
         const supplierData = roleData as Supplier;
         const supplier = new SupplierEntity();
         supplier.personId = personId;
+        supplier.tenantId = tenantId;
         supplier.companyName = supplierData.getCompanyName();
         supplier.taxId = supplierData.getTaxId();
         supplier.supplyCategories = supplierData.getSupplyCategories() || null;
@@ -195,6 +227,7 @@ export class PersonRepository implements IPersonRepository {
         const workerData = roleData as Worker;
         const worker = new WorkerEntity();
         worker.personId = personId;
+        worker.tenantId = tenantId;
         worker.position = workerData.getPosition();
         worker.hireDate = workerData.getHireDate();
         worker.hourlyRate = workerData.getHourlyRate() || null;
@@ -206,6 +239,7 @@ export class PersonRepository implements IPersonRepository {
         const farmOwnerData = roleData as FarmOwner;
         const farmOwner = new FarmOwnerEntity();
         farmOwner.personId = personId;
+        farmOwner.tenantId = tenantId;
         farmOwner.farmName = farmOwnerData.getFarmName();
         farmOwner.farmLocation = farmOwnerData.getFarmLocation() || null;
         farmOwner.totalArea = farmOwnerData.getTotalArea() || null;

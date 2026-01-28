@@ -1,3 +1,5 @@
+import { UserRole } from '../../domain/enums/UserRole.js';
+
 // Login DTOs
 export interface LoginRequestDTO {
   email: string;
@@ -10,6 +12,8 @@ export interface LoginResponseDTO {
   user: {
     id: string;
     email: string;
+    role: UserRole;
+    tenantId: string;
   };
 }
 

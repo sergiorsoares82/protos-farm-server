@@ -1,8 +1,11 @@
 import jwt from 'jsonwebtoken';
+import { UserRole } from '../../domain/enums/UserRole.js';
 
 export interface JWTPayload {
   userId: string;
   email: string;
+  tenantId: string;
+  role: UserRole;
 }
 
 export interface TokenPair {

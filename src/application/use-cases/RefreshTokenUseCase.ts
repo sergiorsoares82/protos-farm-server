@@ -8,10 +8,12 @@ export class RefreshTokenUseCase {
     // Verify the refresh token
     const payload = this.jwtService.verifyRefreshToken(request.refreshToken);
 
-    // Generate new token pair
+    // Generate new token pair with tenant ID and role
     const tokenPair = this.jwtService.generateTokenPair({
       userId: payload.userId,
       email: payload.email,
+      tenantId: payload.tenantId,
+      role: payload.role,
     });
 
     return {

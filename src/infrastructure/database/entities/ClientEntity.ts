@@ -1,10 +1,14 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, OneToOne, JoinColumn } from 'typeorm';
-import type { PersonEntity } from './PersonEntity.js';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, OneToOne, JoinColumn, ManyToOne, Index } from 'typeorm';
+import { OrganizationEntity } from './OrganizationEntity.js';
 
 @Entity('clients')
 export class ClientEntity {
   @PrimaryGeneratedColumn('uuid')
   id!: string;
+
+  @Column({ type: 'uuid', name: 'tenant_id' })
+  @Index() // Important for query performance
+  tenantId!: string;
 
   @Column({ type: 'uuid', name: 'person_id' })
   personId!: string;
@@ -29,5 +33,9 @@ export class ClientEntity {
 
   @OneToOne('PersonEntity', (person: any) => person.client, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'person_id' })
-  person!: PersonEntity;
+  person!: any;
+
+  @ManyToOne(() => OrganizationEntity)
+  @JoinColumn({ name: 'tenant_id' })
+  tenant!: OrganizationEntity;
 }

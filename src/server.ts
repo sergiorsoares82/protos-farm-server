@@ -7,6 +7,14 @@ import cors from 'cors';
 import { initializeDatabase } from './infrastructure/database/typeorm.config.js';
 import { createAuthRoutes } from './presentation/routes/auth.routes.js';
 import { createPersonRoutes } from './presentation/routes/person.routes.js';
+import { createOrganizationRoutes } from './presentation/routes/organization.routes.js';
+import { createUserRoutes } from './presentation/routes/user.routes.js';
+import { createDocumentTypeRoutes } from './presentation/routes/documentType.routes.js';
+import { createItemRoutes } from './presentation/routes/item.routes.js';
+import { createCostCenterCategoryRoutes } from './presentation/routes/cost-center-category.routes.js';
+import { createCostCenterRoutes } from './presentation/routes/cost-center.routes.js';
+import { createManagementAccountRoutes } from './presentation/routes/management-account.routes.js';
+import { createFieldRoutes } from './presentation/routes/field.routes.js';
 
 const app = express();
 
@@ -38,6 +46,30 @@ app.use('/api/auth', createAuthRoutes());
 
 // Person routes
 app.use('/api/persons', createPersonRoutes());
+
+// Organization routes
+app.use('/api/organizations', createOrganizationRoutes());
+
+// User management routes
+app.use('/api/users', createUserRoutes());
+
+// Document types (super admin only)
+app.use('/api/document-types', createDocumentTypeRoutes());
+
+// Item routes
+app.use('/api/items', createItemRoutes());
+
+// Cost center categories
+app.use('/api/cost-center-categories', createCostCenterCategoryRoutes());
+
+// Cost Center routes
+app.use('/api/cost-centers', createCostCenterRoutes());
+
+// Management Account routes
+app.use('/api/management-accounts', createManagementAccountRoutes());
+
+// Field (Talhão) routes
+app.use('/api/fields', createFieldRoutes());
 
 // 404 handler
 app.use((req, res) => {
@@ -73,6 +105,7 @@ async function startServer() {
         console.log(`   Auth:`);
         console.log(`   - POST http://localhost:${PORT}/api/auth/login`);
         console.log(`   - POST http://localhost:${PORT}/api/auth/refresh`);
+        console.log(`   - POST http://localhost:${PORT}/api/auth/logout`);
         console.log(`   Person:`);
         console.log(`   - POST http://localhost:${PORT}/api/persons`);
         console.log(`   - GET http://localhost:${PORT}/api/persons/:id`);
