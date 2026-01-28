@@ -32,6 +32,11 @@ app.use(cors(corsOptions)); // Enable CORS
 app.use(express.json()); // Parse JSON request bodies
 app.use(express.urlencoded({ extended: true })); // Parse URL-encoded bodies
 
+// When running behind a proxy/load balancer (e.g. Vercel, Nginx),
+// trust the X-Forwarded-* headers so express-rate-limit can identify clients correctly.
+// This is safe locally as well.
+app.set('trust proxy', 1);
+
 // Health check endpoint
 app.get('/', (req, res) => {
   res.json({
