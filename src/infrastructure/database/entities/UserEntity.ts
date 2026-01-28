@@ -1,6 +1,5 @@
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, OneToOne, JoinColumn, Index } from 'typeorm';
 import { OrganizationEntity } from './OrganizationEntity.js';
-import { PersonEntity } from './PersonEntity.js';
 import { UserRole } from '../../../domain/enums/UserRole.js';
 
 @Entity('users')
@@ -39,7 +38,7 @@ export class UserEntity {
   @JoinColumn({ name: 'tenant_id' })
   tenant!: OrganizationEntity;
 
-  @OneToOne(() => PersonEntity, person => person.user, { nullable: true })
+  @OneToOne('PersonEntity', (person: any) => person.user, { nullable: true })
   @JoinColumn({ name: 'person_id' })
-  person?: PersonEntity;
+  person?: any;
 }
