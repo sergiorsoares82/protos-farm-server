@@ -5,7 +5,10 @@ import type { IManagementAccountCostCenterTypeRepository } from '../../domain/re
 export class ManagementAccountCostCenterTypeRepository
   implements IManagementAccountCostCenterTypeRepository
 {
-  private repository = AppDataSource.getRepository(ManagementAccountCostCenterTypeEntity);
+  // Use entity name string for compatibility with bundled/serverless builds
+  private repository = AppDataSource.getRepository<ManagementAccountCostCenterTypeEntity>(
+    'ManagementAccountCostCenterTypeEntity',
+  );
 
   async linkAccountToType(accountId: string, costCenterType: string): Promise<void> {
     const existing = await this.repository.findOne({

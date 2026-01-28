@@ -9,7 +9,8 @@ export class CostCenterRepository implements ICostCenterRepository {
     private repo: Repository<CostCenterEntity>;
 
     constructor() {
-        this.repo = AppDataSource.getRepository(CostCenterEntity);
+        // Use entity name string for compatibility with bundled/serverless builds
+        this.repo = AppDataSource.getRepository<CostCenterEntity>('CostCenterEntity');
     }
 
     async findAll(tenantId: string): Promise<CostCenter[]> {

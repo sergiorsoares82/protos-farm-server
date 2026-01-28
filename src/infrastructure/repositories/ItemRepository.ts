@@ -11,8 +11,9 @@ export class ItemRepository implements IItemRepository {
     private productRepo: Repository<ProductEntity>;
 
     constructor() {
-        this.itemRepo = AppDataSource.getRepository(ItemEntity);
-        this.productRepo = AppDataSource.getRepository(ProductEntity);
+        // Use entity name strings for compatibility with bundled/serverless builds
+        this.itemRepo = AppDataSource.getRepository<ItemEntity>('ItemEntity');
+        this.productRepo = AppDataSource.getRepository<ProductEntity>('ProductEntity');
     }
 
     async findAll(tenantId: string): Promise<Item[]> {

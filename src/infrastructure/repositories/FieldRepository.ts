@@ -8,7 +8,8 @@ export class FieldRepository implements IFieldRepository {
   private repo: Repository<FieldEntity>;
 
   constructor() {
-    this.repo = AppDataSource.getRepository(FieldEntity);
+    // Use entity name string for compatibility with bundled/serverless builds
+    this.repo = AppDataSource.getRepository<FieldEntity>('FieldEntity');
   }
 
   async findAll(tenantId: string): Promise<Field[]> {

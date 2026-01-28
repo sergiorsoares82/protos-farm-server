@@ -21,11 +21,12 @@ export class PersonRepository implements IPersonRepository {
   private farmOwnerRepo: Repository<FarmOwnerEntity>;
 
   constructor() {
-    this.personRepo = AppDataSource.getRepository(PersonEntity);
-    this.clientRepo = AppDataSource.getRepository(ClientEntity);
-    this.supplierRepo = AppDataSource.getRepository(SupplierEntity);
-    this.workerRepo = AppDataSource.getRepository(WorkerEntity);
-    this.farmOwnerRepo = AppDataSource.getRepository(FarmOwnerEntity);
+    // Use entity name strings for compatibility with bundled/serverless builds
+    this.personRepo = AppDataSource.getRepository<PersonEntity>('PersonEntity');
+    this.clientRepo = AppDataSource.getRepository<ClientEntity>('ClientEntity');
+    this.supplierRepo = AppDataSource.getRepository<SupplierEntity>('SupplierEntity');
+    this.workerRepo = AppDataSource.getRepository<WorkerEntity>('WorkerEntity');
+    this.farmOwnerRepo = AppDataSource.getRepository<FarmOwnerEntity>('FarmOwnerEntity');
   }
 
   async findAll(tenantId: string): Promise<Person[]> {
