@@ -18,12 +18,29 @@ import { FieldEntity } from './entities/FieldEntity.js';
 
 // Get database configuration from environment variables
 const getDatabaseUrl = (): string => {
+  // 1) Prefer DATABASE_URL if provided (Neon typically gives you this)
   const dbUrl = process.env.DATABASE_URL;
   if (dbUrl) {
     return dbUrl;
   }
 
-  // Fallback to individual env vars
+  // 2) Support Neon-style PG* variables (PGHOST, PGDATABASE, PGUSER, PGPASSWORD, PGPORT, PGSSLMODE)
+  if (process.env.PGHOST && process.env.PGDATABASE && process.env.PGUSER) {
+    const host = process.env.PGHOST;
+    const database = process.env.PGDATABASE;
+    const user = process.env.PGUSER;
+    const password = process.env.PGPASSWORD || '';
+    const port = process.env.PGPORT || '5432';
+    const sslmode = process.env.PGSSLMODE || 'require';
+
+    const connectionString = `postgresql://${encodeURIComponent(
+      user,
+    )}:${encodeURIComponent(password)}@${host}:${port}/${database}?sslmode=${sslmode}`;
+    console.log(`📊 Using Neon PG* vars: host=${host}, port=${port}, user=${user}, db=${database}`);
+    return connectionString;
+  }
+
+  // 3) Fallback to local docker/postgres env vars
   const host = process.env.DB_HOST || 'localhost';
   const port = process.env.DB_PORT || '5432';
   const username = process.env.POSTGRES_USER || 'postgres';
@@ -35,6 +52,10 @@ const getDatabaseUrl = (): string => {
 
   return connectionString;
 };
+
+const isNeon =
+  !!process.env.PGHOST ||
+  (process.env.DATABASE_URL ? process.env.DATABASE_URL.includes('neon.tech') : false);
 
 export const AppDataSource = new DataSource({
   type: 'postgres',
@@ -60,6 +81,8 @@ export const AppDataSource = new DataSource({
   ],
   migrations: [],
   subscribers: [],
+  // Neon requires SSL; local docker/postgres usually does not.
+  ssl: isNeon ? { rejectUnauthorized: false } : false,
 });
 
 /**
