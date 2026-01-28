@@ -2,6 +2,8 @@ import { Router } from 'express';
 import { SeasonController } from '../controllers/SeasonController.js';
 import { SeasonService } from '../../application/services/SeasonService.js';
 import { SeasonRepository } from '../../infrastructure/repositories/SeasonRepository.js';
+import { FieldRepository } from '../../infrastructure/repositories/FieldRepository.js';
+import { FieldSeasonRepository } from '../../infrastructure/repositories/FieldSeasonRepository.js';
 import { authenticate } from '../middleware/auth.js';
 import { tenantContextMiddleware, requireTenant } from '../../infrastructure/middleware/tenantContext.js';
 
@@ -9,7 +11,9 @@ export function createSeasonRoutes(): Router {
   const router = Router();
 
   const seasonRepository = new SeasonRepository();
-  const seasonService = new SeasonService(seasonRepository);
+  const fieldRepository = new FieldRepository();
+  const fieldSeasonRepository = new FieldSeasonRepository();
+  const seasonService = new SeasonService(seasonRepository, fieldRepository, fieldSeasonRepository);
   const seasonController = new SeasonController(seasonService);
 
   router.use(authenticate);
@@ -21,6 +25,12 @@ export function createSeasonRoutes(): Router {
   router.get('/:id', (req, res) => seasonController.getSeason(req, res));
   router.put('/:id', (req, res) => seasonController.updateSeason(req, res));
   router.delete('/:id', (req, res) => seasonController.deleteSeason(req, res));
+
+  router.get('/:id/fields', (req, res) => seasonController.getSeasonFields(req, res));
+  router.post('/:id/fields', (req, res) => seasonController.upsertSeasonField(req, res));
+  router.delete('/:id/fields/:fieldId', (req, res) =>
+    seasonController.deleteSeasonField(req, res),
+  );
 
   return router;
 }

@@ -72,5 +72,67 @@ export class SeasonController {
       res.status(500).json({ error: 'Internal server error' });
     }
   }
+
+  async getSeasonFields(req: Request, res: Response): Promise<void> {
+    try {
+      const tenantId = req.user!.tenantId;
+      const { id } = req.params;
+      const links = await this.seasonService.getFieldLinksForSeason(tenantId, id as string);
+      res.json({ success: true, data: links });
+    } catch (error) {
+      console.error('Error fetching season fields:', error);
+      res.status(400).json({
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to get season fields',
+      });
+    }
+  }
+
+  async upsertSeasonField(req: Request, res: Response): Promise<void> {
+    try {
+      const tenantId = req.user!.tenantId;
+      const { id } = req.params;
+      const { fieldId, areaHectares } = req.body as {
+        fieldId?: string;
+        areaHectares?: number;
+      };
+      if (!fieldId) {
+        res.status(400).json({ success: false, error: 'fieldId is required' });
+        return;
+      }
+      await this.seasonService.upsertFieldLinkForSeason(
+        tenantId,
+        id as string,
+        fieldId,
+        areaHectares ?? 0,
+      );
+      res.status(204).send();
+    } catch (error) {
+      console.error('Error linking field to season:', error);
+      res.status(400).json({
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to link field to season',
+      });
+    }
+  }
+
+  async deleteSeasonField(req: Request, res: Response): Promise<void> {
+    try {
+      const tenantId = req.user!.tenantId;
+      const { id, fieldId } = req.params as { id?: string; fieldId?: string };
+      if (!fieldId) {
+        res.status(400).json({ success: false, error: 'fieldId is required' });
+        return;
+      }
+      await this.seasonService.deleteFieldLinkForSeason(tenantId, id as string, fieldId);
+      res.status(204).send();
+    } catch (error) {
+      console.error('Error unlinking field from season:', error);
+      res.status(400).json({
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to unlink field from season',
+      });
+    }
+  }
 }
 
