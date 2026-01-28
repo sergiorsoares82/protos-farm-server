@@ -10,10 +10,9 @@ export class UserRepository implements IUserRepository {
   private repository: Repository<UserEntity>;
 
   constructor() {
-    // Use the table name string for compatibility with bundled/serverless builds.
-    // The entity is mapped with @Entity('users'), so the metadata name 'users'
-    // is always available even after bundling.
-    this.repository = AppDataSource.getRepository<UserEntity>('users');
+    // Use the entity class directly; this matches the entity metadata
+    // registered in AppDataSource.entities.
+    this.repository = AppDataSource.getRepository(UserEntity);
   }
 
   async findByEmail(email: string): Promise<User | null> {
