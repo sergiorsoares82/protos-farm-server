@@ -10,7 +10,9 @@ export class UserRepository implements IUserRepository {
   private repository: Repository<UserEntity>;
 
   constructor() {
-    this.repository = AppDataSource.getRepository(UserEntity);
+    // Use the entity name instead of the class reference to avoid
+    // issues with module identity in bundled/serverless environments.
+    this.repository = AppDataSource.getRepository<UserEntity>('UserEntity');
   }
 
   async findByEmail(email: string): Promise<User | null> {
