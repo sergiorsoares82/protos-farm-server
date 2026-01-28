@@ -93,6 +93,12 @@ export async function initializeDatabase(): Promise<DataSource> {
     if (!AppDataSource.isInitialized) {
       await AppDataSource.initialize();
       console.log('✅ Database connection established');
+      // Log loaded entity metadata names/table names once, to help debug
+      const metaSummary = AppDataSource.entityMetadatas.map((m) => ({
+        name: m.name,
+        tableName: m.tableName,
+      }));
+      console.log('📦 TypeORM entities metadata:', metaSummary);
     }
     return AppDataSource;
   } catch (error) {
