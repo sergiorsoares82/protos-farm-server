@@ -8,8 +8,8 @@ export class OrganizationRepository implements IOrganizationRepository {
   private repository: Repository<OrganizationEntity>;
 
   constructor() {
-    // Use entity name string for compatibility with bundled/serverless builds
-    this.repository = AppDataSource.getRepository<OrganizationEntity>('OrganizationEntity');
+    // Use entity class directly; this matches metadata registered in AppDataSource.entities
+    this.repository = AppDataSource.getRepository(OrganizationEntity);
   }
 
   async findAll(): Promise<Organization[]> {

@@ -4,8 +4,8 @@ import { DocumentType } from '../../domain/entities/DocumentType.js';
 import type { IDocumentTypeRepository } from '../../domain/repositories/IDocumentTypeRepository.js';
 
 export class DocumentTypeRepository implements IDocumentTypeRepository {
-  // Use entity name string for compatibility with bundled/serverless builds
-  private repository = AppDataSource.getRepository<DocumentTypeEntity>('DocumentTypeEntity');
+  // Use entity class directly; this matches metadata registered in AppDataSource.entities
+  private repository = AppDataSource.getRepository(DocumentTypeEntity);
 
   private toDomain(entity: DocumentTypeEntity): DocumentType {
     return new DocumentType({

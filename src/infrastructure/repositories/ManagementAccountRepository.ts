@@ -9,8 +9,8 @@ export class ManagementAccountRepository implements IManagementAccountRepository
     private repo: Repository<ManagementAccountEntity>;
 
     constructor() {
-        // Use entity name string for compatibility with bundled/serverless builds
-        this.repo = AppDataSource.getRepository<ManagementAccountEntity>('ManagementAccountEntity');
+        // Use entity class directly; this matches metadata registered in AppDataSource.entities
+        this.repo = AppDataSource.getRepository(ManagementAccountEntity);
     }
 
     async findAll(tenantId: string): Promise<ManagementAccount[]> {
