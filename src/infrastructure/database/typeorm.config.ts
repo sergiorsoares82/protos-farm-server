@@ -17,6 +17,7 @@ import { ManagementAccountCostCenterTypeEntity } from './entities/ManagementAcco
 import { FieldEntity } from './entities/FieldEntity.js';
 import { SeasonEntity } from './entities/SeasonEntity.js';
 import { FieldSeasonEntity } from './entities/FieldSeasonEntity.js';
+import { MachineTypeEntity } from './entities/MachineTypeEntity.js';
 
 // Get database configuration from environment variables
 const getDatabaseUrl = (): string => {
@@ -82,6 +83,7 @@ export const AppDataSource = new DataSource({
     FieldEntity,
     SeasonEntity,
     FieldSeasonEntity,
+    MachineTypeEntity,
   ],
   migrations: [],
   subscribers: [],

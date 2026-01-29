@@ -16,6 +16,7 @@ import { createCostCenterRoutes } from './presentation/routes/cost-center.routes
 import { createManagementAccountRoutes } from './presentation/routes/management-account.routes.js';
 import { createFieldRoutes } from './presentation/routes/field.routes.js';
 import { createSeasonRoutes } from './presentation/routes/season.routes.js';
+import { createMachineTypeRoutes } from './presentation/routes/machine-type.routes.js';
 
 const app = express();
 
@@ -79,6 +80,9 @@ app.use('/api/fields', createFieldRoutes());
 
 // Season (Safra) routes
 app.use('/api/seasons', createSeasonRoutes());
+
+// Machine types (tratores, colheitadeiras, semeadoras...)
+app.use('/api/machine-types', createMachineTypeRoutes());
 
 // 404 handler
 app.use((req, res) => {
