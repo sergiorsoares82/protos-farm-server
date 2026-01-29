@@ -1,7 +1,12 @@
 import { Season } from '../../domain/entities/Season.js';
 import type { ISeasonRepository } from '../../domain/repositories/ISeasonRepository.js';
 import type { IFieldRepository } from '../../domain/repositories/IFieldRepository.js';
-import type { IFieldSeasonRepository, FieldSeasonLink } from '../../domain/repositories/IFieldSeasonRepository.js';
+import type {
+  IFieldSeasonRepository,
+  FieldSeasonLink,
+} from '../../domain/repositories/IFieldSeasonRepository.js';
+import type { ICostCenterRepository } from '../../domain/repositories/ICostCenterRepository.js';
+import type { ICostCenterCategoryRepository } from '../../domain/repositories/ICostCenterCategoryRepository.js';
 import type { CreateSeasonDTO, UpdateSeasonDTO } from '../dtos/SeasonDTOs.js';
 
 export class SeasonService {
@@ -9,6 +14,8 @@ export class SeasonService {
     private readonly seasonRepository: ISeasonRepository,
     private readonly fieldRepository?: IFieldRepository,
     private readonly fieldSeasonRepository?: IFieldSeasonRepository,
+    private readonly costCenterRepository?: ICostCenterRepository,
+    private readonly categoryRepository?: ICostCenterCategoryRepository,
   ) {}
 
   async createSeason(tenantId: string, data: CreateSeasonDTO): Promise<Season> {
@@ -80,18 +87,41 @@ export class SeasonService {
     tenantId: string,
     seasonId: string,
     fieldId: string,
+    costCenterId: string,
     areaHectares: number,
   ): Promise<void> {
-    if (!this.fieldSeasonRepository || !this.fieldRepository) return;
+    if (
+      !this.fieldSeasonRepository ||
+      !this.fieldRepository ||
+      !this.costCenterRepository ||
+      !this.categoryRepository
+    ) {
+      return;
+    }
     // Validate season and field belong to tenant
     await this.getSeason(tenantId, seasonId);
     const field = await this.fieldRepository.findById(fieldId, tenantId);
     if (!field) {
       throw new Error('Field not found');
     }
+    const costCenter = await this.costCenterRepository.findById(costCenterId, tenantId);
+    if (!costCenter) {
+      throw new Error('Cost center not found');
+    }
+    const categoryId = costCenter.getCategoryId();
+    if (!categoryId) {
+      throw new Error('Cost center must be assigned to a Lavoura category');
+    }
+    const category = await this.categoryRepository.findById(categoryId, tenantId);
+    if (!category) {
+      throw new Error('Cost center category not found');
+    }
+    if (category.getCode() !== 'LAV') {
+      throw new Error('Cost center must belong to Lavoura category');
+    }
     // Default area if not provided or <= 0
     const area = areaHectares > 0 ? areaHectares : field.getAreaHectares();
-    await this.fieldSeasonRepository.upsertLink(tenantId, seasonId, fieldId, area);
+    await this.fieldSeasonRepository.upsertLink(tenantId, seasonId, fieldId, costCenterId, area);
   }
 
   async deleteFieldLinkForSeason(

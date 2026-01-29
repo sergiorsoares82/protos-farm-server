@@ -4,6 +4,8 @@ import { SeasonService } from '../../application/services/SeasonService.js';
 import { SeasonRepository } from '../../infrastructure/repositories/SeasonRepository.js';
 import { FieldRepository } from '../../infrastructure/repositories/FieldRepository.js';
 import { FieldSeasonRepository } from '../../infrastructure/repositories/FieldSeasonRepository.js';
+import { CostCenterRepository } from '../../infrastructure/repositories/CostCenterRepository.js';
+import { CostCenterCategoryRepository } from '../../infrastructure/repositories/CostCenterCategoryRepository.js';
 import { authenticate } from '../middleware/auth.js';
 import { tenantContextMiddleware, requireTenant } from '../../infrastructure/middleware/tenantContext.js';
 
@@ -13,7 +15,15 @@ export function createSeasonRoutes(): Router {
   const seasonRepository = new SeasonRepository();
   const fieldRepository = new FieldRepository();
   const fieldSeasonRepository = new FieldSeasonRepository();
-  const seasonService = new SeasonService(seasonRepository, fieldRepository, fieldSeasonRepository);
+  const costCenterRepository = new CostCenterRepository();
+  const categoryRepository = new CostCenterCategoryRepository();
+  const seasonService = new SeasonService(
+    seasonRepository,
+    fieldRepository,
+    fieldSeasonRepository,
+    costCenterRepository,
+    categoryRepository,
+  );
   const seasonController = new SeasonController(seasonService);
 
   router.use(authenticate);

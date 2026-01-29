@@ -20,6 +20,7 @@ export class FieldSeasonRepository implements IFieldSeasonRepository {
     return links.map((l) => ({
       fieldId: l.fieldId,
       areaHectares: Number(l.areaHectares),
+      costCenterId: l.costCenterId,
     }));
   }
 
@@ -27,6 +28,7 @@ export class FieldSeasonRepository implements IFieldSeasonRepository {
     tenantId: string,
     seasonId: string,
     fieldId: string,
+    costCenterId: string,
     areaHectares: number,
   ): Promise<void> {
     let link = await this.repo.findOne({
@@ -38,6 +40,7 @@ export class FieldSeasonRepository implements IFieldSeasonRepository {
       link.seasonId = seasonId;
       link.fieldId = fieldId;
     }
+    link.costCenterId = costCenterId;
     link.areaHectares = areaHectares.toString();
     await this.repo.save(link);
   }
@@ -46,4 +49,5 @@ export class FieldSeasonRepository implements IFieldSeasonRepository {
     await this.repo.delete({ tenantId, seasonId, fieldId });
   }
 }
+
 

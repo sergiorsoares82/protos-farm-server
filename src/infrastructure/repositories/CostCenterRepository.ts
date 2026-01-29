@@ -17,6 +17,7 @@ export class CostCenterRepository implements ICostCenterRepository {
         const entities = await this.repo.find({
             where: { tenantId },
             order: { createdAt: 'DESC' },
+            relations: ['category'],
         });
 
         return entities.map(this.toDomain);
@@ -25,6 +26,7 @@ export class CostCenterRepository implements ICostCenterRepository {
     async findById(id: string, tenantId: string): Promise<CostCenter | null> {
         const entity = await this.repo.findOne({
             where: { id, tenantId },
+            relations: ['category'],
         });
 
         if (!entity) return null;
@@ -34,6 +36,7 @@ export class CostCenterRepository implements ICostCenterRepository {
     async findByCode(code: string, tenantId: string): Promise<CostCenter | null> {
         const entity = await this.repo.findOne({
             where: { code, tenantId },
+            relations: ['category'],
         });
 
         if (!entity) return null;

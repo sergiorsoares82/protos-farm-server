@@ -1,6 +1,7 @@
 export interface FieldSeasonLink {
   fieldId: string;
   areaHectares: number;
+  costCenterId: string;
 }
 
 export interface IFieldSeasonRepository {
@@ -9,6 +10,7 @@ export interface IFieldSeasonRepository {
     tenantId: string,
     seasonId: string,
     fieldId: string,
+    costCenterId: string,
     areaHectares: number,
   ): Promise<void>;
   deleteLink(tenantId: string, seasonId: string, fieldId: string): Promise<void>;

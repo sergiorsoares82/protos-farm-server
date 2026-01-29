@@ -92,18 +92,24 @@ export class SeasonController {
     try {
       const tenantId = req.user!.tenantId;
       const { id } = req.params;
-      const { fieldId, areaHectares } = req.body as {
+      const { fieldId, costCenterId, areaHectares } = req.body as {
         fieldId?: string;
+        costCenterId?: string;
         areaHectares?: number;
       };
       if (!fieldId) {
         res.status(400).json({ success: false, error: 'fieldId is required' });
         return;
       }
+      if (!costCenterId) {
+        res.status(400).json({ success: false, error: 'costCenterId is required' });
+        return;
+      }
       await this.seasonService.upsertFieldLinkForSeason(
         tenantId,
         id as string,
         fieldId,
+        costCenterId,
         areaHectares ?? 0,
       );
       res.status(204).send();

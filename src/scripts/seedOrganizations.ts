@@ -2,6 +2,7 @@ import { AppDataSource, initializeDatabase } from '../infrastructure/database/ty
 import { OrganizationEntity } from '../infrastructure/database/entities/OrganizationEntity.js';
 import { UserEntity } from '../infrastructure/database/entities/UserEntity.js';
 import { ManagementAccountEntity } from '../infrastructure/database/entities/ManagementAccountEntity.js';
+import { CostCenterCategoryEntity } from '../infrastructure/database/entities/CostCenterCategoryEntity.js';
 import { AccountType } from '../domain/enums/AccountType.js';
 import { Password } from '../domain/value-objects/Password.js';
 import { UserRole } from '../domain/enums/UserRole.js';
@@ -20,6 +21,7 @@ async function seedOrganizations() {
     const orgRepo = AppDataSource.getRepository(OrganizationEntity);
     const userRepo = AppDataSource.getRepository(UserEntity);
     const accountRepo = AppDataSource.getRepository(ManagementAccountEntity);
+    const categoryRepo = AppDataSource.getRepository(CostCenterCategoryEntity);
     
     // Check if organizations already exist
     const existingOrgs = await orgRepo.count();
@@ -151,34 +153,53 @@ async function seedOrganizations() {
     console.log('✅ Created regular user: user@sunriseranch.com (Password: User@123!)');
     
     // Seed base Management Accounts for each organization
-    const seedBaseAccounts = async (tenantId: string, orgName: string) => {
+    const seedBaseAccountsAndCategories = async (tenantId: string, orgName: string) => {
       const existing = await accountRepo.count({ where: { tenantId } });
-      if (existing > 0) {
-        console.log(`ℹ️  Management accounts already exist for ${orgName}, skipping base seeding.`);
-        return;
+      if (existing === 0) {
+        const income = new ManagementAccountEntity();
+        income.tenantId = tenantId;
+        income.code = '01';
+        income.description = 'Income';
+        income.type = AccountType.REVENUE;
+        income.isActive = true;
+
+        const expense = new ManagementAccountEntity();
+        expense.tenantId = tenantId;
+        expense.code = '02';
+        expense.description = 'Expense';
+        expense.type = AccountType.EXPENSE;
+        expense.isActive = true;
+
+        await accountRepo.save([income, expense]);
+        console.log(`✅ Seeded base management accounts (01 Income, 02 Expense) for ${orgName}`);
+      } else {
+        console.log(
+          `ℹ️  Management accounts already exist for ${orgName}, skipping base account seeding.`,
+        );
       }
 
-      const income = new ManagementAccountEntity();
-      income.tenantId = tenantId;
-      income.code = '01';
-      income.description = 'Income';
-      income.type = AccountType.REVENUE;
-      income.isActive = true;
-
-      const expense = new ManagementAccountEntity();
-      expense.tenantId = tenantId;
-      expense.code = '02';
-      expense.description = 'Expense';
-      expense.type = AccountType.EXPENSE;
-      expense.isActive = true;
-
-      await accountRepo.save([income, expense]);
-      console.log(`✅ Seeded base management accounts (01 Income, 02 Expense) for ${orgName}`);
+      const existingCategory = await categoryRepo.count({
+        where: { tenantId, code: 'LAV' },
+      });
+      if (existingCategory === 0) {
+        const lavouraCat = new CostCenterCategoryEntity();
+        lavouraCat.tenantId = tenantId;
+        lavouraCat.code = 'LAV';
+        lavouraCat.name = 'Lavoura';
+        lavouraCat.description = 'Categoria padrão para lavouras';
+        lavouraCat.isActive = true;
+        await categoryRepo.save(lavouraCat);
+        console.log(`✅ Seeded default Lavoura cost center category for ${orgName}`);
+      } else {
+        console.log(
+          `ℹ️  Lavoura cost center category already exists for ${orgName}, skipping seeding.`,
+        );
+      }
     };
 
-    await seedBaseAccounts(org1.id, 'Acme Farm');
-    await seedBaseAccounts(org2.id, 'Green Valley Farms');
-    await seedBaseAccounts(org3.id, 'Sunrise Ranch');
+    await seedBaseAccountsAndCategories(org1.id, 'Acme Farm');
+    await seedBaseAccountsAndCategories(org2.id, 'Green Valley Farms');
+    await seedBaseAccountsAndCategories(org3.id, 'Sunrise Ranch');
 
     console.log('\n🎉 Seeding completed successfully!');
     console.log('\n📋 Test Users:');
