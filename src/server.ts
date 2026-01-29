@@ -17,6 +17,7 @@ import { createManagementAccountRoutes } from './presentation/routes/management-
 import { createFieldRoutes } from './presentation/routes/field.routes.js';
 import { createSeasonRoutes } from './presentation/routes/season.routes.js';
 import { createMachineTypeRoutes } from './presentation/routes/machine-type.routes.js';
+import { createMachineRoutes } from './presentation/routes/machine.routes.js';
 
 const app = express();
 
@@ -83,6 +84,9 @@ app.use('/api/seasons', createSeasonRoutes());
 
 // Machine types (tratores, colheitadeiras, semeadoras...)
 app.use('/api/machine-types', createMachineTypeRoutes());
+
+// Machines (cadastro de máquinas)
+app.use('/api/machines', createMachineRoutes());
 
 // 404 handler
 app.use((req, res) => {
