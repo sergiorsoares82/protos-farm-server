@@ -15,9 +15,10 @@ export class WorkLocationTypeEntity {
   @PrimaryGeneratedColumn('uuid')
   id!: string;
 
-  @Column({ type: 'uuid', name: 'tenant_id' })
+  /** Nullable = tipo de sistema, disponível para todas as organizações */
+  @Column({ type: 'uuid', name: 'tenant_id', nullable: true })
   @Index()
-  tenantId!: string;
+  tenantId!: string | null;
 
   @Column({ type: 'varchar', length: 50 })
   code!: string;
@@ -40,7 +41,7 @@ export class WorkLocationTypeEntity {
   @UpdateDateColumn({ name: 'updated_at' })
   updatedAt!: Date;
 
-  @ManyToOne(() => OrganizationEntity)
+  @ManyToOne(() => OrganizationEntity, { nullable: true })
   @JoinColumn({ name: 'tenant_id' })
-  tenant!: OrganizationEntity;
+  tenant!: OrganizationEntity | null;
 }

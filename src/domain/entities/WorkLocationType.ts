@@ -1,6 +1,7 @@
 export interface WorkLocationTypeProps {
   id: string;
-  tenantId: string;
+  /** Null for system types (available to all organizations). */
+  tenantId: string | null;
   code: string;
   name: string;
   isTalhao: boolean;
@@ -16,7 +17,7 @@ export interface WorkLocationTypeProps {
  */
 export class WorkLocationType {
   private readonly id: string;
-  private readonly tenantId: string;
+  private readonly tenantId: string | null;
   private code: string;
   private name: string;
   private readonly isTalhao: boolean;
@@ -39,7 +40,7 @@ export class WorkLocationType {
   }
 
   static create(
-    tenantId: string,
+    tenantId: string | null,
     code: string,
     name: string,
     isTalhao: boolean,
@@ -66,8 +67,8 @@ export class WorkLocationType {
     if (!props.name || props.name.trim().length === 0) {
       throw new Error('Name is required');
     }
-    if (!props.tenantId) {
-      throw new Error('Tenant ID is required');
+    if (props.tenantId == null && !props.isSystem) {
+      throw new Error('Tenant ID is required for non-system types');
     }
   }
 
@@ -100,7 +101,7 @@ export class WorkLocationType {
   }
 
   getId(): string { return this.id; }
-  getTenantId(): string { return this.tenantId; }
+  getTenantId(): string | null { return this.tenantId; }
   getCode(): string { return this.code; }
   getName(): string { return this.name; }
   getIsTalhao(): boolean { return this.isTalhao; }

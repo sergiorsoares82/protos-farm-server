@@ -1,3 +1,4 @@
+import { IsNull } from 'typeorm';
 import { Repository } from 'typeorm';
 import type { IWorkLocationTypeRepository } from '../../domain/repositories/IWorkLocationTypeRepository.js';
 import { WorkLocationType } from '../../domain/entities/WorkLocationType.js';
@@ -13,19 +14,33 @@ export class WorkLocationTypeRepository implements IWorkLocationTypeRepository {
 
   async findAll(tenantId: string): Promise<WorkLocationType[]> {
     const entities = await this.repo.find({
-      where: { tenantId },
+      where: [{ tenantId: IsNull() }, { tenantId }],
       order: { code: 'ASC' },
     });
     return entities.map((e) => this.toDomain(e));
   }
 
   async findById(id: string, tenantId: string): Promise<WorkLocationType | null> {
-    const entity = await this.repo.findOne({ where: { id, tenantId } });
+    const entity = await this.repo.findOne({
+      where: [{ id, tenantId: IsNull() }, { id, tenantId }],
+    });
     return entity ? this.toDomain(entity) : null;
   }
 
   async findByCode(code: string, tenantId: string): Promise<WorkLocationType | null> {
-    const entity = await this.repo.findOne({ where: { code, tenantId } });
+    const entities = await this.repo.find({
+      where: [{ code, tenantId: IsNull() }, { code, tenantId }],
+      order: { tenantId: 'ASC' }, // system (null) first
+      take: 1,
+    });
+    const entity = entities[0] ?? null;
+    return entity ? this.toDomain(entity) : null;
+  }
+
+  async findSystemByCode(code: string): Promise<WorkLocationType | null> {
+    const entity = await this.repo.findOne({
+      where: { code, tenantId: IsNull() },
+    });
     return entity ? this.toDomain(entity) : null;
   }
 

@@ -20,7 +20,21 @@ export class WorkLocationTypeService {
   async ensureDefaultTypes(tenantId: string): Promise<void> {
     const existing = await this.workLocationTypeRepository.findAll(tenantId);
     const existingCodes = new Set(existing.map((t) => t.getCode()));
+
+    const systemTalhao = await this.workLocationTypeRepository.findSystemByCode('TALHAO');
+    if (!systemTalhao) {
+      const type = WorkLocationType.create(
+        null,
+        SYSTEM_TALHAO.code,
+        SYSTEM_TALHAO.name,
+        SYSTEM_TALHAO.isTalhao,
+        SYSTEM_TALHAO.isSystem,
+      );
+      await this.workLocationTypeRepository.save(type);
+    }
+
     for (const def of DEFAULT_TYPES) {
+      if (def.isSystem) continue;
       if (!existingCodes.has(def.code)) {
         const type = WorkLocationType.create(
           tenantId,
