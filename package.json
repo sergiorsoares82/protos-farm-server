@@ -19,6 +19,7 @@
     "build": "tsc",
     "start": "node dist/server.js",
     "seed:work-location-type": "tsx src/scripts/seedWorkLocationTypeTalhao.ts",
+    "seed:stock-movement-types": "tsx src/scripts/seedStockMovementTypes.ts",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {

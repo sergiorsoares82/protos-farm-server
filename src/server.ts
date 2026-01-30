@@ -20,6 +20,7 @@ import { createSeasonRoutes } from './presentation/routes/season.routes.js';
 import { createMachineTypeRoutes } from './presentation/routes/machine-type.routes.js';
 import { createMachineRoutes } from './presentation/routes/machine.routes.js';
 import { createAssetRoutes } from './presentation/routes/asset.routes.js';
+import { createStockMovementTypeRoutes } from './presentation/routes/stock-movement-type.routes.js';
 
 const app = express();
 
@@ -95,6 +96,9 @@ app.use('/api/machines', createMachineRoutes());
 
 // Assets (patrimônio: máquinas, implementos, equipamentos, benfeitorias)
 app.use('/api/assets', createAssetRoutes());
+
+// Stock movement types (tipos de movimento de estoque: entrada inicial, compra, venda, consumo, ajustes)
+app.use('/api/stock-movement-types', createStockMovementTypeRoutes());
 
 // 404 handler
 app.use((req, res) => {
