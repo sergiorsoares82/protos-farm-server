@@ -1,6 +1,6 @@
 import { Season } from '../../domain/entities/Season.js';
 import type { ISeasonRepository } from '../../domain/repositories/ISeasonRepository.js';
-import type { IFieldRepository } from '../../domain/repositories/IFieldRepository.js';
+import type { IWorkLocationRepository } from '../../domain/repositories/IWorkLocationRepository.js';
 import type {
   IFieldSeasonRepository,
   FieldSeasonLink,
@@ -12,7 +12,7 @@ import type { CreateSeasonDTO, UpdateSeasonDTO } from '../dtos/SeasonDTOs.js';
 export class SeasonService {
   constructor(
     private readonly seasonRepository: ISeasonRepository,
-    private readonly fieldRepository?: IFieldRepository,
+    private readonly workLocationRepository?: IWorkLocationRepository,
     private readonly fieldSeasonRepository?: IFieldSeasonRepository,
     private readonly costCenterRepository?: ICostCenterRepository,
     private readonly categoryRepository?: ICostCenterCategoryRepository,
@@ -92,17 +92,20 @@ export class SeasonService {
   ): Promise<void> {
     if (
       !this.fieldSeasonRepository ||
-      !this.fieldRepository ||
+      !this.workLocationRepository ||
       !this.costCenterRepository ||
       !this.categoryRepository
     ) {
       return;
     }
-    // Validate season and field belong to tenant
+    // Validate season and work location belong to tenant; only TALHAO can be linked by season
     await this.getSeason(tenantId, seasonId);
-    const field = await this.fieldRepository.findById(fieldId, tenantId);
-    if (!field) {
-      throw new Error('Field not found');
+    const workLocation = await this.workLocationRepository.findById(fieldId, tenantId);
+    if (!workLocation) {
+      throw new Error('Work location not found');
+    }
+    if (!workLocation.getIsTalhao()) {
+      throw new Error('Only Talhão (field) work locations can be linked to a season');
     }
     const costCenter = await this.costCenterRepository.findById(costCenterId, tenantId);
     if (!costCenter) {
@@ -119,8 +122,9 @@ export class SeasonService {
     if (category.getCode() !== 'LAV') {
       throw new Error('Cost center must belong to Lavoura category');
     }
-    // Default area if not provided or <= 0
-    const area = areaHectares > 0 ? areaHectares : field.getAreaHectares();
+    const defaultArea = workLocation.getAreaHectares();
+    const area =
+      areaHectares > 0 ? areaHectares : (defaultArea != null ? defaultArea : 0);
     await this.fieldSeasonRepository.upsertLink(tenantId, seasonId, fieldId, costCenterId, area);
   }
 

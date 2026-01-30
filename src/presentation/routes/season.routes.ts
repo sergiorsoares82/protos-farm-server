@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { SeasonController } from '../controllers/SeasonController.js';
 import { SeasonService } from '../../application/services/SeasonService.js';
 import { SeasonRepository } from '../../infrastructure/repositories/SeasonRepository.js';
-import { FieldRepository } from '../../infrastructure/repositories/FieldRepository.js';
+import { WorkLocationRepository } from '../../infrastructure/repositories/WorkLocationRepository.js';
 import { FieldSeasonRepository } from '../../infrastructure/repositories/FieldSeasonRepository.js';
 import { CostCenterRepository } from '../../infrastructure/repositories/CostCenterRepository.js';
 import { CostCenterCategoryRepository } from '../../infrastructure/repositories/CostCenterCategoryRepository.js';
@@ -13,13 +13,13 @@ export function createSeasonRoutes(): Router {
   const router = Router();
 
   const seasonRepository = new SeasonRepository();
-  const fieldRepository = new FieldRepository();
+  const workLocationRepository = new WorkLocationRepository();
   const fieldSeasonRepository = new FieldSeasonRepository();
   const costCenterRepository = new CostCenterRepository();
   const categoryRepository = new CostCenterCategoryRepository();
   const seasonService = new SeasonService(
     seasonRepository,
-    fieldRepository,
+    workLocationRepository,
     fieldSeasonRepository,
     costCenterRepository,
     categoryRepository,

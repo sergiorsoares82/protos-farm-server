@@ -14,7 +14,8 @@ import { createItemRoutes } from './presentation/routes/item.routes.js';
 import { createCostCenterCategoryRoutes } from './presentation/routes/cost-center-category.routes.js';
 import { createCostCenterRoutes } from './presentation/routes/cost-center.routes.js';
 import { createManagementAccountRoutes } from './presentation/routes/management-account.routes.js';
-import { createFieldRoutes } from './presentation/routes/field.routes.js';
+import { createWorkLocationRoutes } from './presentation/routes/work-location.routes.js';
+import { createWorkLocationTypeRoutes } from './presentation/routes/work-location-type.routes.js';
 import { createSeasonRoutes } from './presentation/routes/season.routes.js';
 import { createMachineTypeRoutes } from './presentation/routes/machine-type.routes.js';
 import { createMachineRoutes } from './presentation/routes/machine.routes.js';
@@ -77,8 +78,11 @@ app.use('/api/cost-centers', createCostCenterRoutes());
 // Management Account routes
 app.use('/api/management-accounts', createManagementAccountRoutes());
 
-// Field (Talhão) routes
-app.use('/api/fields', createFieldRoutes());
+// Work locations (Locais de Trabalho: talhões, galpões, ordenha, fábrica de ração, etc.)
+app.use('/api/work-locations', createWorkLocationRoutes());
+
+// Work location types (managed by SuperAdmin and OrgAdmin only)
+app.use('/api/work-location-types', createWorkLocationTypeRoutes());
 
 // Season (Safra) routes
 app.use('/api/seasons', createSeasonRoutes());

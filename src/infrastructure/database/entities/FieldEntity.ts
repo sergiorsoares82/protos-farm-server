@@ -9,6 +9,8 @@ import {
   Index,
 } from 'typeorm';
 import { OrganizationEntity } from './OrganizationEntity.js';
+import { CostCenterEntity } from './CostCenterEntity.js';
+import { WorkLocationTypeEntity } from './WorkLocationTypeEntity.js';
 
 @Entity('fields')
 export class FieldEntity {
@@ -19,14 +21,30 @@ export class FieldEntity {
   @Index()
   tenantId!: string;
 
+  @Column({ type: 'uuid', name: 'work_location_type_id', nullable: true })
+  workLocationTypeId!: string | null;
+
   @Column({ type: 'varchar', length: 50 })
   code!: string;
 
   @Column({ type: 'varchar', length: 200 })
   name!: string;
 
-  @Column({ type: 'decimal', precision: 10, scale: 2, name: 'area_hectares' })
-  areaHectares!: string;
+  /** @deprecated Use work_location_type_id. Kept for migration. */
+  @Column({ type: 'varchar', length: 30, nullable: true })
+  type!: string | null;
+
+  @Column({
+    type: 'decimal',
+    precision: 10,
+    scale: 2,
+    name: 'area_hectares',
+    nullable: true,
+  })
+  areaHectares!: string | null;
+
+  @Column({ type: 'uuid', name: 'cost_center_id', nullable: true })
+  costCenterId!: string | null;
 
   @Column({ type: 'boolean', default: true, name: 'is_active' })
   isActive!: boolean;
@@ -40,5 +58,13 @@ export class FieldEntity {
   @ManyToOne(() => OrganizationEntity)
   @JoinColumn({ name: 'tenant_id' })
   tenant!: OrganizationEntity;
+
+  @ManyToOne(() => CostCenterEntity, { onDelete: 'SET NULL', nullable: true })
+  @JoinColumn({ name: 'cost_center_id' })
+  costCenter!: CostCenterEntity | null;
+
+  @ManyToOne(() => WorkLocationTypeEntity, { onDelete: 'RESTRICT', nullable: true })
+  @JoinColumn({ name: 'work_location_type_id' })
+  workLocationType!: WorkLocationTypeEntity | null;
 }
 
