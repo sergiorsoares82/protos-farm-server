@@ -22,6 +22,8 @@ import { createMachineRoutes } from './presentation/routes/machine.routes.js';
 import { createAssetRoutes } from './presentation/routes/asset.routes.js';
 import { createStockMovementTypeRoutes } from './presentation/routes/stock-movement-type.routes.js';
 import { createStockMovementRoutes } from './presentation/routes/stock-movement.routes.js';
+import { createInvoiceRoutes } from './presentation/routes/invoice.routes.js';
+import { createSupplierRoutes } from './presentation/routes/supplier.routes.js';
 
 const app = express();
 
@@ -103,6 +105,12 @@ app.use('/api/stock-movement-types', createStockMovementTypeRoutes());
 
 // Stock movements (movimentos de estoque)
 app.use('/api/stock-movements', createStockMovementRoutes());
+
+// Invoices (notas fiscais)
+app.use('/api/invoices', createInvoiceRoutes());
+
+// Suppliers (for invoice form dropdown)
+app.use('/api/suppliers', createSupplierRoutes());
 
 // 404 handler
 app.use((req, res) => {

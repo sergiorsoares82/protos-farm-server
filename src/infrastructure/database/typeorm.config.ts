@@ -23,6 +23,9 @@ import { MachineEntity } from './entities/MachineEntity.js';
 import { AssetEntity } from './entities/AssetEntity.js';
 import { StockMovementTypeEntity } from './entities/StockMovementTypeEntity.js';
 import { StockMovementEntity } from './entities/StockMovementEntity.js';
+import { InvoiceEntity } from './entities/InvoiceEntity.js';
+import { InvoiceItemEntity } from './entities/InvoiceItemEntity.js';
+import { InvoiceFinancialEntity } from './entities/InvoiceFinancialEntity.js';
 
 // Get database configuration from environment variables
 const getDatabaseUrl = (): string => {
@@ -94,6 +97,9 @@ export const AppDataSource = new DataSource({
     AssetEntity,
     StockMovementTypeEntity,
     StockMovementEntity,
+    InvoiceEntity,
+    InvoiceItemEntity,
+    InvoiceFinancialEntity,
   ],
   migrations: [],
   subscribers: [],
