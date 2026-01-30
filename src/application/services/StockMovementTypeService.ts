@@ -88,6 +88,27 @@ export class StockMovementTypeService {
   }
 
   async getAllTypes(tenantId: string): Promise<StockMovementType[]> {
+    await this.ensureSystemTypes();
     return this.stockMovementTypeRepository.findAll(tenantId);
+  }
+
+  /**
+   * Cria os 6 tipos de sistema (tenant_id null) se ainda não existirem.
+   * Chamado automaticamente ao listar tipos, para não depender do seed manual.
+   */
+  private async ensureSystemTypes(): Promise<void> {
+    for (const def of SYSTEM_TYPES) {
+      const existing = await this.stockMovementTypeRepository.findSystemByCode(def.code);
+      if (!existing) {
+        const type = StockMovementType.create(
+          null,
+          def.code,
+          def.name,
+          def.direction,
+          true, // isSystem
+        );
+        await this.stockMovementTypeRepository.save(type);
+      }
+    }
   }
 }
