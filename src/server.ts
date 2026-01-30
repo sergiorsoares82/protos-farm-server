@@ -21,6 +21,7 @@ import { createMachineTypeRoutes } from './presentation/routes/machine-type.rout
 import { createMachineRoutes } from './presentation/routes/machine.routes.js';
 import { createAssetRoutes } from './presentation/routes/asset.routes.js';
 import { createStockMovementTypeRoutes } from './presentation/routes/stock-movement-type.routes.js';
+import { createStockMovementRoutes } from './presentation/routes/stock-movement.routes.js';
 
 const app = express();
 
@@ -99,6 +100,9 @@ app.use('/api/assets', createAssetRoutes());
 
 // Stock movement types (tipos de movimento de estoque: entrada inicial, compra, venda, consumo, ajustes)
 app.use('/api/stock-movement-types', createStockMovementTypeRoutes());
+
+// Stock movements (movimentos de estoque)
+app.use('/api/stock-movements', createStockMovementRoutes());
 
 // 404 handler
 app.use((req, res) => {
