@@ -7,6 +7,7 @@ export interface CostCenterProps {
     description: string;
     type: CostCenterType;
     categoryId?: string | undefined;
+    assetId?: string | undefined;
     isActive: boolean;
     createdAt: Date;
     updatedAt: Date;
@@ -19,6 +20,7 @@ export class CostCenter {
     private description: string;
     private type: CostCenterType;
     private categoryId?: string | undefined;
+    private assetId?: string | undefined;
     private isActive: boolean;
     private readonly createdAt: Date;
     private updatedAt: Date;
@@ -31,6 +33,7 @@ export class CostCenter {
         this.description = props.description;
         this.type = props.type;
         this.categoryId = props.categoryId;
+        this.assetId = props.assetId;
         this.isActive = props.isActive;
         this.createdAt = props.createdAt;
         this.updatedAt = props.updatedAt;
@@ -41,7 +44,8 @@ export class CostCenter {
         code: string,
         description: string,
         type: CostCenterType,
-        categoryId?: string
+        categoryId?: string,
+        assetId?: string,
     ): CostCenter {
         const now = new Date();
         return new CostCenter({
@@ -51,6 +55,7 @@ export class CostCenter {
             description,
             type,
             categoryId,
+            assetId,
             isActive: true,
             createdAt: now,
             updatedAt: now,
@@ -69,7 +74,13 @@ export class CostCenter {
         }
     }
 
-    update(code: string, description: string, type: CostCenterType, categoryId?: string): void {
+    update(
+        code: string,
+        description: string,
+        type: CostCenterType,
+        categoryId?: string,
+        assetId?: string | undefined,
+    ): void {
         if (!code || code.trim().length === 0) {
             throw new Error('Code is required');
         }
@@ -81,6 +92,7 @@ export class CostCenter {
         this.description = description;
         this.type = type;
         this.categoryId = categoryId;
+        this.assetId = assetId;
         this.updatedAt = new Date();
     }
 
@@ -101,6 +113,7 @@ export class CostCenter {
     getDescription(): string { return this.description; }
     getType(): CostCenterType { return this.type; }
     getCategoryId(): string | undefined { return this.categoryId; }
+    getAssetId(): string | undefined { return this.assetId; }
     getIsActive(): boolean { return this.isActive; }
     getCreatedAt(): Date { return this.createdAt; }
     getUpdatedAt(): Date { return this.updatedAt; }
@@ -113,6 +126,7 @@ export class CostCenter {
             description: this.description,
             type: this.type,
             categoryId: this.categoryId,
+            assetId: this.assetId,
             isActive: this.isActive,
             createdAt: this.createdAt,
             updatedAt: this.updatedAt,

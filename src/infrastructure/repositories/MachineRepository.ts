@@ -30,6 +30,7 @@ export class MachineRepository implements IMachineRepository {
     entity.tenantId = machine.getTenantId();
     entity.name = machine.getName();
     entity.machineTypeId = machine.getMachineTypeId();
+    entity.assetId = machine.getAssetId() ?? null;
     entity.isActive = machine.getIsActive();
     const saved = await this.repo.save(entity);
     return this.toDomain(saved);
@@ -45,6 +46,7 @@ export class MachineRepository implements IMachineRepository {
       tenantId: entity.tenantId,
       name: entity.name,
       machineTypeId: entity.machineTypeId,
+      assetId: entity.assetId ?? undefined,
       isActive: entity.isActive,
       createdAt: entity.createdAt,
       updatedAt: entity.updatedAt,

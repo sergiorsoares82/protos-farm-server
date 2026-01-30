@@ -1,0 +1,6 @@
+export enum AssetKind {
+  MACHINE = 'MACHINE',
+  IMPLEMENT = 'IMPLEMENT',
+  EQUIPMENT = 'EQUIPMENT',
+  IMPROVEMENT = 'IMPROVEMENT',
+}

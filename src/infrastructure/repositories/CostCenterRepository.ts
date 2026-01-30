@@ -17,7 +17,7 @@ export class CostCenterRepository implements ICostCenterRepository {
         const entities = await this.repo.find({
             where: { tenantId },
             order: { createdAt: 'DESC' },
-            relations: ['category'],
+            relations: ['category', 'asset'],
         });
 
         return entities.map(this.toDomain);
@@ -26,7 +26,7 @@ export class CostCenterRepository implements ICostCenterRepository {
     async findById(id: string, tenantId: string): Promise<CostCenter | null> {
         const entity = await this.repo.findOne({
             where: { id, tenantId },
-            relations: ['category'],
+            relations: ['category', 'asset'],
         });
 
         if (!entity) return null;
@@ -36,7 +36,17 @@ export class CostCenterRepository implements ICostCenterRepository {
     async findByCode(code: string, tenantId: string): Promise<CostCenter | null> {
         const entity = await this.repo.findOne({
             where: { code, tenantId },
-            relations: ['category'],
+            relations: ['category', 'asset'],
+        });
+
+        if (!entity) return null;
+        return this.toDomain(entity);
+    }
+
+    async findByAssetId(assetId: string, tenantId: string): Promise<CostCenter | null> {
+        const entity = await this.repo.findOne({
+            where: { tenantId, asset: { id: assetId } },
+            relations: ['category', 'asset'],
         });
 
         if (!entity) return null;
@@ -53,10 +63,15 @@ export class CostCenterRepository implements ICostCenterRepository {
         entity.isActive = costCenter.getIsActive();
         const categoryId = costCenter.getCategoryId();
         if (categoryId) {
-            // Associate by reference; TypeORM will use the foreign key column `category_id`
             (entity as any).category = { id: categoryId };
         } else {
             (entity as any).category = null;
+        }
+        const assetId = costCenter.getAssetId();
+        if (assetId) {
+            (entity as any).asset = { id: assetId };
+        } else {
+            (entity as any).asset = null;
         }
 
         const saved = await this.repo.save(entity);
@@ -75,6 +90,7 @@ export class CostCenterRepository implements ICostCenterRepository {
             description: entity.description,
             type: entity.type as CostCenterType,
             categoryId: (entity as any).category?.id ?? undefined,
+            assetId: (entity as any).asset?.id ?? undefined,
             isActive: entity.isActive,
             createdAt: entity.createdAt,
             updatedAt: entity.updatedAt,

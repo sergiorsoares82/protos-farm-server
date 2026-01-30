@@ -9,11 +9,9 @@ import {
   Index,
 } from 'typeorm';
 import { OrganizationEntity } from './OrganizationEntity.js';
-import { MachineTypeEntity } from './MachineTypeEntity.js';
-import { AssetEntity } from './AssetEntity.js';
 
-@Entity('machines')
-export class MachineEntity {
+@Entity('assets')
+export class AssetEntity {
   @PrimaryGeneratedColumn('uuid')
   id!: string;
 
@@ -24,11 +22,11 @@ export class MachineEntity {
   @Column({ type: 'varchar', length: 200 })
   name!: string;
 
-  @Column({ type: 'uuid', name: 'machine_type_id' })
-  machineTypeId!: string;
+  @Column({ type: 'varchar', length: 20, nullable: true })
+  code?: string | null;
 
-  @Column({ type: 'uuid', name: 'asset_id', nullable: true })
-  assetId?: string | null;
+  @Column({ type: 'varchar', length: 50, name: 'asset_kind' })
+  assetKind!: string; // MACHINE | IMPLEMENT | EQUIPMENT | IMPROVEMENT
 
   @Column({ type: 'boolean', default: true, name: 'is_active' })
   isActive!: boolean;
@@ -42,12 +40,4 @@ export class MachineEntity {
   @ManyToOne(() => OrganizationEntity)
   @JoinColumn({ name: 'tenant_id' })
   tenant!: OrganizationEntity;
-
-  @ManyToOne(() => MachineTypeEntity, { onDelete: 'RESTRICT' })
-  @JoinColumn({ name: 'machine_type_id' })
-  machineType!: MachineTypeEntity;
-
-  @ManyToOne(() => AssetEntity, { onDelete: 'SET NULL', nullable: true })
-  @JoinColumn({ name: 'asset_id' })
-  asset?: AssetEntity | null;
 }

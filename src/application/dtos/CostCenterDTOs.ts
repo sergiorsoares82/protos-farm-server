@@ -5,6 +5,7 @@ export interface CreateCostCenterDTO {
     description: string;
     type: CostCenterType;
     categoryId?: string;
+    assetId?: string;
 }
 
 export interface UpdateCostCenterDTO {
@@ -12,5 +13,6 @@ export interface UpdateCostCenterDTO {
     description?: string;
     type?: CostCenterType;
     categoryId?: string;
+    assetId?: string;
     isActive?: boolean;
 }

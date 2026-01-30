@@ -1,12 +1,15 @@
 import { Machine } from '../../domain/entities/Machine.js';
 import type { IMachineRepository } from '../../domain/repositories/IMachineRepository.js';
 import type { IMachineTypeRepository } from '../../domain/repositories/IMachineTypeRepository.js';
+import type { IAssetRepository } from '../../domain/repositories/IAssetRepository.js';
+import { AssetKind } from '../../domain/enums/AssetKind.js';
 import type { CreateMachineDTO, UpdateMachineDTO } from '../dtos/MachineDTOs.js';
 
 export class MachineService {
   constructor(
     private readonly machineRepository: IMachineRepository,
     private readonly machineTypeRepository: IMachineTypeRepository,
+    private readonly assetRepository?: IAssetRepository,
   ) {}
 
   async createMachine(tenantId: string, data: CreateMachineDTO): Promise<Machine> {
@@ -15,7 +18,23 @@ export class MachineService {
       throw new Error('Machine type not found');
     }
 
-    const machine = Machine.create(tenantId, data.name, data.machineTypeId);
+    if (data.assetId && this.assetRepository) {
+      const asset = await this.assetRepository.findById(data.assetId, tenantId);
+      if (!asset) {
+        throw new Error('Asset not found');
+      }
+      const kind = asset.getAssetKind();
+      if (kind !== AssetKind.MACHINE && kind !== AssetKind.IMPLEMENT) {
+        throw new Error('Asset must be of kind MACHINE or IMPLEMENT to link to a machine');
+      }
+    }
+
+    const machine = Machine.create(
+      tenantId,
+      data.name,
+      data.machineTypeId,
+      data.assetId,
+    );
     return this.machineRepository.save(machine);
   }
 
@@ -37,10 +56,27 @@ export class MachineService {
       }
     }
 
-    if (data.name !== undefined || data.machineTypeId !== undefined) {
+    if (data.assetId !== undefined && data.assetId && this.assetRepository) {
+      const asset = await this.assetRepository.findById(data.assetId, tenantId);
+      if (!asset) {
+        throw new Error('Asset not found');
+      }
+      const kind = asset.getAssetKind();
+      if (kind !== AssetKind.MACHINE && kind !== AssetKind.IMPLEMENT) {
+        throw new Error('Asset must be of kind MACHINE or IMPLEMENT to link to a machine');
+      }
+    }
+
+    if (
+      data.name !== undefined ||
+      data.machineTypeId !== undefined ||
+      data.assetId !== undefined
+    ) {
+      const newAssetId = data.assetId !== undefined ? data.assetId : machine.getAssetId();
       machine.update(
         data.name ?? machine.getName(),
         data.machineTypeId ?? machine.getMachineTypeId(),
+        newAssetId,
       );
     }
 

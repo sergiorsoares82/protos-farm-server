@@ -10,6 +10,7 @@ import {
 } from 'typeorm';
 import { OrganizationEntity } from './OrganizationEntity.js';
 import { CostCenterCategoryEntity } from './CostCenterCategoryEntity.js';
+import { AssetEntity } from './AssetEntity.js';
 
 @Entity('cost_centers')
 export class CostCenterEntity {
@@ -45,4 +46,8 @@ export class CostCenterEntity {
   @ManyToOne(() => CostCenterCategoryEntity, { nullable: true })
   @JoinColumn({ name: 'category_id' })
   category?: CostCenterCategoryEntity | null;
+
+  @ManyToOne(() => AssetEntity, { onDelete: 'SET NULL', nullable: true })
+  @JoinColumn({ name: 'asset_id' })
+  asset?: AssetEntity | null;
 }

@@ -1,15 +1,32 @@
 import { CostCenter } from '../../domain/entities/CostCenter.js';
 import type { ICostCenterRepository } from '../../domain/repositories/ICostCenterRepository.js';
+import type { IAssetRepository } from '../../domain/repositories/IAssetRepository.js';
 import type { CreateCostCenterDTO, UpdateCostCenterDTO } from '../dtos/CostCenterDTOs.js';
 
 export class CostCenterService {
-    constructor(private readonly costCenterRepository: ICostCenterRepository) { }
+    constructor(
+        private readonly costCenterRepository: ICostCenterRepository,
+        private readonly assetRepository?: IAssetRepository,
+    ) {}
 
     async createCostCenter(tenantId: string, data: CreateCostCenterDTO): Promise<CostCenter> {
-        // Check if code already exists
         const existing = await this.costCenterRepository.findByCode(data.code, tenantId);
         if (existing) {
             throw new Error(`Cost Center with code '${data.code}' already exists`);
+        }
+
+        if (data.assetId && this.assetRepository) {
+            const asset = await this.assetRepository.findById(data.assetId, tenantId);
+            if (!asset) {
+                throw new Error('Asset not found');
+            }
+            const existingByAsset = await this.costCenterRepository.findByAssetId(
+                data.assetId,
+                tenantId,
+            );
+            if (existingByAsset) {
+                throw new Error('A cost center is already linked to this asset');
+            }
         }
 
         const costCenter = CostCenter.create(
@@ -18,6 +35,7 @@ export class CostCenterService {
             data.description,
             data.type,
             data.categoryId,
+            data.assetId,
         );
 
         return this.costCenterRepository.save(costCenter);
@@ -41,12 +59,33 @@ export class CostCenterService {
             }
         }
 
-        if (data.code || data.description || data.type || data.categoryId !== undefined) {
+        if (data.assetId !== undefined && data.assetId && this.assetRepository) {
+            const asset = await this.assetRepository.findById(data.assetId, tenantId);
+            if (!asset) {
+                throw new Error('Asset not found');
+            }
+            const existingByAsset = await this.costCenterRepository.findByAssetId(
+                data.assetId,
+                tenantId,
+            );
+            if (existingByAsset && existingByAsset.getId() !== id) {
+                throw new Error('A cost center is already linked to this asset');
+            }
+        }
+
+        if (
+            data.code ||
+            data.description ||
+            data.type ||
+            data.categoryId !== undefined ||
+            data.assetId !== undefined
+        ) {
             costCenter.update(
                 data.code || costCenter.getCode(),
                 data.description || costCenter.getDescription(),
                 data.type || costCenter.getType(),
                 data.categoryId !== undefined ? data.categoryId : costCenter.getCategoryId(),
+                data.assetId !== undefined ? data.assetId : costCenter.getAssetId(),
             );
         }
 

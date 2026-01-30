@@ -3,6 +3,7 @@ import { MachineController } from '../controllers/MachineController.js';
 import { MachineService } from '../../application/services/MachineService.js';
 import { MachineRepository } from '../../infrastructure/repositories/MachineRepository.js';
 import { MachineTypeRepository } from '../../infrastructure/repositories/MachineTypeRepository.js';
+import { AssetRepository } from '../../infrastructure/repositories/AssetRepository.js';
 import { authenticate } from '../middleware/auth.js';
 import { tenantContextMiddleware, requireTenant } from '../../infrastructure/middleware/tenantContext.js';
 
@@ -11,7 +12,12 @@ export function createMachineRoutes(): Router {
 
   const machineRepository = new MachineRepository();
   const machineTypeRepository = new MachineTypeRepository();
-  const machineService = new MachineService(machineRepository, machineTypeRepository);
+  const assetRepository = new AssetRepository();
+  const machineService = new MachineService(
+    machineRepository,
+    machineTypeRepository,
+    assetRepository,
+  );
   const machineController = new MachineController(machineService);
 
   router.use(authenticate);

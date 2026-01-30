@@ -1,31 +1,33 @@
-export interface MachineProps {
+import { AssetKind } from '../enums/AssetKind.js';
+
+export interface AssetProps {
   id: string;
   tenantId: string;
   name: string;
-  machineTypeId: string;
-  assetId?: string | undefined;
+  code?: string | undefined;
+  assetKind: AssetKind;
   isActive: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
 
-export class Machine {
+export class Asset {
   private readonly id: string;
   private readonly tenantId: string;
   private name: string;
-  private machineTypeId: string;
-  private assetId?: string | undefined;
+  private code?: string | undefined;
+  private assetKind: AssetKind;
   private isActive: boolean;
   private readonly createdAt: Date;
   private updatedAt: Date;
 
-  constructor(props: MachineProps) {
+  constructor(props: AssetProps) {
     this.validateProps(props);
     this.id = props.id;
     this.tenantId = props.tenantId;
     this.name = props.name;
-    this.machineTypeId = props.machineTypeId;
-    this.assetId = props.assetId;
+    this.code = props.code;
+    this.assetKind = props.assetKind;
     this.isActive = props.isActive;
     this.createdAt = props.createdAt;
     this.updatedAt = props.updatedAt;
@@ -34,48 +36,38 @@ export class Machine {
   static create(
     tenantId: string,
     name: string,
-    machineTypeId: string,
-    assetId?: string,
-  ): Machine {
+    assetKind: AssetKind,
+    code?: string,
+  ): Asset {
     const now = new Date();
-    return new Machine({
+    return new Asset({
       id: crypto.randomUUID(),
       tenantId,
       name,
-      machineTypeId,
-      assetId,
+      code,
+      assetKind,
       isActive: true,
       createdAt: now,
       updatedAt: now,
     });
   }
 
-  private validateProps(props: MachineProps): void {
+  private validateProps(props: AssetProps): void {
     if (!props.name || props.name.trim().length === 0) {
-      throw new Error('Machine name is required');
-    }
-    if (!props.machineTypeId || props.machineTypeId.trim().length === 0) {
-      throw new Error('Machine type is required');
+      throw new Error('Asset name is required');
     }
     if (!props.tenantId) {
       throw new Error('Tenant ID is required');
     }
   }
 
-  update(
-    name: string,
-    machineTypeId: string,
-    assetId?: string | undefined,
-  ): void {
+  update(name: string, assetKind: AssetKind, code?: string): void {
     if (!name || name.trim().length === 0) {
-      throw new Error('Machine name is required');
-    }
-    if (!machineTypeId || machineTypeId.trim().length === 0) {
-      throw new Error('Machine type is required');
+      throw new Error('Asset name is required');
     }
     this.name = name;
-    this.machineTypeId = machineTypeId;
-    this.assetId = assetId;
+    this.assetKind = assetKind;
+    this.code = code;
     this.updatedAt = new Date();
   }
 
@@ -101,12 +93,12 @@ export class Machine {
     return this.name;
   }
 
-  getMachineTypeId(): string {
-    return this.machineTypeId;
+  getCode(): string | undefined {
+    return this.code;
   }
 
-  getAssetId(): string | undefined {
-    return this.assetId;
+  getAssetKind(): AssetKind {
+    return this.assetKind;
   }
 
   getIsActive(): boolean {
@@ -119,5 +111,18 @@ export class Machine {
 
   getUpdatedAt(): Date {
     return this.updatedAt;
+  }
+
+  toJSON() {
+    return {
+      id: this.id,
+      tenantId: this.tenantId,
+      name: this.name,
+      code: this.code,
+      assetKind: this.assetKind,
+      isActive: this.isActive,
+      createdAt: this.createdAt,
+      updatedAt: this.updatedAt,
+    };
   }
 }
