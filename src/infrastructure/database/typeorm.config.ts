@@ -16,6 +16,7 @@ import { CostCenterCategoryEntity } from './entities/CostCenterCategoryEntity.js
 import { ManagementAccountCostCenterTypeEntity } from './entities/ManagementAccountCostCenterTypeEntity.js';
 import { FieldEntity } from './entities/FieldEntity.js';
 import { WorkLocationTypeEntity } from './entities/WorkLocationTypeEntity.js';
+import { UnitOfMeasureEntity } from './entities/UnitOfMeasureEntity.js';
 import { SeasonEntity } from './entities/SeasonEntity.js';
 import { FieldSeasonEntity } from './entities/FieldSeasonEntity.js';
 import { MachineTypeEntity } from './entities/MachineTypeEntity.js';
@@ -90,6 +91,7 @@ export const AppDataSource = new DataSource({
     ManagementAccountCostCenterTypeEntity,
     FieldEntity,
     WorkLocationTypeEntity,
+    UnitOfMeasureEntity,
     SeasonEntity,
     FieldSeasonEntity,
     MachineTypeEntity,
