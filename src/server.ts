@@ -17,6 +17,7 @@ import { createManagementAccountRoutes } from './presentation/routes/management-
 import { createWorkLocationRoutes } from './presentation/routes/work-location.routes.js';
 import { createWorkLocationTypeRoutes } from './presentation/routes/work-location-type.routes.js';
 import { createUnitOfMeasureRoutes } from './presentation/routes/unit-of-measure.routes.js';
+import { createUnitOfMeasureConversionRoutes } from './presentation/routes/unit-of-measure-conversion.routes.js';
 import { createSeasonRoutes } from './presentation/routes/season.routes.js';
 import { createMachineTypeRoutes } from './presentation/routes/machine-type.routes.js';
 import { createMachineRoutes } from './presentation/routes/machine.routes.js';
@@ -91,6 +92,9 @@ app.use('/api/work-location-types', createWorkLocationTypeRoutes());
 
 // Units of measure (unidade de medida: system + per-org; SuperAdmin/OrgAdmin)
 app.use('/api/unit-of-measures', createUnitOfMeasureRoutes());
+
+// Unit of measure conversions (ex.: 1 T = 1000 KG)
+app.use('/api/unit-of-measure-conversions', createUnitOfMeasureConversionRoutes());
 
 // Season (Safra) routes
 app.use('/api/seasons', createSeasonRoutes());
