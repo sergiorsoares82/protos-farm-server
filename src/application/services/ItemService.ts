@@ -2,9 +2,17 @@ import type { IItemRepository } from '../../domain/repositories/IItemRepository.
 import { Item } from '../../domain/entities/Item.js';
 import { ItemType } from '../../domain/enums/ItemType.js';
 import type { CreateItemDTO, UpdateItemDTO, ItemFiltersDTO } from '../dtos/ItemDTOs.js';
+import type { StockMovementTypeService } from './StockMovementTypeService.js';
+import type { StockMovementService } from './StockMovementService.js';
+
+const ENTRADA_INICIAL_CODE = 'ENTRADA_INICIAL';
 
 export class ItemService {
-    constructor(private readonly itemRepository: IItemRepository) { }
+    constructor(
+        private readonly itemRepository: IItemRepository,
+        private readonly stockMovementTypeService: StockMovementTypeService,
+        private readonly stockMovementService: StockMovementService,
+    ) { }
 
     /**
      * Create a new item
@@ -22,13 +30,16 @@ export class ItemService {
             // Validate stock control requirements
             if (data.isStockControlled) {
                 if (!data.initialStockDate) {
-                    throw new Error('Initial stock date is required when stock control is enabled');
+                    throw new Error('Data de estoque inicial é obrigatória quando o produto é estocável');
                 }
-                if (data.stockQuantity === undefined) {
-                    throw new Error('Stock quantity is required when stock control is enabled');
+                if (data.stockQuantity === undefined || data.stockQuantity === null) {
+                    throw new Error('Quantidade inicial é obrigatória quando o produto é estocável');
                 }
-                if (data.price === undefined) {
-                    throw new Error('Price is required when stock control is enabled');
+                if (data.price === undefined || data.price === null) {
+                    throw new Error('Preço inicial é obrigatório quando o produto é estocável');
+                }
+                if (!data.unit?.trim()) {
+                    throw new Error('Unidade de medida é obrigatória quando o produto é estocável');
                 }
             }
 
@@ -60,7 +71,29 @@ export class ItemService {
             throw new Error(`Item type ${data.type} is not yet supported`);
         }
 
-        return await this.itemRepository.save(item, tenantId);
+        const savedItem = await this.itemRepository.save(item, tenantId);
+
+        // Se for produto estocável, registrar movimento de entrada inicial na tabela de movimento de estoque
+        if (data.type === ItemType.PRODUCT && data.isStockControlled && data.initialStockDate && data.stockQuantity != null && data.unit?.trim()) {
+            const types = await this.stockMovementTypeService.getAllTypes(tenantId);
+            const entradaInicial = types.find((t) => t.getCode() === ENTRADA_INICIAL_CODE);
+            if (!entradaInicial) {
+                throw new Error('Tipo de movimento "Entrada inicial" não encontrado. Execute o seed de tipos de movimento de estoque.');
+            }
+            await this.stockMovementService.createMovement(tenantId, {
+                movementDate: data.initialStockDate,
+                stockMovementTypeId: entradaInicial.getId(),
+                itemId: savedItem.getId(),
+                unit: data.unit,
+                quantity: data.stockQuantity,
+                workLocationId: null,
+                seasonId: null,
+                costCenterId: null,
+                managementAccountId: null,
+            });
+        }
+
+        return savedItem;
     }
 
     /**

@@ -1,7 +1,15 @@
 import { Router } from 'express';
 import { ItemController } from '../controllers/ItemController.js';
 import { ItemService } from '../../application/services/ItemService.js';
+import { StockMovementTypeService } from '../../application/services/StockMovementTypeService.js';
+import { StockMovementService } from '../../application/services/StockMovementService.js';
 import { ItemRepository } from '../../infrastructure/repositories/ItemRepository.js';
+import { StockMovementTypeRepository } from '../../infrastructure/repositories/StockMovementTypeRepository.js';
+import { StockMovementRepository } from '../../infrastructure/repositories/StockMovementRepository.js';
+import { WorkLocationRepository } from '../../infrastructure/repositories/WorkLocationRepository.js';
+import { SeasonRepository } from '../../infrastructure/repositories/SeasonRepository.js';
+import { CostCenterRepository } from '../../infrastructure/repositories/CostCenterRepository.js';
+import { ManagementAccountRepository } from '../../infrastructure/repositories/ManagementAccountRepository.js';
 import { authenticate } from '../middleware/auth.js';
 import { tenantContextMiddleware, requireTenant } from '../../infrastructure/middleware/tenantContext.js';
 
@@ -17,7 +25,27 @@ export function createItemRoutes(): Router {
     router.use(requireTenant);
 
     const itemRepository = new ItemRepository();
-    const itemService = new ItemService(itemRepository);
+    const stockMovementTypeRepository = new StockMovementTypeRepository();
+    const stockMovementTypeService = new StockMovementTypeService(stockMovementTypeRepository);
+    const stockMovementRepository = new StockMovementRepository();
+    const workLocationRepository = new WorkLocationRepository();
+    const seasonRepository = new SeasonRepository();
+    const costCenterRepository = new CostCenterRepository();
+    const managementAccountRepository = new ManagementAccountRepository();
+    const stockMovementService = new StockMovementService(
+        stockMovementRepository,
+        stockMovementTypeRepository,
+        itemRepository,
+        workLocationRepository,
+        seasonRepository,
+        costCenterRepository,
+        managementAccountRepository,
+    );
+    const itemService = new ItemService(
+        itemRepository,
+        stockMovementTypeService,
+        stockMovementService,
+    );
     const itemController = new ItemController(itemService);
 
     /**
