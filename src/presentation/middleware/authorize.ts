@@ -70,3 +70,68 @@ export const canManageOrganization = (req: Request, res: Response, next: NextFun
     error: 'Cannot manage this organization',
   });
 };
+
+/**
+ * Middleware to check if user can manage a document type
+ * Super admin can manage all (including system types)
+ * Org admin can only manage their own organization's types (not system types)
+ */
+export const canManageDocumentType = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  const user = (req as any).user;
+  const { id } = req.params;
+  
+  if (!user) {
+    res.status(401).json({
+      success: false,
+      error: 'Authentication required',
+    });
+    return;
+  }
+  
+  // Super admin can manage any document type
+  if (user.role === UserRole.SUPER_ADMIN) {
+    next();
+    return;
+  }
+  
+  // For org admin, check if it's a system type or belongs to their organization
+  if (user.role === UserRole.ORG_ADMIN) {
+    const { DocumentTypeRepository } = await import('../../infrastructure/repositories/DocumentTypeRepository.js');
+    const repository = new DocumentTypeRepository();
+    const docType = await repository.findById(id);
+    
+    if (!docType) {
+      res.status(404).json({
+        success: false,
+        error: 'Document type not found',
+      });
+      return;
+    }
+    
+    // Org admin cannot edit system types
+    if (docType.getIsSystem()) {
+      res.status(403).json({
+        success: false,
+        error: 'Cannot edit system document types',
+      });
+      return;
+    }
+    
+    // Org admin can only edit their own organization's types
+    if (docType.getTenantId() === user.tenantId) {
+      next();
+      return;
+    }
+    
+    res.status(403).json({
+      success: false,
+      error: 'Cannot manage this document type',
+    });
+    return;
+  }
+  
+  res.status(403).json({
+    success: false,
+    error: 'Insufficient permissions',
+  });
+};

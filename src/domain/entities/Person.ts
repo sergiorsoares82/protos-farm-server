@@ -1,4 +1,5 @@
 import { PersonRole } from '../enums/PersonRole.js';
+import { PersonType } from '../enums/PersonType.js';
 import { Client, type ClientProps } from '../value-objects/roles/Client.js';
 import { Supplier, type SupplierProps } from '../value-objects/roles/Supplier.js';
 import { Worker, type WorkerProps } from '../value-objects/roles/Worker.js';
@@ -7,8 +8,9 @@ import { FarmOwner, type FarmOwnerProps } from '../value-objects/roles/FarmOwner
 export interface PersonProps {
   id: string;
   userId?: string;
-  firstName: string;
-  lastName: string;
+  nome: string;
+  personType: PersonType;
+  cpfCnpj?: string;
   email: string;
   phone?: string;
   roles: Map<PersonRole, Client | Supplier | Worker | FarmOwner>;
@@ -19,8 +21,9 @@ export interface PersonProps {
 export class Person {
   private readonly id: string;
   private userId?: string;
-  private firstName: string;
-  private lastName: string;
+  private nome: string;
+  private personType: PersonType;
+  private cpfCnpj?: string;
   private email: string;
   private phone?: string;
   private roles: Map<PersonRole, Client | Supplier | Worker | FarmOwner>;
@@ -31,8 +34,9 @@ export class Person {
     this.validateProps(props);
     this.id = props.id;
     if (props.userId) this.userId = props.userId;
-    this.firstName = props.firstName;
-    this.lastName = props.lastName;
+    this.nome = props.nome;
+    this.personType = props.personType;
+    if (props.cpfCnpj) this.cpfCnpj = props.cpfCnpj;
     this.email = props.email;
     if (props.phone) this.phone = props.phone;
     this.roles = props.roles;
@@ -44,18 +48,20 @@ export class Person {
    * Factory method to create a new person
    */
   static create(
-    firstName: string,
-    lastName: string,
+    nome: string,
     email: string,
+    personType: PersonType,
     phone?: string,
-    userId?: string
+    userId?: string,
+    cpfCnpj?: string
   ): Person {
     const now = new Date();
     return new Person({
       id: crypto.randomUUID(),
       ...(userId && { userId }),
-      firstName,
-      lastName,
+      nome,
+      personType,
+      ...(cpfCnpj && { cpfCnpj }),
       email,
       ...(phone && { phone }),
       roles: new Map(),
@@ -65,17 +71,12 @@ export class Person {
   }
 
   private validateProps(props: PersonProps): void {
-    if (!props.firstName || props.firstName.trim().length === 0) {
-      throw new Error('First name is required');
-    }
-    if (!props.lastName || props.lastName.trim().length === 0) {
-      throw new Error('Last name is required');
+    if (!props.nome || props.nome.trim().length === 0) {
+      throw new Error('Nome é obrigatório');
     }
     if (!props.email || props.email.trim().length === 0) {
-      throw new Error('Email is required');
+      throw new Error('Email é obrigatório');
     }
-    // Note: Role validation is not done here because roles may be assigned
-    // after construction. The business rule is enforced at the repository level.
   }
 
   /**
@@ -96,7 +97,6 @@ export class Person {
     if (!this.roles.has(role)) {
       throw new Error(`Person does not have role: ${role}`);
     }
-    // Business rule: must have at least one role
     if (this.roles.size === 1) {
       throw new Error('Cannot remove last role. Person must have at least one role.');
     }
@@ -104,23 +104,14 @@ export class Person {
     this.updatedAt = new Date();
   }
 
-  /**
-   * Check if person has a specific role
-   */
   hasRole(role: PersonRole): boolean {
     return this.roles.has(role);
   }
 
-  /**
-   * Get role data for a specific role
-   */
   getRole<T extends Client | Supplier | Worker | FarmOwner>(role: PersonRole): T | undefined {
     return this.roles.get(role) as T | undefined;
   }
 
-  /**
-   * Get all roles
-   */
   getRoles(): PersonRole[] {
     return Array.from(this.roles.keys());
   }
@@ -128,20 +119,20 @@ export class Person {
   /**
    * Update basic person information
    */
-  updateInfo(firstName: string, lastName: string, email: string, phone?: string): void {
-    if (!firstName || firstName.trim().length === 0) {
-      throw new Error('First name is required');
-    }
-    if (!lastName || lastName.trim().length === 0) {
-      throw new Error('Last name is required');
+  updateInfo(nome: string, email: string, phone?: string, personType?: PersonType, cpfCnpj?: string): void {
+    if (!nome || nome.trim().length === 0) {
+      throw new Error('Nome é obrigatório');
     }
     if (!email || email.trim().length === 0) {
-      throw new Error('Email is required');
+      throw new Error('Email é obrigatório');
     }
-
-    this.firstName = firstName;
-    this.lastName = lastName;
+    this.nome = nome;
     this.email = email;
+    if (personType !== undefined) this.personType = personType;
+    if (cpfCnpj !== undefined) {
+      if (cpfCnpj) this.cpfCnpj = cpfCnpj;
+      else delete this.cpfCnpj;
+    }
     if (phone) {
       this.phone = phone;
     } else {
@@ -150,9 +141,6 @@ export class Person {
     this.updatedAt = new Date();
   }
 
-  /**
-   * Link person to a user account
-   */
   linkToUser(userId: string): void {
     if (this.userId) {
       throw new Error('Person is already linked to a user');
@@ -161,9 +149,6 @@ export class Person {
     this.updatedAt = new Date();
   }
 
-  /**
-   * Unlink person from user account
-   */
   unlinkFromUser(): void {
     if (!this.userId) {
       throw new Error('Person is not linked to any user');
@@ -172,14 +157,6 @@ export class Person {
     this.updatedAt = new Date();
   }
 
-  /**
-   * Get full name
-   */
-  getFullName(): string {
-    return `${this.firstName} ${this.lastName}`;
-  }
-
-  // Getters
   getId(): string {
     return this.id;
   }
@@ -188,12 +165,16 @@ export class Person {
     return this.userId;
   }
 
-  getFirstName(): string {
-    return this.firstName;
+  getNome(): string {
+    return this.nome;
   }
 
-  getLastName(): string {
-    return this.lastName;
+  getPersonType(): PersonType {
+    return this.personType;
+  }
+
+  getCpfCnpj(): string | undefined {
+    return this.cpfCnpj;
   }
 
   getEmail(): string {
@@ -212,18 +193,17 @@ export class Person {
     return this.updatedAt;
   }
 
-  // Serialization
   toJSON() {
     const rolesObj: Record<string, any> = {};
     this.roles.forEach((roleData, role) => {
       rolesObj[role] = roleData.toJSON();
     });
-
     return {
       id: this.id,
       userId: this.userId,
-      firstName: this.firstName,
-      lastName: this.lastName,
+      nome: this.nome,
+      personType: this.personType,
+      cpfCnpj: this.cpfCnpj,
       email: this.email,
       phone: this.phone,
       roles: rolesObj,

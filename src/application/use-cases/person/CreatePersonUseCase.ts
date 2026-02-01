@@ -24,11 +24,12 @@ export class CreatePersonUseCase {
 
     // Create person
     const person = Person.create(
-      request.firstName,
-      request.lastName,
+      request.nome,
       request.email,
+      request.personType,
       request.phone,
-      request.userId
+      request.userId,
+      request.cpfCnpj
     );
 
     // Assign roles
@@ -72,9 +73,9 @@ export class CreatePersonUseCase {
     return {
       id: person.getId(),
       ...(userId && { userId }),
-      firstName: person.getFirstName(),
-      lastName: person.getLastName(),
-      fullName: person.getFullName(),
+      nome: person.getNome(),
+      personType: person.getPersonType(),
+      ...(person.getCpfCnpj() && { cpfCnpj: person.getCpfCnpj() }),
       email: person.getEmail(),
       ...(phone && { phone }),
       roles: person.toJSON().roles,

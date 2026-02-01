@@ -1,5 +1,6 @@
 import type { InvoiceItem } from './InvoiceItem.js';
 import type { InvoiceFinancial } from './InvoiceFinancial.js';
+import { InvoiceType } from '../enums/InvoiceType.js';
 
 export interface InvoiceProps {
   id: string;
@@ -10,6 +11,7 @@ export interface InvoiceProps {
   supplierId: string;
   documentTypeId?: string | undefined;
   notes?: string | undefined;
+  type: InvoiceType;
   items: InvoiceItem[];
   financials: InvoiceFinancial[];
   createdAt: Date;
@@ -29,6 +31,7 @@ export class Invoice {
   private supplierId: string;
   private documentTypeId?: string | undefined;
   private notes?: string | undefined;
+  private type: InvoiceType;
   private items: InvoiceItem[];
   private financials: InvoiceFinancial[];
   private readonly createdAt: Date;
@@ -44,6 +47,7 @@ export class Invoice {
     this.supplierId = props.supplierId;
     this.documentTypeId = props.documentTypeId;
     this.notes = props.notes;
+    this.type = props.type;
     this.items = props.items ?? [];
     this.financials = props.financials ?? [];
     this.createdAt = props.createdAt;
@@ -55,6 +59,7 @@ export class Invoice {
     number: string,
     issueDate: Date,
     supplierId: string,
+    type: InvoiceType,
     series?: string,
     documentTypeId?: string,
     notes?: string
@@ -69,6 +74,7 @@ export class Invoice {
       supplierId,
       documentTypeId,
       notes,
+      type,
       items: [],
       financials: [],
       createdAt: now,
@@ -89,6 +95,7 @@ export class Invoice {
     number: string,
     issueDate: Date,
     supplierId: string,
+    type: InvoiceType,
     series?: string,
     documentTypeId?: string,
     notes?: string
@@ -101,6 +108,7 @@ export class Invoice {
     this.number = number;
     this.issueDate = issueDate;
     this.supplierId = supplierId;
+    this.type = type;
     this.series = series;
     this.documentTypeId = documentTypeId;
     this.notes = notes;
@@ -147,13 +155,14 @@ export class Invoice {
   getSupplierId(): string { return this.supplierId; }
   getDocumentTypeId(): string | undefined { return this.documentTypeId; }
   getNotes(): string | undefined { return this.notes; }
+  getType(): InvoiceType { return this.type; }
   getItems(): InvoiceItem[] { return [...this.items]; }
   getFinancials(): InvoiceFinancial[] { return [...this.financials]; }
   getCreatedAt(): Date { return this.createdAt; }
   getUpdatedAt(): Date { return this.updatedAt; }
 
   toJSON(): Record<string, unknown> {
-    return {
+    const json: Record<string, unknown> = {
       id: this.id,
       tenantId: this.tenantId,
       number: this.number,
@@ -162,6 +171,7 @@ export class Invoice {
       supplierId: this.supplierId,
       documentTypeId: this.documentTypeId,
       notes: this.notes,
+      type: this.type,
       items: this.items.map((i) => i.toJSON()),
       financials: this.financials.map((f) => f.toJSON()),
       itemsTotal: this.getItemsTotal(),
@@ -169,5 +179,12 @@ export class Invoice {
       createdAt: this.createdAt,
       updatedAt: this.updatedAt,
     };
+
+    // Include documentType if available (set by repository)
+    if ((this as any)._documentType) {
+      json.documentType = (this as any)._documentType;
+    }
+
+    return json;
   }
 }

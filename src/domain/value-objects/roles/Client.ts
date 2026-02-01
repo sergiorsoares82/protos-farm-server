@@ -1,56 +1,25 @@
 /**
  * Client Role Value Object
- * Represents client-specific data
+ * Represents client-specific data (only client_categories for now)
  */
 export interface ClientProps {
-  companyName?: string;
-  taxId?: string;
-  preferredPaymentMethod?: string;
-  creditLimit?: number;
+  clientCategories?: string;
 }
 
 export class Client {
-  private readonly companyName?: string;
-  private readonly taxId?: string;
-  private readonly preferredPaymentMethod?: string;
-  private readonly creditLimit?: number;
+  private readonly clientCategories?: string;
 
   constructor(props: ClientProps) {
-    this.validateProps(props);
-    if (props.companyName) this.companyName = props.companyName;
-    if (props.taxId) this.taxId = props.taxId;
-    if (props.preferredPaymentMethod) this.preferredPaymentMethod = props.preferredPaymentMethod;
-    if (props.creditLimit !== undefined) this.creditLimit = props.creditLimit;
+    if (props.clientCategories) this.clientCategories = props.clientCategories;
   }
 
-  private validateProps(props: ClientProps): void {
-    if (props.creditLimit !== undefined && props.creditLimit < 0) {
-      throw new Error('Credit limit cannot be negative');
-    }
-  }
-
-  getCompanyName(): string | undefined {
-    return this.companyName;
-  }
-
-  getTaxId(): string | undefined {
-    return this.taxId;
-  }
-
-  getPreferredPaymentMethod(): string | undefined {
-    return this.preferredPaymentMethod;
-  }
-
-  getCreditLimit(): number | undefined {
-    return this.creditLimit;
+  getClientCategories(): string | undefined {
+    return this.clientCategories;
   }
 
   toJSON(): ClientProps {
     return {
-      ...(this.companyName && { companyName: this.companyName }),
-      ...(this.taxId && { taxId: this.taxId }),
-      ...(this.preferredPaymentMethod && { preferredPaymentMethod: this.preferredPaymentMethod }),
-      ...(this.creditLimit !== undefined && { creditLimit: this.creditLimit }),
+      ...(this.clientCategories && { clientCategories: this.clientCategories }),
     };
   }
 }

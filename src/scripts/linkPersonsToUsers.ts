@@ -45,9 +45,9 @@ async function linkPersonsToUsers() {
         person.userId = user.id;
         await personRepo.save(person);
         
-        console.log(`✅ Linked person "${person.firstName} ${person.lastName}" to user "${user.email}"`);
+        console.log(`✅ Linked person "${person.nome}" to user "${user.email}"`);
       } else {
-        console.log(`⏭️  Skipped: person "${person.firstName} ${person.lastName}" and user "${user.email}" have different tenants`);
+        console.log(`⏭️  Skipped: person "${person.nome}" and user "${user.email}" have different tenants`);
       }
     }
     

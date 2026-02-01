@@ -1,5 +1,6 @@
 import { ItemType } from '../../domain/enums/ItemType.js';
 import { InvoiceFinancialStatus } from '../../domain/enums/InvoiceFinancialStatus.js';
+import { InvoiceType } from '../../domain/enums/InvoiceType.js';
 
 export interface InvoiceItemDTO {
   id?: string;
@@ -27,6 +28,7 @@ export interface CreateInvoiceDTO {
   supplierId: string;
   documentTypeId?: string;
   notes?: string;
+  type: InvoiceType;
   items: InvoiceItemDTO[];
   financials: InvoiceFinancialDTO[];
 }
@@ -38,6 +40,7 @@ export interface UpdateInvoiceDTO {
   supplierId?: string;
   documentTypeId?: string;
   notes?: string;
+  type?: InvoiceType;
   items?: InvoiceItemDTO[];
   financials?: InvoiceFinancialDTO[];
 }

@@ -7,23 +7,14 @@ export class ClientEntity {
   id!: string;
 
   @Column({ type: 'uuid', name: 'tenant_id' })
-  @Index() // Important for query performance
+  @Index()
   tenantId!: string;
 
   @Column({ type: 'uuid', name: 'person_id' })
   personId!: string;
 
-  @Column({ type: 'varchar', length: 255, name: 'company_name', nullable: true })
-  companyName!: string | null;
-
-  @Column({ type: 'varchar', length: 50, name: 'tax_id', nullable: true })
-  taxId!: string | null;
-
-  @Column({ type: 'varchar', length: 50, name: 'preferred_payment_method', nullable: true })
-  preferredPaymentMethod!: string | null;
-
-  @Column({ type: 'decimal', precision: 15, scale: 2, name: 'credit_limit', nullable: true })
-  creditLimit!: number | null;
+  @Column({ type: 'text', name: 'client_categories', nullable: true })
+  clientCategories!: string | null;
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt!: Date;

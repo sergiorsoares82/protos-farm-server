@@ -21,10 +21,11 @@ export class UpdatePersonUseCase {
 
     // Update person info
     person.updateInfo(
-      request.firstName || person.getFirstName(),
-      request.lastName || person.getLastName(),
-      request.email || person.getEmail(),
-      request.phone !== undefined ? request.phone : person.getPhone()
+      request.nome ?? person.getNome(),
+      request.email ?? person.getEmail(),
+      request.phone !== undefined ? request.phone : person.getPhone(),
+      request.personType,
+      request.cpfCnpj !== undefined ? request.cpfCnpj ?? undefined : undefined
     );
 
     // Save updated person with tenant context
@@ -36,9 +37,9 @@ export class UpdatePersonUseCase {
     return {
       id: updatedPerson.getId(),
       ...(userId && { userId }),
-      firstName: updatedPerson.getFirstName(),
-      lastName: updatedPerson.getLastName(),
-      fullName: updatedPerson.getFullName(),
+      nome: updatedPerson.getNome(),
+      personType: updatedPerson.getPersonType(),
+      ...(updatedPerson.getCpfCnpj() && { cpfCnpj: updatedPerson.getCpfCnpj() }),
       email: updatedPerson.getEmail(),
       ...(phone && { phone }),
       roles: updatedPerson.toJSON().roles,

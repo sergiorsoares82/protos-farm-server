@@ -5,6 +5,7 @@ import { InvoiceItem } from '../../domain/entities/InvoiceItem.js';
 import { InvoiceFinancial } from '../../domain/entities/InvoiceFinancial.js';
 import { InvoiceFinancialStatus } from '../../domain/enums/InvoiceFinancialStatus.js';
 import { ItemType } from '../../domain/enums/ItemType.js';
+import { InvoiceType } from '../../domain/enums/InvoiceType.js';
 import { InvoiceEntity } from '../database/entities/InvoiceEntity.js';
 import { InvoiceItemEntity } from '../database/entities/InvoiceItemEntity.js';
 import { InvoiceFinancialEntity } from '../database/entities/InvoiceFinancialEntity.js';
@@ -24,7 +25,7 @@ export class InvoiceRepository implements IInvoiceRepository {
   async findAll(tenantId: string): Promise<Invoice[]> {
     const entities = await this.invoiceRepo.find({
       where: { tenantId },
-      relations: ['items', 'financials'],
+      relations: ['items', 'financials', 'documentType'],
       order: { issueDate: 'DESC', createdAt: 'DESC' },
     });
     return entities.map((e) => this.toDomain(e));
@@ -33,7 +34,7 @@ export class InvoiceRepository implements IInvoiceRepository {
   async findById(id: string, tenantId: string): Promise<Invoice | null> {
     const entity = await this.invoiceRepo.findOne({
       where: { id, tenantId },
-      relations: ['items', 'financials'],
+      relations: ['items', 'financials', 'documentType'],
     });
     if (!entity) return null;
     return this.toDomain(entity);
@@ -50,6 +51,7 @@ export class InvoiceRepository implements IInvoiceRepository {
     invEntity.issueDate = invoice.getIssueDate().toISOString().slice(0, 10);
     invEntity.supplierId = invoice.getSupplierId();
     invEntity.documentTypeId = invoice.getDocumentTypeId() ?? null;
+    invEntity.type = invoice.getType();
     invEntity.notes = invoice.getNotes() ?? null;
 
     await this.invoiceRepo.save(invEntity);
@@ -109,7 +111,7 @@ export class InvoiceRepository implements IInvoiceRepository {
     const items = (entity.items ?? []).map((i) => this.itemToDomain(i));
     const financials = (entity.financials ?? []).map((f) => this.financialToDomain(f));
 
-    return new Invoice({
+    const invoice = new Invoice({
       id: entity.id,
       tenantId: entity.tenantId,
       number: entity.number,
@@ -118,11 +120,24 @@ export class InvoiceRepository implements IInvoiceRepository {
       supplierId: entity.supplierId,
       documentTypeId: entity.documentTypeId ?? undefined,
       notes: entity.notes ?? undefined,
+      type: entity.type as InvoiceType,
       items,
       financials,
       createdAt: entity.createdAt,
       updatedAt: entity.updatedAt,
     });
+
+    // Store documentType for JSON serialization if available
+    if (entity.documentType) {
+      (invoice as any)._documentType = {
+        id: entity.documentType.id,
+        name: entity.documentType.name,
+        group: entity.documentType.group,
+        hasAccessKey: entity.documentType.hasAccessKey,
+      };
+    }
+
+    return invoice;
   }
 
   private itemToDomain(entity: InvoiceItemEntity): InvoiceItem {

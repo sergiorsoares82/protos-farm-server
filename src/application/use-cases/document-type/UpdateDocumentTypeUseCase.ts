@@ -27,9 +27,11 @@ export class UpdateDocumentTypeUseCase {
 
     return {
       id: saved.getId()!,
+      tenantId: saved.getTenantId(),
       name: saved.getName(),
       group: saved.getGroup(),
       hasAccessKey: saved.getHasAccessKey(),
+      isSystem: saved.getIsSystem(),
       createdAt: saved.getCreatedAt() ?? new Date(),
       updatedAt: saved.getUpdatedAt() ?? new Date(),
     };

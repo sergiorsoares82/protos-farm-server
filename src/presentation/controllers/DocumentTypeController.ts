@@ -14,8 +14,10 @@ export class DocumentTypeController {
   private createUseCase: CreateDocumentTypeUseCase;
   private updateUseCase: UpdateDocumentTypeUseCase;
   private deleteUseCase: DeleteDocumentTypeUseCase;
+  private repository: IDocumentTypeRepository;
 
   constructor(repository: IDocumentTypeRepository) {
+    this.repository = repository;
     this.getUseCase = new GetDocumentTypesUseCase(repository);
     this.createUseCase = new CreateDocumentTypeUseCase(repository);
     this.updateUseCase = new UpdateDocumentTypeUseCase(repository);
@@ -24,7 +26,8 @@ export class DocumentTypeController {
 
   async list(req: Request, res: Response): Promise<void> {
     try {
-      const result = await this.getUseCase.execute();
+      const tenantId = req.tenant?.tenantId ?? null;
+      const result = await this.getUseCase.execute(tenantId);
       res.status(200).json({ success: true, data: result });
     } catch (error) {
       console.error('List document types error:', error);
@@ -36,7 +39,8 @@ export class DocumentTypeController {
   async create(req: Request, res: Response): Promise<void> {
     try {
       const payload = req.body as CreateDocumentTypeRequestDTO;
-      const created = await this.createUseCase.execute(payload);
+      const tenantId = req.user?.role === 'SUPER_ADMIN' ? (payload.tenantId ?? null) : req.tenant?.tenantId ?? null;
+      const created = await this.createUseCase.execute(payload, tenantId);
       res.status(201).json({
         success: true,
         data: created,
@@ -56,6 +60,16 @@ export class DocumentTypeController {
         res.status(400).json({ success: false, error: 'Invalid ID parameter' });
         return;
       }
+      
+      // Check if user can edit system types
+      const user = (req as any).user;
+      const docType = await this.repository.findById(id);
+      
+      if (docType && docType.getIsSystem() && user.role !== 'SUPER_ADMIN') {
+        res.status(403).json({ success: false, error: 'Cannot edit system document types' });
+        return;
+      }
+      
       const payload = req.body as UpdateDocumentTypeRequestDTO;
       const updated = await this.updateUseCase.execute(id, payload);
       res.status(200).json({

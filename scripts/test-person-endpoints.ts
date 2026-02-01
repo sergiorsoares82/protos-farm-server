@@ -13,6 +13,7 @@ import { GetPersonUseCase } from '../src/application/use-cases/person/GetPersonU
 import { AssignRoleUseCase } from '../src/application/use-cases/person/AssignRoleUseCase.js';
 import { RemoveRoleUseCase } from '../src/application/use-cases/person/RemoveRoleUseCase.js';
 import { PersonRole } from '../src/domain/enums/PersonRole.js';
+import { PersonType } from '../src/domain/enums/PersonType.js';
 import { initializeDatabase, closeDatabase } from '../src/infrastructure/database/typeorm.config.js';
 
 async function testPersonEndpoints() {
@@ -32,18 +33,14 @@ async function testPersonEndpoints() {
     // Test 1: Create person with multiple roles
     console.log('\n✅ Test 1: Create person with CLIENT and FARM_OWNER roles');
     const person1 = await createPersonUseCase.execute({
-      firstName: 'John',
-      lastName: 'Doe',
+      nome: 'John Doe',
+      personType: PersonType.FISICA,
       email: `john.doe.${Date.now()}@example.com`,
       phone: '+1234567890',
       roles: [
         {
           type: PersonRole.CLIENT,
-          data: {
-            companyName: 'Doe Enterprises',
-            taxId: 'TAX123456',
-            creditLimit: 50000,
-          },
+          data: { clientCategories: 'Agricultura, Comércio' },
         },
         {
           type: PersonRole.FARM_OWNER,
@@ -57,7 +54,7 @@ async function testPersonEndpoints() {
       ],
     });
     console.log('   Created person:', person1.id);
-    console.log('   Full name:', person1.fullName);
+    console.log('   Nome:', person1.nome);
     console.log('   Roles:', Object.keys(person1.roles));
 
     // Test 2: Get person by ID
@@ -73,10 +70,7 @@ async function testPersonEndpoints() {
     const updatedPerson = await assignRoleUseCase.execute(person1.id, {
       role: PersonRole.SUPPLIER,
       roleData: {
-        companyName: 'Doe Supplies Ltd',
-        taxId: 'SUPPLY789',
         supplyCategories: 'Seeds, Fertilizer, Equipment',
-        paymentTerms: 'Net 30',
       },
     });
     console.log('   Person now has roles:', Object.keys(updatedPerson.roles));
@@ -84,8 +78,8 @@ async function testPersonEndpoints() {
     // Test 4: Create person with WORKER role
     console.log('\n✅ Test 4: Create person with WORKER role');
     const person2 = await createPersonUseCase.execute({
-      firstName: 'Jane',
-      lastName: 'Smith',
+      nome: 'Jane Smith',
+      personType: PersonType.FISICA,
       email: `jane.smith.${Date.now()}@example.com`,
       phone: '+9876543210',
       roles: [
@@ -100,7 +94,7 @@ async function testPersonEndpoints() {
         },
       ],
     });
-    console.log('   Created worker:', person2.fullName);
+    console.log('   Created worker:', person2.nome);
     console.log('   Position:', person2.roles.WORKER?.position);
 
     // Test 5: Try to remove a role (should fail if it's the last role)
@@ -122,17 +116,17 @@ async function testPersonEndpoints() {
     // Test 7: Create person with all roles
     console.log('\n✅ Test 7: Create person with ALL roles');
     const person3 = await createPersonUseCase.execute({
-      firstName: 'Alex',
-      lastName: 'Johnson',
+      nome: 'Alex Johnson',
+      personType: PersonType.FISICA,
       email: `alex.johnson.${Date.now()}@example.com`,
       roles: [
         {
           type: PersonRole.CLIENT,
-          data: { companyName: 'Johnson Corp' },
+          data: { clientCategories: 'Johnson Corp' },
         },
         {
           type: PersonRole.SUPPLIER,
-          data: { companyName: 'Johnson Supplies', taxId: 'JS123' },
+          data: { supplyCategories: 'Johnson Supplies' },
         },
         {
           type: PersonRole.WORKER,
@@ -148,7 +142,7 @@ async function testPersonEndpoints() {
         },
       ],
     });
-    console.log('   Created person with all roles:', person3.fullName);
+    console.log('   Created person with all roles:', person3.nome);
     console.log('   Total roles:', Object.keys(person3.roles).length);
     console.log('   All roles:', Object.keys(person3.roles).join(', '));
 
@@ -156,8 +150,8 @@ async function testPersonEndpoints() {
     console.log('\n✅ Test 8: Try to create person without roles (should fail)');
     try {
       await createPersonUseCase.execute({
-        firstName: 'Invalid',
-        lastName: 'Person',
+        nome: 'Invalid Person',
+        personType: PersonType.FISICA,
         email: `invalid.${Date.now()}@example.com`,
         roles: [],
       });
@@ -170,8 +164,8 @@ async function testPersonEndpoints() {
     console.log('\n✅ Test 9: Try to create person with duplicate email (should fail)');
     try {
       await createPersonUseCase.execute({
-        firstName: 'Duplicate',
-        lastName: 'Email',
+        nome: 'Duplicate Email',
+        personType: PersonType.FISICA,
         email: person1.email, // Reuse existing email
         roles: [{ type: PersonRole.CLIENT, data: {} }],
       });

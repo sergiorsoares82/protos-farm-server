@@ -13,11 +13,14 @@ export class PersonEntity {
   @Column({ type: 'uuid', name: 'user_id', nullable: true })
   userId!: string | null;
 
-  @Column({ type: 'varchar', length: 100, name: 'first_name' })
-  firstName!: string;
+  @Column({ type: 'varchar', length: 255, name: 'nome' })
+  nome!: string;
 
-  @Column({ type: 'varchar', length: 100, name: 'last_name' })
-  lastName!: string;
+  @Column({ type: 'varchar', length: 20, name: 'person_type' })
+  personType!: string;
+
+  @Column({ type: 'varchar', length: 50, name: 'cpf_cnpj', nullable: true })
+  cpfCnpj!: string | null;
 
   @Column({ type: 'varchar', length: 255, unique: true })
   email!: string;

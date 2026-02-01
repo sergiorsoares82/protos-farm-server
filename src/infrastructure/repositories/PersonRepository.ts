@@ -2,6 +2,7 @@ import { Repository } from 'typeorm';
 import type { IPersonRepository } from '../../domain/repositories/IPersonRepository.js';
 import { Person } from '../../domain/entities/Person.js';
 import { PersonRole } from '../../domain/enums/PersonRole.js';
+import { PersonType } from '../../domain/enums/PersonType.js';
 import { Client } from '../../domain/value-objects/roles/Client.js';
 import { Supplier } from '../../domain/value-objects/roles/Supplier.js';
 import { Worker } from '../../domain/value-objects/roles/Worker.js';
@@ -139,8 +140,9 @@ export class PersonRepository implements IPersonRepository {
     personEntity.id = person.getId();
     personEntity.tenantId = tenantId;
     personEntity.userId = person.getUserId() || null;
-    personEntity.firstName = person.getFirstName();
-    personEntity.lastName = person.getLastName();
+    personEntity.nome = person.getNome();
+    personEntity.personType = person.getPersonType();
+    personEntity.cpfCnpj = person.getCpfCnpj() || null;
     personEntity.email = person.getEmail();
     personEntity.phone = person.getPhone() || null;
 
@@ -205,10 +207,7 @@ export class PersonRepository implements IPersonRepository {
         const client = new ClientEntity();
         client.personId = personId;
         client.tenantId = tenantId;
-        client.companyName = clientData.getCompanyName() || null;
-        client.taxId = clientData.getTaxId() || null;
-        client.preferredPaymentMethod = clientData.getPreferredPaymentMethod() || null;
-        client.creditLimit = clientData.getCreditLimit() || null;
+        client.clientCategories = clientData.getClientCategories() || null;
         await this.clientRepo.save(client);
         break;
 
@@ -217,10 +216,7 @@ export class PersonRepository implements IPersonRepository {
         const supplier = new SupplierEntity();
         supplier.personId = personId;
         supplier.tenantId = tenantId;
-        supplier.companyName = supplierData.getCompanyName();
-        supplier.taxId = supplierData.getTaxId();
         supplier.supplyCategories = supplierData.getSupplyCategories() || null;
-        supplier.paymentTerms = supplierData.getPaymentTerms() || null;
         await this.supplierRepo.save(supplier);
         break;
 
@@ -257,10 +253,7 @@ export class PersonRepository implements IPersonRepository {
       roles.set(
         PersonRole.CLIENT,
         new Client({
-          ...(entity.client.companyName && { companyName: entity.client.companyName }),
-          ...(entity.client.taxId && { taxId: entity.client.taxId }),
-          ...(entity.client.preferredPaymentMethod && { preferredPaymentMethod: entity.client.preferredPaymentMethod }),
-          ...(entity.client.creditLimit && { creditLimit: Number(entity.client.creditLimit) }),
+          ...(entity.client.clientCategories && { clientCategories: entity.client.clientCategories }),
         })
       );
     }
@@ -269,10 +262,7 @@ export class PersonRepository implements IPersonRepository {
       roles.set(
         PersonRole.SUPPLIER,
         new Supplier({
-          companyName: entity.supplier.companyName,
-          taxId: entity.supplier.taxId,
           ...(entity.supplier.supplyCategories && { supplyCategories: entity.supplier.supplyCategories }),
-          ...(entity.supplier.paymentTerms && { paymentTerms: entity.supplier.paymentTerms }),
         })
       );
     }
@@ -304,8 +294,9 @@ export class PersonRepository implements IPersonRepository {
     return new Person({
       id: entity.id,
       ...(entity.userId && { userId: entity.userId }),
-      firstName: entity.firstName,
-      lastName: entity.lastName,
+      nome: entity.nome,
+      personType: entity.personType as PersonType,
+      ...(entity.cpfCnpj && { cpfCnpj: entity.cpfCnpj }),
       email: entity.email,
       ...(entity.phone && { phone: entity.phone }),
       roles,

@@ -2,9 +2,9 @@ import { UserRole } from '../../domain/enums/UserRole.js';
 
 export interface UserPersonDTO {
   id: string;
-  firstName: string;
-  lastName: string;
-  fullName: string;
+  nome: string;
+  personType: string;
+  cpfCnpj?: string;
   email: string;
 }
 

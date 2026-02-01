@@ -13,6 +13,7 @@ import { OrganizationEntity } from './OrganizationEntity.js';
 import { SupplierEntity } from './SupplierEntity.js';
 import { InvoiceItemEntity } from './InvoiceItemEntity.js';
 import { InvoiceFinancialEntity } from './InvoiceFinancialEntity.js';
+import { DocumentTypeEntity } from './DocumentTypeEntity.js';
 
 @Entity('invoices')
 export class InvoiceEntity {
@@ -38,6 +39,9 @@ export class InvoiceEntity {
   @Column({ type: 'uuid', name: 'document_type_id', nullable: true })
   documentTypeId!: string | null;
 
+  @Column({ type: 'varchar', length: 20, default: 'DESPESA' })
+  type!: string;
+
   @Column({ type: 'text', nullable: true })
   notes!: string | null;
 
@@ -54,6 +58,10 @@ export class InvoiceEntity {
   @ManyToOne(() => SupplierEntity)
   @JoinColumn({ name: 'supplier_id' })
   supplier!: SupplierEntity;
+
+  @ManyToOne(() => DocumentTypeEntity, { nullable: true })
+  @JoinColumn({ name: 'document_type_id' })
+  documentType!: DocumentTypeEntity | null;
 
   @OneToMany(() => InvoiceItemEntity, (item) => item.invoice, { cascade: true })
   items!: InvoiceItemEntity[];

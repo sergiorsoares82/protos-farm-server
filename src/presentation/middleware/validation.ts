@@ -2,6 +2,7 @@ import type { Request, Response, NextFunction } from 'express';
 import { z, ZodError } from 'zod';
 import type { ZodSchema } from 'zod';
 import { PersonRole } from '../../domain/enums/PersonRole.js';
+import { PersonType } from '../../domain/enums/PersonType.js';
 
 /**
  * Validation middleware factory
@@ -44,17 +45,11 @@ export const refreshTokenSchema = z.object({
 
 // Person validation schemas
 const clientRoleDataSchema = z.object({
-  companyName: z.string().optional(),
-  taxId: z.string().optional(),
-  preferredPaymentMethod: z.string().optional(),
-  creditLimit: z.number().nonnegative().optional(),
+  clientCategories: z.string().optional(),
 });
 
 const supplierRoleDataSchema = z.object({
-  companyName: z.string().min(1, 'Company name is required'),
-  taxId: z.string().min(1, 'Tax ID is required'),
   supplyCategories: z.string().optional(),
-  paymentTerms: z.string().optional(),
 });
 
 const workerRoleDataSchema = z.object({
@@ -92,18 +87,20 @@ const roleAssignmentSchema = z.discriminatedUnion('type', [
 ]);
 
 export const createPersonSchema = z.object({
-  firstName: z.string().min(1, 'First name is required'),
-  lastName: z.string().min(1, 'Last name is required'),
-  email: z.string().email('Invalid email format').min(1, 'Email is required'),
+  nome: z.string().min(1, 'Nome é obrigatório'),
+  personType: z.nativeEnum(PersonType, { message: 'Tipo de pessoa deve ser FISICA ou JURIDICA' }),
+  cpfCnpj: z.string().optional(),
+  email: z.string().email('E-mail inválido').min(1, 'E-mail é obrigatório'),
   phone: z.string().optional(),
   userId: z.string().uuid().optional(),
-  roles: z.array(roleAssignmentSchema).min(1, 'At least one role is required'),
+  roles: z.array(roleAssignmentSchema).min(1, 'Pelo menos um papel é obrigatório'),
 });
 
 export const updatePersonSchema = z.object({
-  firstName: z.string().min(1).optional(),
-  lastName: z.string().min(1).optional(),
-  email: z.string().email('Invalid email format').optional(),
+  nome: z.string().min(1).optional(),
+  personType: z.nativeEnum(PersonType).optional(),
+  cpfCnpj: z.string().optional().nullable(),
+  email: z.string().email('E-mail inválido').optional(),
   phone: z.string().optional(),
 });
 

@@ -10,9 +10,11 @@ export class DocumentTypeRepository implements IDocumentTypeRepository {
   private toDomain(entity: DocumentTypeEntity): DocumentType {
     return new DocumentType({
       id: entity.id,
+      tenantId: entity.tenantId,
       name: entity.name,
       group: entity.group,
       hasAccessKey: entity.hasAccessKey,
+      isSystem: entity.isSystem,
       createdAt: entity.createdAt,
       updatedAt: entity.updatedAt,
     });
@@ -24,16 +26,33 @@ export class DocumentTypeRepository implements IDocumentTypeRepository {
     if (id) {
       (entity as any).id = id;
     }
+    entity.tenantId = docType.getTenantId();
     entity.name = docType.getName();
     entity.group = docType.getGroup();
     entity.hasAccessKey = docType.getHasAccessKey();
+    entity.isSystem = docType.getIsSystem();
     entity.createdAt = docType.getCreatedAt() ?? new Date();
     entity.updatedAt = docType.getUpdatedAt() ?? new Date();
     return entity;
   }
 
   async findAll(): Promise<DocumentType[]> {
-    const entities = await this.repository.find({ order: { name: 'ASC' } });
+    // Return both system types (tenantId = null) and all organization types
+    const entities = await this.repository.find({ 
+      order: { isSystem: 'DESC', name: 'ASC' },
+    });
+    return entities.map((e) => this.toDomain(e));
+  }
+
+  async findAllByTenant(tenantId: string | null): Promise<DocumentType[]> {
+    // Return system types (tenantId = null) + organization types (tenantId = provided)
+    const entities = await this.repository.find({
+      where: [
+        { tenantId: null }, // System types
+        { tenantId }, // Organization types
+      ],
+      order: { isSystem: 'DESC', name: 'ASC' },
+    });
     return entities.map((e) => this.toDomain(e));
   }
 
@@ -42,8 +61,12 @@ export class DocumentTypeRepository implements IDocumentTypeRepository {
     return entity ? this.toDomain(entity) : null;
   }
 
-  async findByNameAndGroup(name: string, group: string): Promise<DocumentType | null> {
-    const entity = await this.repository.findOne({ where: { name, group } });
+  async findByNameAndGroup(name: string, group: string, tenantId?: string | null): Promise<DocumentType | null> {
+    const where: any = { name, group };
+    if (tenantId !== undefined) {
+      where.tenantId = tenantId;
+    }
+    const entity = await this.repository.findOne({ where });
     return entity ? this.toDomain(entity) : null;
   }
 

@@ -22,6 +22,7 @@
     "seed:stock-movement-types": "tsx src/scripts/seedStockMovementTypes.ts",
     "seed:unit-of-measures": "tsx src/scripts/seedUnitOfMeasures.ts",
     "seed:unit-of-measure-conversions": "tsx src/scripts/seedUnitOfMeasureConversions.ts",
+    "seed:document-types": "tsx src/scripts/seedDocumentTypes.ts",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {

@@ -4,6 +4,7 @@ import { InvoiceItem } from '../../domain/entities/InvoiceItem.js';
 import { InvoiceFinancial } from '../../domain/entities/InvoiceFinancial.js';
 import { InvoiceFinancialStatus } from '../../domain/enums/InvoiceFinancialStatus.js';
 import { ItemType } from '../../domain/enums/ItemType.js';
+import { InvoiceType } from '../../domain/enums/InvoiceType.js';
 import type { CreateInvoiceDTO, UpdateInvoiceDTO, InvoiceItemDTO, InvoiceFinancialDTO } from '../dtos/InvoiceDTOs.js';
 
 export class InvoiceService {
@@ -25,6 +26,7 @@ export class InvoiceService {
       data.number,
       issueDate,
       data.supplierId,
+      data.type,
       data.series,
       data.documentTypeId,
       data.notes
@@ -88,11 +90,12 @@ export class InvoiceService {
     const number = data.number ?? invoice.getNumber();
     const issueDate = data.issueDate ? new Date(data.issueDate) : invoice.getIssueDate();
     const supplierId = data.supplierId ?? invoice.getSupplierId();
+    const type = data.type ?? invoice.getType();
     const series = data.series !== undefined ? data.series : invoice.getSeries();
     const documentTypeId = data.documentTypeId !== undefined ? data.documentTypeId : invoice.getDocumentTypeId();
     const notes = data.notes !== undefined ? data.notes : invoice.getNotes();
 
-    invoice.updateHeader(number, issueDate, supplierId, series, documentTypeId, notes);
+    invoice.updateHeader(number, issueDate, supplierId, type, series, documentTypeId, notes);
 
     if (data.items !== undefined) {
       for (const existing of invoice.getItems()) {

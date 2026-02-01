@@ -4,7 +4,7 @@ import { SupplierEntity } from '../../infrastructure/database/entities/SupplierE
 
 /**
  * List suppliers for the tenant (for dropdowns e.g. invoice form).
- * Returns supplier id, personId, companyName, taxId and person name.
+ * Returns supplier id, personId, supplyCategories and person (nome, cpfCnpj, email).
  */
 export async function listSuppliers(req: Request, res: Response): Promise<void> {
   try {
@@ -13,21 +13,18 @@ export async function listSuppliers(req: Request, res: Response): Promise<void> 
     const suppliers = await repo.find({
       where: { tenantId },
       relations: ['person'],
-      order: { companyName: 'ASC' },
+      order: { id: 'ASC' },
     });
     const data = suppliers.map((s) => ({
       id: s.id,
       personId: s.personId,
-      companyName: s.companyName,
-      taxId: s.taxId,
       supplyCategories: s.supplyCategories,
-      paymentTerms: s.paymentTerms,
       person: s.person
         ? {
             id: s.person.id,
-            firstName: s.person.firstName,
-            lastName: s.person.lastName,
-            fullName: `${s.person.firstName} ${s.person.lastName}`,
+            nome: s.person.nome,
+            personType: s.person.personType,
+            cpfCnpj: s.person.cpfCnpj,
             email: s.person.email,
           }
         : null,

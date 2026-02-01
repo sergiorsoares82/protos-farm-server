@@ -8,23 +8,14 @@ export class SupplierEntity {
   id!: string;
 
   @Column({ type: 'uuid', name: 'tenant_id' })
-  @Index() // Important for query performance
+  @Index()
   tenantId!: string;
 
   @Column({ type: 'uuid', name: 'person_id' })
   personId!: string;
 
-  @Column({ type: 'varchar', length: 255, name: 'company_name' })
-  companyName!: string;
-
-  @Column({ type: 'varchar', length: 50, name: 'tax_id' })
-  taxId!: string;
-
   @Column({ type: 'text', name: 'supply_categories', nullable: true })
   supplyCategories!: string | null;
-
-  @Column({ type: 'varchar', length: 100, name: 'payment_terms', nullable: true })
-  paymentTerms!: string | null;
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt!: Date;
