@@ -1,3 +1,4 @@
+import { createRequire } from 'module';
 import {
   Entity,
   PrimaryGeneratedColumn,
@@ -8,8 +9,10 @@ import {
   JoinColumn,
   Index,
 } from 'typeorm';
-import { InvoiceReceiptEntity } from './InvoiceReceiptEntity.js';
+import type { InvoiceReceiptEntity } from './InvoiceReceiptEntity.js';
 import { InvoiceItemEntity } from './InvoiceItemEntity.js';
+
+const require = createRequire(import.meta.url);
 
 @Entity('invoice_receipt_items')
 export class InvoiceReceiptItemEntity {
@@ -33,7 +36,7 @@ export class InvoiceReceiptItemEntity {
   @UpdateDateColumn({ name: 'updated_at' })
   updatedAt!: Date;
 
-  @ManyToOne(() => InvoiceReceiptEntity, (receipt) => receipt.items, { onDelete: 'CASCADE' })
+  @ManyToOne(() => require('./InvoiceReceiptEntity.js').InvoiceReceiptEntity, (receipt) => receipt.items, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'receipt_id' })
   receipt!: InvoiceReceiptEntity;
 
