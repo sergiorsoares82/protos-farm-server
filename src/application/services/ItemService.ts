@@ -26,6 +26,10 @@ export class ItemService {
 
         let item: Item;
 
+        if (!data.unit?.trim()) {
+            throw new Error('Unidade de medida é obrigatória');
+        }
+
         if (data.type === ItemType.PRODUCT) {
             // Validate stock control requirements
             if (data.isStockControlled) {
@@ -38,9 +42,6 @@ export class ItemService {
                 if (data.price === undefined || data.price === null) {
                     throw new Error('Preço inicial é obrigatório quando o produto é estocável');
                 }
-                if (!data.unit?.trim()) {
-                    throw new Error('Unidade de medida é obrigatória quando o produto é estocável');
-                }
             }
 
             item = Item.createProduct(
@@ -48,7 +49,7 @@ export class ItemService {
                 data.name,
                 data.description,
                 data.price,
-                data.unit,
+                data.unit.trim(),
                 {
                     sku: data.sku,
                     isStockControlled: data.isStockControlled,
@@ -64,7 +65,7 @@ export class ItemService {
                 data.name,
                 data.description,
                 data.price,
-                data.unit
+                data.unit.trim()
             );
         } else {
             // For future types (ASSET, PAYROLL)
@@ -127,11 +128,15 @@ export class ItemService {
         // Update basic info
         if (data.name || data.description !== undefined ||
             data.price !== undefined || data.unit !== undefined) {
+            const unit = data.unit !== undefined ? data.unit : item.getUnit();
+            if (!unit?.trim()) {
+                throw new Error('Unidade de medida é obrigatória');
+            }
             item.updateInfo(
                 data.name || item.getName(),
                 data.description !== undefined ? data.description : item.getDescription(),
                 data.price !== undefined ? data.price : item.getPrice(),
-                data.unit !== undefined ? data.unit : item.getUnit()
+                unit.trim()
             );
         }
 

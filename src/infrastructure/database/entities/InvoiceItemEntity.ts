@@ -8,7 +8,7 @@ import {
   JoinColumn,
   Index,
 } from 'typeorm';
-import { InvoiceEntity } from './InvoiceEntity.js';
+import type { InvoiceEntity } from './InvoiceEntity.js';
 import { ItemEntity } from './ItemEntity.js';
 
 @Entity('invoice_items')
@@ -47,7 +47,7 @@ export class InvoiceItemEntity {
   @UpdateDateColumn({ name: 'updated_at' })
   updatedAt!: Date;
 
-  @ManyToOne(() => InvoiceEntity, (inv) => inv.items, { onDelete: 'CASCADE' })
+  @ManyToOne('InvoiceEntity', 'items', { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'invoice_id' })
   invoice!: InvoiceEntity;
 

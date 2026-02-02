@@ -5,7 +5,8 @@ export interface CreateItemDTO {
     description?: string;
     type: ItemType;
     price?: number;
-    unit?: string;
+    /** Código da unidade de medida (obrigatório para produto e serviço). */
+    unit: string;
     // Product-specific fields
     sku?: string;
     isStockControlled?: boolean;

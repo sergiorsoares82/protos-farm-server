@@ -137,7 +137,7 @@ export class ItemRepository implements IItemRepository {
             ...(entity.description && { description: entity.description }),
             type: entity.type as ItemType,
             ...(entity.price !== null && { price: Number(entity.price) }),
-            ...(entity.unit && { unit: entity.unit }),
+            unit: entity.unit?.trim() || 'UN',
             isActive: entity.isActive,
             ...(productDetails && { productDetails }),
             createdAt: entity.createdAt,

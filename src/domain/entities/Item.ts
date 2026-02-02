@@ -16,7 +16,8 @@ export interface ItemProps {
     description?: string | undefined;
     type: ItemType;
     price?: number | undefined;
-    unit?: string | undefined;
+    /** Código da unidade de medida (obrigatório). */
+    unit: string;
     isActive: boolean;
     productDetails?: ProductDetails | undefined;
     createdAt: Date;
@@ -30,7 +31,7 @@ export class Item {
     private description?: string | undefined;
     private readonly type: ItemType;
     private price?: number | undefined;
-    private unit?: string | undefined;
+    private unit: string;
     private isActive: boolean;
     private productDetails?: ProductDetails | undefined;
     private readonly createdAt: Date;
@@ -59,7 +60,7 @@ export class Item {
         name: string,
         description: string | undefined,
         price: number | undefined,
-        unit: string | undefined,
+        unit: string,
         productDetails: ProductDetails
     ): Item {
         const now = new Date();
@@ -86,7 +87,7 @@ export class Item {
         name: string,
         description: string | undefined,
         price: number | undefined,
-        unit: string | undefined
+        unit: string
     ): Item {
         const now = new Date();
         return new Item({
@@ -113,6 +114,9 @@ export class Item {
         if (!props.type) {
             throw new Error('Item type is required');
         }
+        if (!props.unit || props.unit.trim().length === 0) {
+            throw new Error('Unidade de medida é obrigatória');
+        }
     }
 
     /**
@@ -122,10 +126,13 @@ export class Item {
         name: string,
         description: string | undefined,
         price: number | undefined,
-        unit: string | undefined
+        unit: string
     ): void {
         if (!name || name.trim().length === 0) {
             throw new Error('Item name is required');
+        }
+        if (!unit || unit.trim().length === 0) {
+            throw new Error('Unidade de medida é obrigatória');
         }
 
         this.name = name;
@@ -201,7 +208,7 @@ export class Item {
         return this.price;
     }
 
-    getUnit(): string | undefined {
+    getUnit(): string {
         return this.unit;
     }
 
