@@ -96,9 +96,14 @@ export const canManageDocumentType = async (req: Request, res: Response, next: N
   
   // For org admin, check if it's a system type or belongs to their organization
   if (user.role === UserRole.ORG_ADMIN) {
+    const docTypeId = typeof id === 'string' ? id : undefined;
+    if (!docTypeId) {
+      res.status(400).json({ success: false, error: 'Invalid document type id' });
+      return;
+    }
     const { DocumentTypeRepository } = await import('../../infrastructure/repositories/DocumentTypeRepository.js');
     const repository = new DocumentTypeRepository();
-    const docType = await repository.findById(id);
+    const docType = await repository.findById(docTypeId);
     
     if (!docType) {
       res.status(404).json({

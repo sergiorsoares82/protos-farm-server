@@ -1,3 +1,4 @@
+import { IsNull } from 'typeorm';
 import { AppDataSource } from '../database/typeorm.config.js';
 import { DocumentTypeEntity } from '../database/entities/DocumentTypeEntity.js';
 import { DocumentType } from '../../domain/entities/DocumentType.js';
@@ -46,11 +47,12 @@ export class DocumentTypeRepository implements IDocumentTypeRepository {
 
   async findAllByTenant(tenantId: string | null): Promise<DocumentType[]> {
     // Return system types (tenantId = null) + organization types (tenantId = provided)
+    const where =
+      tenantId != null
+        ? [{ tenantId: IsNull() }, { tenantId }]
+        : [{ tenantId: IsNull() }];
     const entities = await this.repository.find({
-      where: [
-        { tenantId: null }, // System types
-        { tenantId }, // Organization types
-      ],
+      where,
       order: { isSystem: 'DESC', name: 'ASC' },
     });
     return entities.map((e) => this.toDomain(e));
