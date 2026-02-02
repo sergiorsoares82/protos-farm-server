@@ -9,8 +9,8 @@ export class CostCenterRepository implements ICostCenterRepository {
     private repo: Repository<CostCenterEntity>;
 
     constructor() {
-        // Use entity class directly; this matches metadata registered in AppDataSource.entities
-        this.repo = AppDataSource.getRepository(CostCenterEntity);
+        // Use entity name so we resolve the same metadata as DataSource (avoids bundle reference mismatch on Vercel)
+        this.repo = AppDataSource.getRepository('CostCenterEntity') as Repository<CostCenterEntity>;
     }
 
     async findAll(tenantId: string): Promise<CostCenter[]> {

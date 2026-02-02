@@ -1,13 +1,33 @@
 import 'reflect-metadata';
-import { dirname, join } from 'path';
-import { fileURLToPath } from 'url';
 import { DataSource } from 'typeorm';
-
-// ESM: __dirname equivalent
-const __dirname = dirname(fileURLToPath(import.meta.url));
-
-// Load entities by path so all are discovered at runtime (avoids bundler/order issues on Vercel)
-const entitiesPath = join(__dirname, 'entities', '*.js');
+import { OrganizationEntity } from './entities/OrganizationEntity.js';
+import { UserEntity } from './entities/UserEntity.js';
+import { PersonEntity } from './entities/PersonEntity.js';
+import { ClientEntity } from './entities/ClientEntity.js';
+import { SupplierEntity } from './entities/SupplierEntity.js';
+import { WorkerEntity } from './entities/WorkerEntity.js';
+import { FarmOwnerEntity } from './entities/FarmOwnerEntity.js';
+import { DocumentTypeEntity } from './entities/DocumentTypeEntity.js';
+import { ItemEntity } from './entities/ItemEntity.js';
+import { ProductEntity } from './entities/ProductEntity.js';
+import { CostCenterEntity } from './entities/CostCenterEntity.js';
+import { ManagementAccountEntity } from './entities/ManagementAccountEntity.js';
+import { CostCenterCategoryEntity } from './entities/CostCenterCategoryEntity.js';
+import { ManagementAccountCostCenterTypeEntity } from './entities/ManagementAccountCostCenterTypeEntity.js';
+import { FieldEntity } from './entities/FieldEntity.js';
+import { WorkLocationTypeEntity } from './entities/WorkLocationTypeEntity.js';
+import { UnitOfMeasureEntity } from './entities/UnitOfMeasureEntity.js';
+import { UnitOfMeasureConversionEntity } from './entities/UnitOfMeasureConversionEntity.js';
+import { SeasonEntity } from './entities/SeasonEntity.js';
+import { FieldSeasonEntity } from './entities/FieldSeasonEntity.js';
+import { MachineTypeEntity } from './entities/MachineTypeEntity.js';
+import { MachineEntity } from './entities/MachineEntity.js';
+import { AssetEntity } from './entities/AssetEntity.js';
+import { StockMovementTypeEntity } from './entities/StockMovementTypeEntity.js';
+import { StockMovementEntity } from './entities/StockMovementEntity.js';
+import { InvoiceEntity } from './entities/InvoiceEntity.js';
+import { InvoiceItemEntity } from './entities/InvoiceItemEntity.js';
+import { InvoiceFinancialEntity } from './entities/InvoiceFinancialEntity.js';
 
 // Get database configuration from environment variables
 const getDatabaseUrl = (): string => {
@@ -55,7 +75,36 @@ export const AppDataSource = new DataSource({
   url: getDatabaseUrl(),
   synchronize: true, // Auto-create tables (disable in production, use migrations instead)
   logging: process.env.NODE_ENV !== 'production',
-  entities: [entitiesPath],
+  entities: [
+    OrganizationEntity,
+    UserEntity,
+    PersonEntity,
+    ClientEntity,
+    SupplierEntity,
+    WorkerEntity,
+    FarmOwnerEntity,
+    DocumentTypeEntity,
+    ItemEntity,
+    ProductEntity,
+    CostCenterEntity,
+    ManagementAccountEntity,
+    CostCenterCategoryEntity,
+    ManagementAccountCostCenterTypeEntity,
+    FieldEntity,
+    WorkLocationTypeEntity,
+    UnitOfMeasureEntity,
+    UnitOfMeasureConversionEntity,
+    SeasonEntity,
+    FieldSeasonEntity,
+    MachineTypeEntity,
+    MachineEntity,
+    AssetEntity,
+    StockMovementTypeEntity,
+    StockMovementEntity,
+    InvoiceEntity,
+    InvoiceItemEntity,
+    InvoiceFinancialEntity,
+  ],
   migrations: [],
   subscribers: [],
   // Neon requires SSL; local docker/postgres usually does not.
