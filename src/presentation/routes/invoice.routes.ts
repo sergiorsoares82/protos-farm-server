@@ -1,7 +1,15 @@
 import { Router } from 'express';
 import { InvoiceController } from '../controllers/InvoiceController.js';
+import { InvoiceReceiptController } from '../controllers/InvoiceReceiptController.js';
 import { InvoiceService } from '../../application/services/InvoiceService.js';
+import { InvoiceReceiptService } from '../../application/services/InvoiceReceiptService.js';
 import { InvoiceRepository } from '../../infrastructure/repositories/InvoiceRepository.js';
+import { InvoiceReceiptRepository } from '../../infrastructure/repositories/InvoiceReceiptRepository.js';
+import { StockMovementService } from '../../application/services/StockMovementService.js';
+import { StockMovementTypeService } from '../../application/services/StockMovementTypeService.js';
+import { StockMovementRepository } from '../../infrastructure/repositories/StockMovementRepository.js';
+import { StockMovementTypeRepository } from '../../infrastructure/repositories/StockMovementTypeRepository.js';
+import { ItemRepository } from '../../infrastructure/repositories/ItemRepository.js';
 import { authenticate } from '../middleware/auth.js';
 import { tenantContextMiddleware, requireTenant } from '../../infrastructure/middleware/tenantContext.js';
 
@@ -14,9 +22,30 @@ export function createInvoiceRoutes(): Router {
 
   const invoiceRepository = new InvoiceRepository();
   const invoiceService = new InvoiceService(invoiceRepository);
-  const invoiceController = new InvoiceController(invoiceService);
+
+  const invoiceReceiptRepository = new InvoiceReceiptRepository();
+  const stockMovementRepository = new StockMovementRepository();
+  const stockMovementTypeRepository = new StockMovementTypeRepository();
+  const itemRepository = new ItemRepository();
+  const stockMovementTypeService = new StockMovementTypeService(stockMovementTypeRepository);
+  const stockMovementService = new StockMovementService(
+    stockMovementRepository,
+    stockMovementTypeRepository,
+    itemRepository,
+  );
+  const invoiceReceiptService = new InvoiceReceiptService(
+    invoiceRepository,
+    invoiceReceiptRepository,
+    stockMovementService,
+    stockMovementTypeService,
+  );
+
+  const invoiceController = new InvoiceController(invoiceService, invoiceReceiptService);
+  const invoiceReceiptController = new InvoiceReceiptController(invoiceReceiptService);
 
   router.get('/', (req, res) => invoiceController.getAllInvoices(req, res));
+  router.get('/:invoiceId/receipts', (req, res) => invoiceReceiptController.getReceiptsByInvoiceId(req, res));
+  router.post('/:invoiceId/receipts', (req, res) => invoiceReceiptController.createReceipt(req, res));
   router.get('/:id', (req, res) => invoiceController.getInvoice(req, res));
   router.post('/', (req, res) => invoiceController.createInvoice(req, res));
   router.put('/:id', (req, res) => invoiceController.updateInvoice(req, res));

@@ -41,6 +41,18 @@ export class InvoiceItemEntity {
   @Column({ type: 'int', name: 'line_order', default: 0 })
   lineOrder!: number;
 
+  @Column({ type: 'uuid', name: 'cost_center_id', nullable: true })
+  costCenterId!: string | null;
+
+  @Column({ type: 'uuid', name: 'management_account_id', nullable: true })
+  managementAccountId!: string | null;
+
+  @Column({ type: 'uuid', name: 'season_id', nullable: true })
+  seasonId!: string | null;
+
+  @Column({ type: 'boolean', name: 'goes_to_stock', default: false })
+  goesToStock!: boolean;
+
   @CreateDateColumn({ name: 'created_at' })
   createdAt!: Date;
 

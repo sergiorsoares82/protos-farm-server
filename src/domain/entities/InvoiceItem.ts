@@ -10,6 +10,10 @@ export interface InvoiceItemProps {
   unit: string;
   unitPrice: number;
   lineOrder: number;
+  costCenterId?: string | null;
+  managementAccountId?: string | null;
+  seasonId?: string | null;
+  goesToStock?: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -27,6 +31,10 @@ export class InvoiceItem {
   private unit: string;
   private unitPrice: number;
   private lineOrder: number;
+  private costCenterId: string | null;
+  private managementAccountId: string | null;
+  private seasonId: string | null;
+  private goesToStock: boolean;
   private readonly createdAt: Date;
   private updatedAt: Date;
 
@@ -41,6 +49,10 @@ export class InvoiceItem {
     this.unit = props.unit;
     this.unitPrice = props.unitPrice;
     this.lineOrder = props.lineOrder;
+    this.costCenterId = props.costCenterId ?? null;
+    this.managementAccountId = props.managementAccountId ?? null;
+    this.seasonId = props.seasonId ?? null;
+    this.goesToStock = props.goesToStock ?? false;
     this.createdAt = props.createdAt;
     this.updatedAt = props.updatedAt;
   }
@@ -53,7 +65,11 @@ export class InvoiceItem {
     unit: string,
     unitPrice: number,
     lineOrder: number,
-    description?: string
+    description?: string,
+    costCenterId?: string | null,
+    managementAccountId?: string | null,
+    seasonId?: string | null,
+    goesToStock?: boolean
   ): InvoiceItem {
     const now = new Date();
     return new InvoiceItem({
@@ -66,6 +82,10 @@ export class InvoiceItem {
       unit,
       unitPrice,
       lineOrder,
+      costCenterId: costCenterId ?? null,
+      managementAccountId: managementAccountId ?? null,
+      seasonId: seasonId ?? null,
+      goesToStock: goesToStock ?? false,
       createdAt: now,
       updatedAt: now,
     });
@@ -97,7 +117,11 @@ export class InvoiceItem {
     unit: string,
     unitPrice: number,
     lineOrder: number,
-    description?: string
+    description?: string,
+    costCenterId?: string | null,
+    managementAccountId?: string | null,
+    seasonId?: string | null,
+    goesToStock?: boolean
   ): void {
     if (!itemId?.trim()) throw new Error('Item is required');
     if (typeof quantity !== 'number' || quantity <= 0) throw new Error('Quantity must be positive');
@@ -110,6 +134,10 @@ export class InvoiceItem {
     this.unitPrice = unitPrice;
     this.lineOrder = lineOrder;
     this.description = description;
+    if (costCenterId !== undefined) this.costCenterId = costCenterId;
+    if (managementAccountId !== undefined) this.managementAccountId = managementAccountId;
+    if (seasonId !== undefined) this.seasonId = seasonId;
+    if (goesToStock !== undefined) this.goesToStock = goesToStock;
     this.updatedAt = new Date();
   }
 
@@ -122,6 +150,10 @@ export class InvoiceItem {
   getUnit(): string { return this.unit; }
   getUnitPrice(): number { return this.unitPrice; }
   getLineOrder(): number { return this.lineOrder; }
+  getCostCenterId(): string | null { return this.costCenterId; }
+  getManagementAccountId(): string | null { return this.managementAccountId; }
+  getSeasonId(): string | null { return this.seasonId; }
+  getGoesToStock(): boolean { return this.goesToStock; }
   getCreatedAt(): Date { return this.createdAt; }
   getUpdatedAt(): Date { return this.updatedAt; }
 
@@ -137,6 +169,10 @@ export class InvoiceItem {
       unitPrice: this.unitPrice,
       totalPrice: this.getTotalPrice(),
       lineOrder: this.lineOrder,
+      costCenterId: this.costCenterId,
+      managementAccountId: this.managementAccountId,
+      seasonId: this.seasonId,
+      goesToStock: this.goesToStock,
       createdAt: this.createdAt,
       updatedAt: this.updatedAt,
     };

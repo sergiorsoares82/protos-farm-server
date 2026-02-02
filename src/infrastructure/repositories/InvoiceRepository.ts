@@ -72,6 +72,10 @@ export class InvoiceRepository implements IInvoiceRepository {
       itemEnt.unit = line.getUnit();
       itemEnt.unitPrice = line.getUnitPrice();
       itemEnt.lineOrder = line.getLineOrder();
+      itemEnt.costCenterId = line.getCostCenterId();
+      itemEnt.managementAccountId = line.getManagementAccountId();
+      itemEnt.seasonId = line.getSeasonId();
+      itemEnt.goesToStock = line.getGoesToStock();
       await this.itemRepo.save(itemEnt);
     }
 
@@ -151,6 +155,10 @@ export class InvoiceRepository implements IInvoiceRepository {
       unit: entity.unit,
       unitPrice: Number(entity.unitPrice),
       lineOrder: entity.lineOrder,
+      costCenterId: entity.costCenterId ?? null,
+      managementAccountId: entity.managementAccountId ?? null,
+      seasonId: entity.seasonId ?? null,
+      goesToStock: entity.goesToStock ?? false,
       createdAt: entity.createdAt,
       updatedAt: entity.updatedAt,
     });

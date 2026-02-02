@@ -1,9 +1,13 @@
 import type { Request, Response } from 'express';
 import { InvoiceService } from '../../application/services/InvoiceService.js';
+import type { InvoiceReceiptService } from '../../application/services/InvoiceReceiptService.js';
 import type { CreateInvoiceDTO, UpdateInvoiceDTO } from '../../application/dtos/InvoiceDTOs.js';
 
 export class InvoiceController {
-  constructor(private readonly invoiceService: InvoiceService) {}
+  constructor(
+    private readonly invoiceService: InvoiceService,
+    private readonly receiptService?: InvoiceReceiptService,
+  ) {}
 
   async getAllInvoices(req: Request, res: Response): Promise<void> {
     try {
@@ -29,7 +33,18 @@ export class InvoiceController {
       }
       const tenantId = req.tenant!.tenantId;
       const invoice = await this.invoiceService.getInvoice(tenantId, id);
-      res.status(200).json({ success: true, data: invoice.toJSON() });
+      let data: Record<string, unknown> = invoice.toJSON() as Record<string, unknown>;
+      if (this.receiptService) {
+        const receivedTotals = await this.receiptService.getReceivedTotalsByInvoiceId(tenantId, id);
+        data = {
+          ...data,
+          items: invoice.getItems().map((item) => ({
+            ...item.toJSON(),
+            quantityReceivedTotal: receivedTotals[item.getId()] ?? 0,
+          })),
+        };
+      }
+      res.status(200).json({ success: true, data });
     } catch (error) {
       console.error('Get invoice error:', error);
       const message = error instanceof Error ? error.message : 'Falha ao buscar nota fiscal';

@@ -11,6 +11,10 @@ export interface InvoiceItemDTO {
   unit: string;
   unitPrice: number;
   lineOrder: number;
+  costCenterId?: string | null;
+  managementAccountId?: string | null;
+  seasonId?: string | null;
+  goesToStock?: boolean;
 }
 
 export interface InvoiceFinancialDTO {

@@ -42,7 +42,11 @@ export class InvoiceService {
         dto.unit,
         dto.unitPrice,
         lineOrder++,
-        dto.description
+        dto.description,
+        dto.costCenterId ?? null,
+        dto.managementAccountId ?? null,
+        dto.seasonId ?? null,
+        dto.goesToStock ?? false
       );
       invoice.addItem(item);
     }
@@ -111,7 +115,11 @@ export class InvoiceService {
           dto.unit,
           dto.unitPrice,
           lineOrder++,
-          dto.description
+          dto.description,
+          dto.costCenterId ?? null,
+          dto.managementAccountId ?? null,
+          dto.seasonId ?? null,
+          dto.goesToStock ?? false
         );
         invoice.addItem(item);
       }
