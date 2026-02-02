@@ -1,12 +1,15 @@
 import type { Request, Response } from 'express';
+import { InvoiceType } from '../../domain/enums/InvoiceType.js';
 import { InvoiceService } from '../../application/services/InvoiceService.js';
 import type { InvoiceReceiptService } from '../../application/services/InvoiceReceiptService.js';
+import type { InvoiceShipmentService } from '../../application/services/InvoiceShipmentService.js';
 import type { CreateInvoiceDTO, UpdateInvoiceDTO } from '../../application/dtos/InvoiceDTOs.js';
 
 export class InvoiceController {
   constructor(
     private readonly invoiceService: InvoiceService,
     private readonly receiptService?: InvoiceReceiptService,
+    private readonly shipmentService?: InvoiceShipmentService,
   ) {}
 
   async getAllInvoices(req: Request, res: Response): Promise<void> {
@@ -14,8 +17,18 @@ export class InvoiceController {
       const tenantId = req.tenant!.tenantId;
       const pendingReceipt = req.query.pendingReceipt === 'true' || req.query.pendingReceipt === '1';
       const withReceipts = req.query.withReceipts === 'true' || req.query.withReceipts === '1';
+      const pendingShipment = req.query.pendingShipment === 'true' || req.query.pendingShipment === '1';
+      const withShipments = req.query.withShipments === 'true' || req.query.withShipments === '1';
       let invoices = await this.invoiceService.getAllInvoices(tenantId);
       let receivedTotalsMap: Map<string, Record<string, number>> | null = null;
+      let shippedTotalsMap: Map<string, Record<string, number>> | null = null;
+
+      if (pendingReceipt || withReceipts) {
+        invoices = invoices.filter((inv) => inv.getType() === InvoiceType.DESPESA);
+      } else if (pendingShipment || withShipments) {
+        invoices = invoices.filter((inv) => inv.getType() === InvoiceType.RECEITA);
+      }
+
       if ((pendingReceipt || withReceipts) && this.receiptService) {
         const ids = invoices.map((inv) => inv.getId());
         receivedTotalsMap = await this.receiptService.getReceivedTotalsByInvoiceIds(tenantId, ids);
@@ -35,6 +48,27 @@ export class InvoiceController {
           });
         }
       }
+
+      if ((pendingShipment || withShipments) && this.shipmentService) {
+        const ids = invoices.map((inv) => inv.getId());
+        shippedTotalsMap = await this.shipmentService.getShippedTotalsByInvoiceIds(tenantId, ids);
+        if (pendingShipment) {
+          invoices = invoices.filter((inv) => {
+            const totals = shippedTotalsMap!.get(inv.getId()) ?? {};
+            return inv.getItems().some((item) => {
+              if (!item.getGoesToStock()) return false;
+              const shipped = totals[item.getId()] ?? 0;
+              return item.getQuantity() - shipped > 0;
+            });
+          });
+        } else if (withShipments) {
+          invoices = invoices.filter((inv) => {
+            const totals = shippedTotalsMap!.get(inv.getId()) ?? {};
+            return Object.keys(totals).length > 0;
+          });
+        }
+      }
+
       res.status(200).json({
         success: true,
         data: invoices.map((inv) => {
@@ -45,6 +79,14 @@ export class InvoiceController {
               ...item.toJSON(),
               quantityReceivedTotal: totals[item.getId()] ?? 0,
             }));
+          }
+          if (shippedTotalsMap) {
+            const totals = shippedTotalsMap.get(inv.getId()) ?? {};
+            const currentItems = (json.items as Array<Record<string, unknown>>) ?? inv.getItems().map((i) => i.toJSON());
+            (json.items as Array<Record<string, unknown>>) = inv.getItems().map((item) => {
+              const base = currentItems.find((i) => i.id === item.getId()) ?? item.toJSON();
+              return { ...base, quantityShippedTotal: totals[item.getId()] ?? 0 };
+            });
           }
           return json;
         }),
@@ -74,6 +116,17 @@ export class InvoiceController {
             ...item.toJSON(),
             quantityReceivedTotal: receivedTotals[item.getId()] ?? 0,
           })),
+        };
+      }
+      if (this.shipmentService && invoice.getType() === InvoiceType.RECEITA) {
+        const shippedTotals = await this.shipmentService.getShippedTotalsByInvoiceId(tenantId, id);
+        const currentItems = (data.items as Array<Record<string, unknown>>) ?? invoice.getItems().map((i) => i.toJSON());
+        data = {
+          ...data,
+          items: invoice.getItems().map((item) => {
+            const base = currentItems.find((i) => i.id === item.getId()) ?? item.toJSON();
+            return { ...base, quantityShippedTotal: shippedTotals[item.getId()] ?? 0 };
+          }),
         };
       }
       res.status(200).json({ success: true, data });
