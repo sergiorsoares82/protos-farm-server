@@ -29,6 +29,24 @@ import { createSupplierRoutes } from './presentation/routes/supplier.routes.js';
 
 const app = express();
 
+// Start DB initialization immediately so it's ready before first request (avoids race on Vercel cold start)
+const dbReady = initializeDatabase();
+
+// Wait for DB to be ready before handling any request (fixes "first request fails" on serverless)
+app.use(async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    await dbReady;
+    next();
+  } catch (err) {
+    console.error('Database not ready:', err);
+    res.status(503).json({
+      error: 'Service Unavailable',
+      message: 'Database is initializing. Please retry.',
+      statusCode: 503,
+    });
+  }
+});
+
 // CORS configuration
 const corsOptions = {
   origin: process.env.CORS_ORIGIN || '*', // Allow all origins in development
@@ -142,8 +160,7 @@ app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
 // Initialize database and start server
 async function startServer() {
   try {
-    // Initialize database connection
-    await initializeDatabase();
+    await dbReady;
 
     // Only start server if not running in serverless environment (Vercel)
     if (process.env.VERCEL !== '1') {
