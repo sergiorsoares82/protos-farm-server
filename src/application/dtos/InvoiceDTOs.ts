@@ -15,6 +15,8 @@ export interface InvoiceItemDTO {
   managementAccountId?: string | null;
   seasonId?: string | null;
   goesToStock?: boolean;
+  /** Se true, ao salvar a nota cria recebimento no estoque com quantidade da linha e data de emissão */
+  received?: boolean;
 }
 
 export interface InvoiceFinancialDTO {

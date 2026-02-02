@@ -46,6 +46,7 @@ export function createInvoiceRoutes(): Router {
   router.get('/', (req, res) => invoiceController.getAllInvoices(req, res));
   router.get('/:invoiceId/receipts', (req, res) => invoiceReceiptController.getReceiptsByInvoiceId(req, res));
   router.post('/:invoiceId/receipts', (req, res) => invoiceReceiptController.createReceipt(req, res));
+  router.delete('/:invoiceId/receipts/:receiptId', (req, res) => invoiceReceiptController.deleteReceipt(req, res));
   router.get('/:id', (req, res) => invoiceController.getInvoice(req, res));
   router.post('/', (req, res) => invoiceController.createInvoice(req, res));
   router.put('/:id', (req, res) => invoiceController.updateInvoice(req, res));

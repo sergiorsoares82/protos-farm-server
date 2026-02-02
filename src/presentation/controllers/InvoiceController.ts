@@ -12,10 +12,42 @@ export class InvoiceController {
   async getAllInvoices(req: Request, res: Response): Promise<void> {
     try {
       const tenantId = req.tenant!.tenantId;
-      const invoices = await this.invoiceService.getAllInvoices(tenantId);
+      const pendingReceipt = req.query.pendingReceipt === 'true' || req.query.pendingReceipt === '1';
+      const withReceipts = req.query.withReceipts === 'true' || req.query.withReceipts === '1';
+      let invoices = await this.invoiceService.getAllInvoices(tenantId);
+      let receivedTotalsMap: Map<string, Record<string, number>> | null = null;
+      if ((pendingReceipt || withReceipts) && this.receiptService) {
+        const ids = invoices.map((inv) => inv.getId());
+        receivedTotalsMap = await this.receiptService.getReceivedTotalsByInvoiceIds(tenantId, ids);
+        if (pendingReceipt) {
+          invoices = invoices.filter((inv) => {
+            const totals = receivedTotalsMap!.get(inv.getId()) ?? {};
+            return inv.getItems().some((item) => {
+              if (!item.getGoesToStock()) return false;
+              const received = totals[item.getId()] ?? 0;
+              return item.getQuantity() - received > 0;
+            });
+          });
+        } else if (withReceipts) {
+          invoices = invoices.filter((inv) => {
+            const totals = receivedTotalsMap!.get(inv.getId()) ?? {};
+            return Object.keys(totals).length > 0;
+          });
+        }
+      }
       res.status(200).json({
         success: true,
-        data: invoices.map((inv) => inv.toJSON()),
+        data: invoices.map((inv) => {
+          const json = inv.toJSON() as Record<string, unknown>;
+          if (receivedTotalsMap) {
+            const totals = receivedTotalsMap.get(inv.getId()) ?? {};
+            (json.items as Array<Record<string, unknown>>) = inv.getItems().map((item) => ({
+              ...item.toJSON(),
+              quantityReceivedTotal: totals[item.getId()] ?? 0,
+            }));
+          }
+          return json;
+        }),
       });
     } catch (error) {
       console.error('Get all invoices error:', error);
@@ -61,6 +93,23 @@ export class InvoiceController {
       const tenantId = req.tenant!.tenantId;
       const body = req.body as CreateInvoiceDTO;
       const invoice = await this.invoiceService.createInvoice(tenantId, body);
+      if (this.receiptService && body.items?.length) {
+        const receiptItems: { invoiceItemId: string; quantityReceived: number }[] = [];
+        const savedItems = invoice.getItems();
+        for (let i = 0; i < body.items.length && i < savedItems.length; i++) {
+          const dto = body.items[i];
+          const item = savedItems[i];
+          if (dto && item && dto.goesToStock && dto.received && dto.quantity > 0) {
+            receiptItems.push({ invoiceItemId: item.getId(), quantityReceived: item.getQuantity() });
+          }
+        }
+        if (receiptItems.length > 0) {
+          await this.receiptService.createReceipt(tenantId, invoice.getId(), {
+            receiptDate: invoice.getIssueDate().toISOString().slice(0, 10),
+            items: receiptItems,
+          });
+        }
+      }
       res.status(201).json({
         success: true,
         data: invoice.toJSON(),
@@ -83,6 +132,23 @@ export class InvoiceController {
       const tenantId = req.tenant!.tenantId;
       const body = req.body as UpdateInvoiceDTO;
       const invoice = await this.invoiceService.updateInvoice(tenantId, id, body);
+      if (this.receiptService && body.items?.length) {
+        const receiptItems: { invoiceItemId: string; quantityReceived: number }[] = [];
+        const savedItems = invoice.getItems();
+        for (let i = 0; i < body.items.length && i < savedItems.length; i++) {
+          const dto = body.items[i];
+          const item = savedItems[i];
+          if (dto && item && dto.goesToStock && dto.received && dto.quantity > 0) {
+            receiptItems.push({ invoiceItemId: item.getId(), quantityReceived: item.getQuantity() });
+          }
+        }
+        if (receiptItems.length > 0) {
+          await this.receiptService.createReceipt(tenantId, invoice.getId(), {
+            receiptDate: invoice.getIssueDate().toISOString().slice(0, 10),
+            items: receiptItems,
+          });
+        }
+      }
       res.status(200).json({
         success: true,
         data: invoice.toJSON(),

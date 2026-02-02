@@ -7,6 +7,7 @@ import type { StockMovementService } from './StockMovementService.js';
 import type { StockMovementTypeService } from './StockMovementTypeService.js';
 
 const COMPRA_TYPE_CODE = 'COMPRA';
+const SAIDA_AJUSTE_TYPE_CODE = 'SAIDA_AJUSTE';
 
 export class InvoiceReceiptService {
   constructor(
@@ -121,6 +122,71 @@ export class InvoiceReceiptService {
       }
     }
     return map;
+  }
+
+  /**
+   * Deletes a receipt and reverts associated stock movements (creates SAIDA_AJUSTE to offset the COMPRA entries).
+   */
+  async deleteReceipt(tenantId: string, invoiceId: string, receiptId: string): Promise<void> {
+    const receipt = await this.receiptRepository.findById(receiptId, tenantId);
+    if (!receipt || receipt.getInvoiceId() !== invoiceId) {
+      throw new Error('Recebimento não encontrado');
+    }
+    const invoice = await this.invoiceRepository.findById(invoiceId, tenantId);
+    if (!invoice) {
+      throw new Error('Nota fiscal não encontrada');
+    }
+    const invoiceItemMap = new Map(invoice.getItems().map((i) => [i.getId(), i]));
+    const types = await this.stockMovementTypeService.getAllTypes(tenantId);
+    const saidaAjusteType = types.find((t) => t.getCode() === SAIDA_AJUSTE_TYPE_CODE);
+    if (!saidaAjusteType) {
+      throw new Error(
+        'Tipo de movimento "Saída de ajuste" não encontrado. Execute o seed de tipos de movimento de estoque.'
+      );
+    }
+    const receiptDateStr = receipt.getReceiptDate().toISOString().slice(0, 10);
+    for (const line of receipt.getItems()) {
+      const invoiceItem = invoiceItemMap.get(line.getInvoiceItemId());
+      if (invoiceItem && invoiceItem.getGoesToStock() && line.getQuantityReceived() > 0) {
+        await this.stockMovementService.createMovement(tenantId, {
+          movementDate: receiptDateStr,
+          stockMovementTypeId: saidaAjusteType.getId(),
+          itemId: invoiceItem.getItemId(),
+          unit: invoiceItem.getUnit(),
+          quantity: line.getQuantityReceived(),
+          workLocationId: null,
+          seasonId: invoiceItem.getSeasonId() ?? null,
+          costCenterId: invoiceItem.getCostCenterId(),
+          managementAccountId: invoiceItem.getManagementAccountId(),
+        });
+      }
+    }
+    await this.receiptRepository.delete(receiptId, tenantId);
+  }
+
+  /**
+   * Returns total quantity received per invoice item ID, keyed by invoice ID (for filtering pending receipts).
+   */
+  async getReceivedTotalsByInvoiceIds(
+    tenantId: string,
+    invoiceIds: string[]
+  ): Promise<Map<string, Record<string, number>>> {
+    if (invoiceIds.length === 0) return new Map();
+    const receipts = await this.receiptRepository.findByInvoiceIds(tenantId, invoiceIds);
+    const byInvoice = new Map<string, Record<string, number>>();
+    for (const rec of receipts) {
+      const invId = rec.getInvoiceId();
+      let map = byInvoice.get(invId);
+      if (!map) {
+        map = {};
+        byInvoice.set(invId, map);
+      }
+      for (const line of rec.getItems()) {
+        const itemId = line.getInvoiceItemId();
+        map[itemId] = (map[itemId] ?? 0) + line.getQuantityReceived();
+      }
+    }
+    return byInvoice;
   }
 
   private toDTO(receipt: InvoiceReceipt): InvoiceReceiptDTO {

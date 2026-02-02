@@ -51,4 +51,29 @@ export class InvoiceReceiptController {
       res.status(400).json({ success: false, error: message });
     }
   }
+
+  async deleteReceipt(req: Request, res: Response): Promise<void> {
+    try {
+      const invoiceId = Array.isArray(req.params.invoiceId) ? req.params.invoiceId[0] : req.params.invoiceId;
+      const receiptId = Array.isArray(req.params.receiptId) ? req.params.receiptId[0] : req.params.receiptId;
+      if (!invoiceId || !receiptId) {
+        res.status(400).json({ success: false, error: 'ID da nota fiscal e do recebimento são obrigatórios' });
+        return;
+      }
+      const tenantId = req.tenant!.tenantId;
+      await this.receiptService.deleteReceipt(tenantId, invoiceId, receiptId);
+      res.status(200).json({
+        success: true,
+        message: 'Recebimento excluído com sucesso. O estoque foi ajustado.',
+      });
+    } catch (error) {
+      console.error('Delete receipt error:', error);
+      const message = error instanceof Error ? error.message : 'Falha ao excluir recebimento';
+      if (message.includes('não encontrada') || message.includes('não encontrado')) {
+        res.status(404).json({ success: false, error: message });
+        return;
+      }
+      res.status(400).json({ success: false, error: message });
+    }
+  }
 }

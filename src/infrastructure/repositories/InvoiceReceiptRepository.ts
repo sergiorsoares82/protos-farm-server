@@ -1,4 +1,4 @@
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import type { IInvoiceReceiptRepository } from '../../domain/repositories/IInvoiceReceiptRepository.js';
 import { InvoiceReceipt } from '../../domain/entities/InvoiceReceipt.js';
 import { InvoiceReceiptItem } from '../../domain/entities/InvoiceReceiptItem.js';
@@ -59,6 +59,21 @@ export class InvoiceReceiptRepository implements IInvoiceReceiptRepository {
       order: { receiptDate: 'ASC', createdAt: 'ASC' },
     });
     return entities.map((e) => this.toDomain(e));
+  }
+
+  async findByInvoiceIds(tenantId: string, invoiceIds: string[]): Promise<InvoiceReceipt[]> {
+    if (invoiceIds.length === 0) return [];
+    const entities = await this.receiptRepo.find({
+      where: { tenantId, invoiceId: In(invoiceIds) },
+      relations: ['items'],
+      order: { receiptDate: 'ASC', createdAt: 'ASC' },
+    });
+    return entities.map((e) => this.toDomain(e));
+  }
+
+  async delete(id: string, tenantId: string): Promise<void> {
+    await this.itemRepo.delete({ receiptId: id });
+    await this.receiptRepo.delete({ id, tenantId });
   }
 
   private toDomain(entity: InvoiceReceiptEntity): InvoiceReceipt {
