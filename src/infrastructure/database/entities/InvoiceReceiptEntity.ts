@@ -12,6 +12,7 @@ import {
 import { OrganizationEntity } from './OrganizationEntity.js';
 import { InvoiceEntity } from './InvoiceEntity.js';
 import { InvoiceReceiptItemEntity } from './InvoiceReceiptItemEntity.js';
+import { registerEntity } from './entityRegistry.js';
 
 @Entity('invoice_receipts')
 export class InvoiceReceiptEntity {
@@ -49,3 +50,5 @@ export class InvoiceReceiptEntity {
   @OneToMany(() => InvoiceReceiptItemEntity, (item) => item.receipt, { cascade: true })
   items!: InvoiceReceiptItemEntity[];
 }
+
+registerEntity('InvoiceReceiptEntity', InvoiceReceiptEntity);
