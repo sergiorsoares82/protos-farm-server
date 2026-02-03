@@ -66,7 +66,11 @@ export class InvoiceFinancialsTypeRepository implements IInvoiceFinancialsTypeRe
   }
 
   async delete(id: string, tenantId: string | null): Promise<void> {
-    await this.repo.delete({ id, tenantId });
+    const where =
+      tenantId != null
+        ? { id, tenantId }
+        : { id, tenantId: IsNull() };
+    await this.repo.delete(where);
   }
 
   private toDomain(entity: InvoiceFinancialsTypeEntity): InvoiceFinancialsType {
