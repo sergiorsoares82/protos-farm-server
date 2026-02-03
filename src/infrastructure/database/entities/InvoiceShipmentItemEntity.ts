@@ -35,7 +35,7 @@ export class InvoiceShipmentItemEntity {
 
   @ManyToOne(() => InvoiceShipmentEntity, (shipment) => shipment.items, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'shipment_id' })
-  shipment!: InvoiceShipmentEntity;
+  shipment!: any;
 
   @ManyToOne(() => InvoiceItemEntity)
   @JoinColumn({ name: 'invoice_item_id' })
