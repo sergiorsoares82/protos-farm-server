@@ -140,3 +140,69 @@ export const canManageDocumentType = async (req: Request, res: Response, next: N
     error: 'Insufficient permissions',
   });
 };
+
+/**
+ * Middleware to check if user can manage an invoice financial type (update/delete).
+ * Super admin can manage all (including system types).
+ * Org admin can only manage their own organization's types (not system types).
+ */
+export const canManageInvoiceFinancialType = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  const user = (req as any).user;
+  const { id } = req.params;
+
+  if (!user) {
+    res.status(401).json({
+      success: false,
+      error: 'Authentication required',
+    });
+    return;
+  }
+
+  if (user.role === UserRole.SUPER_ADMIN) {
+    next();
+    return;
+  }
+
+  if (user.role === UserRole.ORG_ADMIN) {
+    const typeId = typeof id === 'string' ? id : undefined;
+    if (!typeId) {
+      res.status(400).json({ success: false, error: 'Invalid invoice financial type id' });
+      return;
+    }
+    const { InvoiceFinancialsTypeRepository } = await import('../../infrastructure/repositories/InvoiceFinancialsTypeRepository.js');
+    const repository = new InvoiceFinancialsTypeRepository();
+    const type = await repository.findByIdAny(typeId);
+
+    if (!type) {
+      res.status(404).json({
+        success: false,
+        error: 'Invoice financial type not found',
+      });
+      return;
+    }
+
+    if (type.getIsSystem()) {
+      res.status(403).json({
+        success: false,
+        error: 'Cannot edit system invoice financial types',
+      });
+      return;
+    }
+
+    if (type.getTenantId() === user.tenantId) {
+      next();
+      return;
+    }
+
+    res.status(403).json({
+      success: false,
+      error: 'Cannot manage this invoice financial type',
+    });
+    return;
+  }
+
+  res.status(403).json({
+    success: false,
+    error: 'Insufficient permissions',
+  });
+};

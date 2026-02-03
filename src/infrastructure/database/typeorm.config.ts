@@ -32,6 +32,8 @@ import { InvoiceReceiptEntity } from './entities/InvoiceReceiptEntity.js';
 import { InvoiceReceiptItemEntity } from './entities/InvoiceReceiptItemEntity.js';
 import { InvoiceShipmentEntity } from './entities/InvoiceShipmentEntity.js';
 import { InvoiceShipmentItemEntity } from './entities/InvoiceShipmentItemEntity.js';
+import { InvoiceFinancialsTypeEntity } from './entities/InvoiceFinancialsTypeEntity.js';
+import { BankAccountEntity } from './entities/BankAccountEntity.js';
 
 // Get database configuration from environment variables
 const getDatabaseUrl = (): string => {
@@ -112,6 +114,8 @@ export const AppDataSource = new DataSource({
     InvoiceReceiptItemEntity,
     InvoiceShipmentEntity,
     InvoiceShipmentItemEntity,
+    InvoiceFinancialsTypeEntity,
+    BankAccountEntity,
   ],
   migrations: [],
   subscribers: [],

@@ -25,7 +25,9 @@ import { createAssetRoutes } from './presentation/routes/asset.routes.js';
 import { createStockMovementTypeRoutes } from './presentation/routes/stock-movement-type.routes.js';
 import { createStockMovementRoutes } from './presentation/routes/stock-movement.routes.js';
 import { createInvoiceRoutes } from './presentation/routes/invoice.routes.js';
+import { createInvoiceFinancialsTypeRoutes } from './presentation/routes/invoice-financials-type.routes.js';
 import { createSupplierRoutes } from './presentation/routes/supplier.routes.js';
+import { createBankAccountRoutes } from './presentation/routes/bank-account.routes.js';
 
 const app = express();
 
@@ -135,8 +137,14 @@ app.use('/api/stock-movements', createStockMovementRoutes());
 // Invoices (notas fiscais)
 app.use('/api/invoices', createInvoiceRoutes());
 
+// Invoice financial (payment) types – Super admin can edit system types; Org admin can view and create org types
+app.use('/api/invoice-financials-types', createInvoiceFinancialsTypeRoutes());
+
 // Suppliers (for invoice form dropdown)
 app.use('/api/suppliers', createSupplierRoutes());
+
+// Bank accounts (contas bancárias)
+app.use('/api/bank-accounts', createBankAccountRoutes());
 
 // 404 handler
 app.use((req, res) => {
