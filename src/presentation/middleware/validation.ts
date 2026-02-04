@@ -60,7 +60,7 @@ const workerRoleDataSchema = z.object({
 });
 
 const farmOwnerRoleDataSchema = z.object({
-  farmName: z.string().min(1, 'Farm name is required'),
+  farmName: z.string().min(1).optional(),
   farmLocation: z.string().optional(),
   totalArea: z.number().nonnegative().optional(),
   ownershipType: z.string().optional(),

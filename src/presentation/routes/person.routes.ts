@@ -19,14 +19,14 @@ export function createPersonRoutes(): Router {
   const personRepository = new PersonRepository();
   const personController = new PersonController(personRepository);
 
+  const wrap = (fn: (req: any, res: any) => Promise<void>) => (req: any, res: any, next: any) =>
+    fn(req, res).catch(next);
+
   /**
    * GET /api/persons
    * Get all persons
    */
-  router.get(
-    '/',
-    (req, res) => personController.getAllPersons(req, res)
-  );
+  router.get('/', wrap((req, res) => personController.getAllPersons(req, res)));
 
   /**
    * POST /api/persons
@@ -35,17 +35,14 @@ export function createPersonRoutes(): Router {
   router.post(
     '/',
     validate(createPersonSchema),
-    (req, res) => personController.createPerson(req, res)
+    wrap((req, res) => personController.createPerson(req, res))
   );
 
   /**
    * GET /api/persons/:id
    * Get person by ID with all roles
    */
-  router.get(
-    '/:id',
-    (req, res) => personController.getPerson(req, res)
-  );
+  router.get('/:id', wrap((req, res) => personController.getPerson(req, res)));
 
   /**
    * PUT /api/persons/:id
@@ -54,7 +51,7 @@ export function createPersonRoutes(): Router {
   router.put(
     '/:id',
     validate(updatePersonSchema),
-    (req, res) => personController.updatePerson(req, res)
+    wrap((req, res) => personController.updatePerson(req, res))
   );
 
   /**
@@ -64,7 +61,7 @@ export function createPersonRoutes(): Router {
   router.post(
     '/:id/roles',
     validate(assignRoleSchema),
-    (req, res) => personController.assignRole(req, res)
+    wrap((req, res) => personController.assignRole(req, res))
   );
 
   /**
@@ -73,17 +70,14 @@ export function createPersonRoutes(): Router {
    */
   router.delete(
     '/:id/roles/:role',
-    (req, res) => personController.removeRole(req, res)
+    wrap((req, res) => personController.removeRole(req, res))
   );
 
   /**
    * DELETE /api/persons/:id
    * Delete a person (not yet implemented)
    */
-  router.delete(
-    '/:id',
-    (req, res) => personController.deletePerson(req, res)
-  );
+  router.delete('/:id', wrap((req, res) => personController.deletePerson(req, res)));
 
   return router;
 }

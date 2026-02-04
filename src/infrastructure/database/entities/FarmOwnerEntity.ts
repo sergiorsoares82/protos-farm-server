@@ -1,27 +1,38 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, OneToOne, JoinColumn, ManyToOne, Index } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  CreateDateColumn,
+  UpdateDateColumn,
+  ManyToOne,
+  JoinColumn,
+  Index,
+  Unique,
+} from 'typeorm';
 import type { PersonEntity } from './PersonEntity.js';
+import { FarmEntity } from './FarmEntity.js';
 import { OrganizationEntity } from './OrganizationEntity.js';
 
+/**
+ * Join table: Person (proprietário) <-> Farm (fazenda).
+ * One person can own many farms; one farm can have many owners.
+ * farm_id nullable: person can have role "proprietário" with no farm linked yet.
+ */
 @Entity('farm_owners')
+@Unique(['personId', 'farmId'])
 export class FarmOwnerEntity {
   @PrimaryGeneratedColumn('uuid')
   id!: string;
 
   @Column({ type: 'uuid', name: 'tenant_id' })
-  @Index() // Important for query performance
+  @Index()
   tenantId!: string;
 
   @Column({ type: 'uuid', name: 'person_id' })
   personId!: string;
 
-  @Column({ type: 'varchar', length: 255, name: 'farm_name' })
-  farmName!: string;
-
-  @Column({ type: 'text', name: 'farm_location', nullable: true })
-  farmLocation!: string | null;
-
-  @Column({ type: 'decimal', precision: 12, scale: 2, name: 'total_area', nullable: true })
-  totalArea!: number | null;
+  @Column({ type: 'uuid', name: 'farm_id', nullable: true })
+  farmId!: string | null;
 
   @Column({ type: 'varchar', length: 50, name: 'ownership_type', nullable: true })
   ownershipType!: string | null;
@@ -32,9 +43,13 @@ export class FarmOwnerEntity {
   @UpdateDateColumn({ name: 'updated_at' })
   updatedAt!: Date;
 
-  @OneToOne('PersonEntity', (person: any) => person.farmOwner, { onDelete: 'CASCADE' })
+  @ManyToOne('PersonEntity', (person: any) => person.farmOwners, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'person_id' })
   person!: PersonEntity;
+
+  @ManyToOne(() => FarmEntity, (farm) => farm.farmOwners, { onDelete: 'CASCADE', nullable: true })
+  @JoinColumn({ name: 'farm_id' })
+  farm!: FarmEntity | null;
 
   @ManyToOne(() => OrganizationEntity)
   @JoinColumn({ name: 'tenant_id' })

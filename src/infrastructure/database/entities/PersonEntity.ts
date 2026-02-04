@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, OneToOne, ManyToOne, JoinColumn, Index } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, OneToOne, OneToMany, ManyToOne, JoinColumn, Index } from 'typeorm';
 import { OrganizationEntity } from './OrganizationEntity.js';
 
 @Entity('persons')
@@ -44,8 +44,8 @@ export class PersonEntity {
   @OneToOne('WorkerEntity', (worker: any) => worker.person, { eager: false, cascade: true })
   worker?: any;
 
-  @OneToOne('FarmOwnerEntity', (farmOwner: any) => farmOwner.person, { eager: false, cascade: true })
-  farmOwner?: any;
+  @OneToMany('FarmOwnerEntity', (farmOwner: any) => farmOwner.person, { eager: false, cascade: true })
+  farmOwners?: any[];
 
   @OneToOne('UserEntity', (user: any) => user.person, { nullable: true })
   @JoinColumn({ name: 'user_id' })

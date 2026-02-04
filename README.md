@@ -28,7 +28,15 @@ docker compose up db -d
 npm run dev
 ```
 
-The server will be available at `http://localhost:3000`
+The server will be available at `http://localhost:3000` (or the port set by `PORT`).
+
+To use a different port (e.g. if 3000 is already in use by Docker or another app):
+
+```bash
+PORT=3001 npm run dev
+```
+
+Then open `http://localhost:3001`.
 
 ## Deployment
 
@@ -141,6 +149,9 @@ Required variables:
 - `DB_HOST` - Database host (default: db for Docker, localhost for local)
 - `DB_PORT` - Database port (default: 5432)
 
+Optional:
+- `PORT` - HTTP server port (default: 3000). Use a different value when running locally while Docker uses 3000 (e.g. `PORT=3001`).
+
 ## Scripts
 
 - `npm run dev` - Start development server with hot reload
@@ -177,10 +188,10 @@ psql --host=localhost --username=postgres --port=5430 --dbname=protos-farm
 
 ## Troubleshooting
 
-### Container won't start
-- Check logs: `docker compose logs app`
-- Verify environment variables are set
-- Ensure port 3000 is not already in use
+### Container won't start / "Empty reply" or ERR_EMPTY_RESPONSE on port 3000
+- Check logs: `docker compose logs app`. If you see `ReferenceError` or DB errors, the app is crashing before it can respond.
+- Verify environment variables are set in `.env/.env`.
+- If port 3000 is in use (e.g. by another Docker project), either run `docker compose down` in this project to free it, or run the server locally on another port: `PORT=3001 npm run dev`.
 
 ### Database connection issues
 - Verify database container is running: `docker ps`

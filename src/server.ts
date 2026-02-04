@@ -7,6 +7,7 @@ import cors from 'cors';
 import { initializeDatabase } from './infrastructure/database/typeorm.config.js';
 import { createAuthRoutes } from './presentation/routes/auth.routes.js';
 import { createPersonRoutes } from './presentation/routes/person.routes.js';
+import { createFarmRoutes } from './presentation/routes/farm.routes.js';
 import { createOrganizationRoutes } from './presentation/routes/organization.routes.js';
 import { createUserRoutes } from './presentation/routes/user.routes.js';
 import { createDocumentTypeRoutes } from './presentation/routes/documentType.routes.js';
@@ -83,6 +84,9 @@ app.use('/api/auth', createAuthRoutes());
 // Person routes
 app.use('/api/persons', createPersonRoutes());
 
+// Farm routes (fazendas; N:N with proprietários)
+app.use('/api/farms', createFarmRoutes());
+
 // Organization routes
 app.use('/api/organizations', createOrganizationRoutes());
 
@@ -155,12 +159,16 @@ app.use((req, res) => {
   });
 });
 
-// Global error handler
-app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
+// Global error handler (receives errors from async route handlers via .catch(next))
+app.use((err: Error, req: Request, res: Response, _next: NextFunction) => {
   console.error('Unhandled error:', err);
+  const message =
+    process.env.NODE_ENV !== 'production' && err?.message
+      ? err.message
+      : 'An unexpected error occurred';
   res.status(500).json({
     error: 'Internal Server Error',
-    message: 'An unexpected error occurred',
+    message,
     statusCode: 500,
   });
 });

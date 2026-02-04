@@ -1,4 +1,4 @@
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import type { IPersonRepository } from '../../domain/repositories/IPersonRepository.js';
 import { Person } from '../../domain/entities/Person.js';
 import { PersonRole } from '../../domain/enums/PersonRole.js';
@@ -33,7 +33,7 @@ export class PersonRepository implements IPersonRepository {
   async findAll(tenantId: string): Promise<Person[]> {
     const personEntities = await this.personRepo.find({
       where: { tenantId },
-      relations: ['client', 'supplier', 'worker', 'farmOwner'],
+      relations: ['client', 'supplier', 'worker', 'farmOwners'],
       order: { createdAt: 'DESC' },
     });
 
@@ -43,7 +43,7 @@ export class PersonRepository implements IPersonRepository {
   async findById(id: string, tenantId: string): Promise<Person | null> {
     const personEntity = await this.personRepo.findOne({
       where: { id, tenantId },
-      relations: ['client', 'supplier', 'worker', 'farmOwner'],
+      relations: ['client', 'supplier', 'worker', 'farmOwners'],
     });
 
     if (!personEntity) {
@@ -56,7 +56,7 @@ export class PersonRepository implements IPersonRepository {
   async findByEmail(email: string, tenantId: string): Promise<Person | null> {
     const personEntity = await this.personRepo.findOne({
       where: { email: email.toLowerCase(), tenantId },
-      relations: ['client', 'supplier', 'worker', 'farmOwner'],
+      relations: ['client', 'supplier', 'worker', 'farmOwners'],
     });
 
     if (!personEntity) {
@@ -69,7 +69,7 @@ export class PersonRepository implements IPersonRepository {
   async findByUserId(userId: string, tenantId: string): Promise<Person | null> {
     const personEntity = await this.personRepo.findOne({
       where: { userId, tenantId },
-      relations: ['client', 'supplier', 'worker', 'farmOwner'],
+      relations: ['client', 'supplier', 'worker', 'farmOwners'],
     });
 
     if (!personEntity) {
@@ -104,13 +104,21 @@ export class PersonRepository implements IPersonRepository {
         });
         personEntities = workers.map((w) => w.person);
         break;
-      case PersonRole.FARM_OWNER:
-        const farmOwners = await this.farmOwnerRepo.find({ 
+      case PersonRole.FARM_OWNER: {
+        const farmOwnerRows = await this.farmOwnerRepo.find({
           where: { tenantId },
-          relations: ['person'] 
+          relations: ['person'],
         });
-        personEntities = farmOwners.map((f) => f.person);
+        const distinctPersonIds = [...new Set(farmOwnerRows.map((f) => f.person.id))];
+        personEntities =
+          distinctPersonIds.length > 0
+            ? await this.personRepo.find({
+                where: { id: In(distinctPersonIds), tenantId },
+                relations: ['client', 'supplier', 'worker', 'farmOwners'],
+              })
+            : [];
         break;
+      }
     }
 
     // Load all roles for each person
@@ -118,10 +126,10 @@ export class PersonRepository implements IPersonRepository {
       personEntities.map((p) =>
         this.personRepo.findOne({
           where: { id: p.id, tenantId },
-          relations: ['client', 'supplier', 'worker', 'farmOwner'],
+          relations: ['client', 'supplier', 'worker', 'farmOwners'],
         })
       )
-    );
+    ).then((list) => list.filter((p): p is PersonEntity => p != null));
 
     return personsWithRoles
       .filter((p): p is PersonEntity => p !== null)
@@ -179,7 +187,7 @@ export class PersonRepository implements IPersonRepository {
         await this.workerRepo.delete({ personId });
         break;
       case PersonRole.FARM_OWNER:
-        await this.farmOwnerRepo.delete({ personId });
+        await this.farmOwnerRepo.delete({ personId }); // all farm_owners rows for this person
         break;
     }
   }
@@ -232,17 +240,16 @@ export class PersonRepository implements IPersonRepository {
         await this.workerRepo.save(worker);
         break;
 
-      case PersonRole.FARM_OWNER:
+      case PersonRole.FARM_OWNER: {
         const farmOwnerData = roleData as FarmOwner;
         const farmOwner = new FarmOwnerEntity();
         farmOwner.personId = personId;
         farmOwner.tenantId = tenantId;
-        farmOwner.farmName = farmOwnerData.getFarmName();
-        farmOwner.farmLocation = farmOwnerData.getFarmLocation() || null;
-        farmOwner.totalArea = farmOwnerData.getTotalArea() || null;
+        farmOwner.farmId = null; // link to farm is done in Fazenda cadastro
         farmOwner.ownershipType = farmOwnerData.getOwnershipType() || null;
         await this.farmOwnerRepo.save(farmOwner);
         break;
+      }
     }
   }
 
@@ -279,16 +286,9 @@ export class PersonRepository implements IPersonRepository {
       );
     }
 
-    if (entity.farmOwner) {
-      roles.set(
-        PersonRole.FARM_OWNER,
-        new FarmOwner({
-          farmName: entity.farmOwner.farmName,
-          ...(entity.farmOwner.farmLocation && { farmLocation: entity.farmOwner.farmLocation }),
-          ...(entity.farmOwner.totalArea && { totalArea: Number(entity.farmOwner.totalArea) }),
-          ...(entity.farmOwner.ownershipType && { ownershipType: entity.farmOwner.ownershipType }),
-        })
-      );
+    if (entity.farmOwners && entity.farmOwners.length > 0) {
+      // Person has role FARM_OWNER; actual farm links are in FarmOwnerEntity (N:N with Farm)
+      roles.set(PersonRole.FARM_OWNER, new FarmOwner({}));
     }
 
     return new Person({
