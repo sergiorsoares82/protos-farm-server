@@ -90,7 +90,8 @@ export const createPersonSchema = z.object({
   nome: z.string().min(1, 'Nome é obrigatório'),
   personType: z.nativeEnum(PersonType, { message: 'Tipo de pessoa deve ser FISICA ou JURIDICA' }),
   cpfCnpj: z.string().optional(),
-  email: z.string().email('E-mail inválido').min(1, 'E-mail é obrigatório'),
+  // E-mail opcional: se informado, precisa ser válido
+  email: z.string().email('E-mail inválido').optional(),
   phone: z.string().optional(),
   userId: z.string().uuid().optional(),
   roles: z.array(roleAssignmentSchema).min(1, 'Pelo menos um papel é obrigatório'),

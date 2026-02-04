@@ -22,8 +22,9 @@ export class PersonEntity {
   @Column({ type: 'varchar', length: 50, name: 'cpf_cnpj', nullable: true })
   cpfCnpj!: string | null;
 
-  @Column({ type: 'varchar', length: 255, unique: true })
-  email!: string;
+  // E-mail opcional: permite proprietários sem e-mail
+  @Column({ type: 'varchar', length: 255, unique: true, nullable: true })
+  email!: string | null;
 
   @Column({ type: 'varchar', length: 20, nullable: true })
   phone!: string | null;

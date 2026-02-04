@@ -11,7 +11,8 @@ export interface PersonProps {
   nome: string;
   personType: PersonType;
   cpfCnpj?: string;
-  email: string;
+  // E-mail opcional (por exemplo, para proprietários sem e-mail)
+  email?: string;
   phone?: string;
   roles: Map<PersonRole, Client | Supplier | Worker | FarmOwner>;
   createdAt: Date;
@@ -24,7 +25,7 @@ export class Person {
   private nome: string;
   private personType: PersonType;
   private cpfCnpj?: string;
-  private email: string;
+  private email?: string;
   private phone?: string;
   private roles: Map<PersonRole, Client | Supplier | Worker | FarmOwner>;
   private readonly createdAt: Date;
@@ -37,7 +38,7 @@ export class Person {
     this.nome = props.nome;
     this.personType = props.personType;
     if (props.cpfCnpj) this.cpfCnpj = props.cpfCnpj;
-    this.email = props.email;
+    if (props.email) this.email = props.email;
     if (props.phone) this.phone = props.phone;
     this.roles = props.roles;
     this.createdAt = props.createdAt;
@@ -49,7 +50,7 @@ export class Person {
    */
   static create(
     nome: string,
-    email: string,
+    email: string | undefined,
     personType: PersonType,
     phone?: string,
     userId?: string,
@@ -62,7 +63,7 @@ export class Person {
       nome,
       personType,
       ...(cpfCnpj && { cpfCnpj }),
-      email,
+      ...(email && { email }),
       ...(phone && { phone }),
       roles: new Map(),
       createdAt: now,
@@ -73,9 +74,6 @@ export class Person {
   private validateProps(props: PersonProps): void {
     if (!props.nome || props.nome.trim().length === 0) {
       throw new Error('Nome é obrigatório');
-    }
-    if (!props.email || props.email.trim().length === 0) {
-      throw new Error('Email é obrigatório');
     }
   }
 
@@ -119,15 +117,19 @@ export class Person {
   /**
    * Update basic person information
    */
-  updateInfo(nome: string, email: string, phone?: string, personType?: PersonType, cpfCnpj?: string): void {
+  updateInfo(nome: string, email?: string, phone?: string, personType?: PersonType, cpfCnpj?: string): void {
     if (!nome || nome.trim().length === 0) {
       throw new Error('Nome é obrigatório');
     }
-    if (!email || email.trim().length === 0) {
-      throw new Error('Email é obrigatório');
-    }
     this.nome = nome;
-    this.email = email;
+    // Se email foi explicitamente enviado, validar e atualizar;
+    // caso contrário, manter o valor atual (inclusive podendo continuar sem e-mail).
+    if (email !== undefined) {
+      if (!email.trim()) {
+        throw new Error('Email não pode ser vazio se informado');
+      }
+      this.email = email;
+    }
     if (personType !== undefined) this.personType = personType;
     if (cpfCnpj !== undefined) {
       if (cpfCnpj) this.cpfCnpj = cpfCnpj;
@@ -178,7 +180,7 @@ export class Person {
   }
 
   getEmail(): string {
-    return this.email;
+    return this.email as string;
   }
 
   getPhone(): string | undefined {

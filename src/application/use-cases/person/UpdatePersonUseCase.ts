@@ -11,7 +11,7 @@ export class UpdatePersonUseCase {
       throw new Error('Person not found');
     }
 
-    // Check if email is being changed and if it's already taken within tenant
+    // Se e-mail foi informado e está sendo alterado, checar se já está em uso no tenant
     if (request.email && request.email !== person.getEmail()) {
       const emailTaken = await this.personRepository.existsByEmail(request.email, tenantId);
       if (emailTaken) {
@@ -22,7 +22,7 @@ export class UpdatePersonUseCase {
     // Update person info
     person.updateInfo(
       request.nome ?? person.getNome(),
-      request.email ?? person.getEmail(),
+      request.email,
       request.phone !== undefined ? request.phone : person.getPhone(),
       request.personType,
       request.cpfCnpj !== undefined ? request.cpfCnpj ?? undefined : undefined
@@ -40,7 +40,7 @@ export class UpdatePersonUseCase {
       nome: updatedPerson.getNome(),
       personType: updatedPerson.getPersonType(),
       ...(updatedPerson.getCpfCnpj() && { cpfCnpj: updatedPerson.getCpfCnpj() }),
-      email: updatedPerson.getEmail(),
+      ...(updatedPerson.getEmail() && { email: updatedPerson.getEmail() }),
       ...(phone && { phone }),
       roles: updatedPerson.toJSON().roles,
       createdAt: updatedPerson.getCreatedAt(),

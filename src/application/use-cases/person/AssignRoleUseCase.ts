@@ -43,7 +43,7 @@ export class AssignRoleUseCase {
       nome: updatedPerson.getNome(),
       personType: updatedPerson.getPersonType(),
       ...(updatedPerson.getCpfCnpj() && { cpfCnpj: updatedPerson.getCpfCnpj() }),
-      email: updatedPerson.getEmail(),
+      ...(updatedPerson.getEmail() && { email: updatedPerson.getEmail() }),
       ...(phone && { phone }),
       roles: updatedPerson.toJSON().roles,
       createdAt: updatedPerson.getCreatedAt(),

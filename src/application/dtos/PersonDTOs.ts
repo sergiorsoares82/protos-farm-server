@@ -16,7 +16,8 @@ export interface CreatePersonRequestDTO {
   nome: string;
   personType: PersonType;
   cpfCnpj?: string;
-  email: string;
+  // E-mail opcional (por exemplo, para proprietários sem e-mail)
+  email?: string;
   phone?: string;
   userId?: string;
   roles: RoleAssignmentDTO[];
@@ -41,7 +42,7 @@ export interface PersonResponseDTO {
   nome: string;
   personType: PersonType;
   cpfCnpj?: string | undefined;
-  email: string;
+  email?: string;
   phone?: string;
   roles: Record<string, any>;
   createdAt: Date;

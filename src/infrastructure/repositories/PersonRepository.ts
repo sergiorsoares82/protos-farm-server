@@ -151,7 +151,8 @@ export class PersonRepository implements IPersonRepository {
     personEntity.nome = person.getNome();
     personEntity.personType = person.getPersonType();
     personEntity.cpfCnpj = person.getCpfCnpj() || null;
-    personEntity.email = person.getEmail();
+    // Se a pessoa não tiver e-mail, persistir como null
+    personEntity.email = person.getEmail() || null;
     personEntity.phone = person.getPhone() || null;
 
     const savedPerson = await this.personRepo.save(personEntity);
@@ -297,7 +298,7 @@ export class PersonRepository implements IPersonRepository {
       nome: entity.nome,
       personType: entity.personType as PersonType,
       ...(entity.cpfCnpj && { cpfCnpj: entity.cpfCnpj }),
-      email: entity.email,
+      ...(entity.email && { email: entity.email }),
       ...(entity.phone && { phone: entity.phone }),
       roles,
       createdAt: entity.createdAt,

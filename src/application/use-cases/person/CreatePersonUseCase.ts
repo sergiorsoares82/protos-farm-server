@@ -11,10 +11,12 @@ export class CreatePersonUseCase {
   constructor(private personRepository: IPersonRepository) {}
 
   async execute(request: CreatePersonRequestDTO, tenantId: string): Promise<PersonResponseDTO> {
-    // Check if email already exists within tenant
-    const existingPerson = await this.personRepository.findByEmail(request.email, tenantId);
-    if (existingPerson) {
-      throw new Error('Email already in use');
+    // Se e-mail foi informado, garantir unicidade dentro do tenant
+    if (request.email) {
+      const existingPerson = await this.personRepository.findByEmail(request.email, tenantId);
+      if (existingPerson) {
+        throw new Error('Email already in use');
+      }
     }
 
     // Validate at least one role
@@ -76,7 +78,7 @@ export class CreatePersonUseCase {
       nome: person.getNome(),
       personType: person.getPersonType(),
       ...(person.getCpfCnpj() && { cpfCnpj: person.getCpfCnpj() }),
-      email: person.getEmail(),
+      ...(person.getEmail() && { email: person.getEmail() }),
       ...(phone && { phone }),
       roles: person.toJSON().roles,
       createdAt: person.getCreatedAt(),
