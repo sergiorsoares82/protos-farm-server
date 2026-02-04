@@ -10,6 +10,7 @@ import {
   Index,
 } from 'typeorm';
 import { OrganizationEntity } from './OrganizationEntity.js';
+import { FarmRuralPropertyEntity } from './FarmRuralPropertyEntity.js';
 
 @Entity('farms')
 export class FarmEntity {
@@ -41,4 +42,7 @@ export class FarmEntity {
 
   @OneToMany('FarmOwnerEntity', (fo: any) => fo.farm)
   farmOwners!: any[];
+
+  @OneToMany(() => FarmRuralPropertyEntity, (frp) => frp.farm)
+  farmRuralProperties!: FarmRuralPropertyEntity[];
 }

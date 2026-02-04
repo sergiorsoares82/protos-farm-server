@@ -1,7 +1,9 @@
-export interface FarmOwnerDTO {
-  personId: string;
-  personName: string;
-  ownershipType?: string;
+export interface FarmRuralPropertyItemDTO {
+  id: string;
+  nomeImovelIncra: string;
+  codigoSncr?: string | null;
+  municipio?: string | null;
+  uf?: string | null;
 }
 
 export interface FarmResponseDTO {
@@ -10,7 +12,7 @@ export interface FarmResponseDTO {
   name: string;
   location?: string;
   totalArea?: number;
-  owners: FarmOwnerDTO[];
+  ruralProperties: FarmRuralPropertyItemDTO[];
   createdAt: Date;
   updatedAt: Date;
 }
@@ -19,14 +21,12 @@ export interface CreateFarmRequestDTO {
   name: string;
   location?: string;
   totalArea?: number;
-  ownerIds: string[];
-  ownershipTypeByPersonId?: Record<string, string>;
+  ruralPropertyIds?: string[];
 }
 
 export interface UpdateFarmRequestDTO {
   name?: string;
   location?: string;
   totalArea?: number;
-  ownerIds?: string[];
-  ownershipTypeByPersonId?: Record<string, string>;
+  ruralPropertyIds?: string[];
 }

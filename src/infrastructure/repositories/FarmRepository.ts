@@ -1,25 +1,25 @@
-import { Repository } from 'typeorm';
+import { Repository, In } from 'typeorm';
 import { FarmEntity } from '../database/entities/FarmEntity.js';
-import { FarmOwnerEntity } from '../database/entities/FarmOwnerEntity.js';
-import { PersonEntity } from '../database/entities/PersonEntity.js';
+import { FarmRuralPropertyEntity } from '../database/entities/FarmRuralPropertyEntity.js';
+import { RuralPropertyEntity } from '../database/entities/RuralPropertyEntity.js';
 import { AppDataSource } from '../database/typeorm.config.js';
 import type { CreateFarmRequestDTO, UpdateFarmRequestDTO } from '../../application/dtos/FarmDTOs.js';
 
 export class FarmRepository {
   private farmRepo: Repository<FarmEntity>;
-  private farmOwnerRepo: Repository<FarmOwnerEntity>;
-  private personRepo: Repository<PersonEntity>;
+  private farmRuralPropertyRepo: Repository<FarmRuralPropertyEntity>;
+  private ruralPropertyRepo: Repository<RuralPropertyEntity>;
 
   constructor() {
     this.farmRepo = AppDataSource.getRepository(FarmEntity);
-    this.farmOwnerRepo = AppDataSource.getRepository(FarmOwnerEntity);
-    this.personRepo = AppDataSource.getRepository(PersonEntity);
+    this.farmRuralPropertyRepo = AppDataSource.getRepository(FarmRuralPropertyEntity);
+    this.ruralPropertyRepo = AppDataSource.getRepository(RuralPropertyEntity);
   }
 
   async findAll(tenantId: string): Promise<FarmEntity[]> {
     return this.farmRepo.find({
       where: { tenantId },
-      relations: ['farmOwners', 'farmOwners.person'],
+      relations: ['farmRuralProperties', 'farmRuralProperties.ruralProperty'],
       order: { name: 'ASC' },
     });
   }
@@ -27,7 +27,7 @@ export class FarmRepository {
   async findById(id: string, tenantId: string): Promise<FarmEntity | null> {
     return this.farmRepo.findOne({
       where: { id, tenantId },
-      relations: ['farmOwners', 'farmOwners.person'],
+      relations: ['farmRuralProperties', 'farmRuralProperties.ruralProperty'],
     });
   }
 
@@ -42,15 +42,23 @@ export class FarmRepository {
       totalArea: data.totalArea ?? null,
     });
     const saved = await this.farmRepo.save(farm);
-    if (data.ownerIds?.length) {
-      for (const personId of data.ownerIds) {
-        const fo = this.farmOwnerRepo.create({
+    const ruralPropertyIds = data.ruralPropertyIds ?? [];
+    if (ruralPropertyIds.length) {
+      const existing = await this.ruralPropertyRepo.find({
+        where: { id: In(ruralPropertyIds), tenantId },
+      });
+      const foundIds = new Set(existing.map((rp) => rp.id));
+      const missing = ruralPropertyIds.filter((id) => !foundIds.has(id));
+      if (missing.length) {
+        throw new Error(`Imóveis rurais não encontrados ou de outro tenant: ${missing.join(', ')}`);
+      }
+      for (const ruralPropertyId of ruralPropertyIds) {
+        const frp = this.farmRuralPropertyRepo.create({
           tenantId,
-          personId,
           farmId: saved.id,
-          ownershipType: data.ownershipTypeByPersonId?.[personId] ?? null,
+          ruralPropertyId,
         });
-        await this.farmOwnerRepo.save(fo);
+        await this.farmRuralPropertyRepo.save(frp);
       }
     }
     const full = await this.findById(saved.id, tenantId);
@@ -71,24 +79,25 @@ export class FarmRepository {
     if (data.totalArea !== undefined) farm.totalArea = data.totalArea ?? null;
     await this.farmRepo.save(farm);
 
-    if (data.ownerIds !== undefined) {
-      await this.farmOwnerRepo.delete({ farmId: id });
-      for (const personId of data.ownerIds) {
-        const fo = this.farmOwnerRepo.create({
-          tenantId,
-          personId,
-          farmId: id,
-          ownershipType: data.ownershipTypeByPersonId?.[personId] ?? null,
+    if (data.ruralPropertyIds !== undefined) {
+      await this.farmRuralPropertyRepo.delete({ farmId: id });
+      const ruralPropertyIds = data.ruralPropertyIds;
+      if (ruralPropertyIds.length) {
+        const existing = await this.ruralPropertyRepo.find({
+          where: { id: In(ruralPropertyIds), tenantId },
         });
-        await this.farmOwnerRepo.save(fo);
-      }
-    } else if (data.ownershipTypeByPersonId) {
-      const existing = await this.farmOwnerRepo.find({ where: { farmId: id }, relations: ['person'] });
-      for (const fo of existing) {
-        const ownership = data.ownershipTypeByPersonId[fo.personId];
-        if (ownership !== undefined) {
-          fo.ownershipType = ownership || null;
-          await this.farmOwnerRepo.save(fo);
+        const foundIds = new Set(existing.map((rp) => rp.id));
+        const missing = ruralPropertyIds.filter((rid) => !foundIds.has(rid));
+        if (missing.length) {
+          throw new Error(`Imóveis rurais não encontrados ou de outro tenant: ${missing.join(', ')}`);
+        }
+        for (const ruralPropertyId of ruralPropertyIds) {
+          const frp = this.farmRuralPropertyRepo.create({
+            tenantId,
+            farmId: id,
+            ruralPropertyId,
+          });
+          await this.farmRuralPropertyRepo.save(frp);
         }
       }
     }

@@ -8,6 +8,7 @@ import { SupplierEntity } from './entities/SupplierEntity.js';
 import { WorkerEntity } from './entities/WorkerEntity.js';
 import { FarmEntity } from './entities/FarmEntity.js';
 import { FarmOwnerEntity } from './entities/FarmOwnerEntity.js';
+import { FarmRuralPropertyEntity } from './entities/FarmRuralPropertyEntity.js';
 import { DocumentTypeEntity } from './entities/DocumentTypeEntity.js';
 import { ItemEntity } from './entities/ItemEntity.js';
 import { ProductEntity } from './entities/ProductEntity.js';
@@ -99,6 +100,7 @@ export const AppDataSource = new DataSource({
     WorkerEntity,
     FarmEntity,
     FarmOwnerEntity,
+    FarmRuralPropertyEntity,
     DocumentTypeEntity,
     ItemEntity,
     ProductEntity,

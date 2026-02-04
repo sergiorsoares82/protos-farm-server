@@ -11,6 +11,7 @@ import {
 } from 'typeorm';
 import { OrganizationEntity } from './OrganizationEntity.js';
 import { LandRegistryEntity } from './LandRegistryEntity.js';
+import { FarmRuralPropertyEntity } from './FarmRuralPropertyEntity.js';
 
 @Entity('rural_properties')
 export class RuralPropertyEntity {
@@ -49,5 +50,8 @@ export class RuralPropertyEntity {
 
   @OneToMany(() => LandRegistryEntity, (lr) => lr.ruralProperty)
   landRegistries!: LandRegistryEntity[];
+
+  @OneToMany(() => FarmRuralPropertyEntity, (frp) => frp.ruralProperty)
+  farmRuralProperties!: FarmRuralPropertyEntity[];
 }
 

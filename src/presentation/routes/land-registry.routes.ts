@@ -15,6 +15,7 @@ export function createLandRegistryRoutes(): Router {
 
   router.get('/', (req, res) => controller.getAll(req, res));
   router.post('/', (req, res) => controller.create(req, res));
+  router.put('/:id/owners', (req, res) => controller.upsertOwners(req, res));
 
   return router;
 }
