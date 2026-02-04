@@ -16,7 +16,7 @@ export interface TokenPair {
 export class JWTService {
   private readonly accessTokenSecret: string;
   private readonly refreshTokenSecret: string;
-  private readonly accessTokenExpiry = '15m' as const; // 15 minutes
+  private readonly accessTokenExpiry = '1h' as const; // 1 hora
   private readonly refreshTokenExpiry = '7d' as const; // 7 days
 
   constructor() {

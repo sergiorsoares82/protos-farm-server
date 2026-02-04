@@ -35,6 +35,14 @@ import { InvoiceShipmentEntity } from './entities/InvoiceShipmentEntity.js';
 import { InvoiceShipmentItemEntity } from './entities/InvoiceShipmentItemEntity.js';
 import { InvoiceFinancialsTypeEntity } from './entities/InvoiceFinancialsTypeEntity.js';
 import { BankAccountEntity } from './entities/BankAccountEntity.js';
+import { RuralPropertyEntity } from './entities/RuralPropertyEntity.js';
+import { LandRegistryEntity } from './entities/LandRegistryEntity.js';
+import { PropertyOwnershipEntity } from './entities/PropertyOwnershipEntity.js';
+import { StateRegistrationEntity } from './entities/StateRegistrationEntity.js';
+import { ProductionSiteEntity } from './entities/ProductionSiteEntity.js';
+import { ProductionSiteParcelEntity } from './entities/ProductionSiteParcelEntity.js';
+import { ProductionSiteStateRegistrationEntity } from './entities/ProductionSiteStateRegistrationEntity.js';
+import { ExplorationContractEntity } from './entities/ExplorationContractEntity.js';
 
 // Get database configuration from environment variables
 const getDatabaseUrl = (): string => {
@@ -118,6 +126,14 @@ export const AppDataSource = new DataSource({
     InvoiceShipmentItemEntity,
     InvoiceFinancialsTypeEntity,
     BankAccountEntity,
+    RuralPropertyEntity,
+    LandRegistryEntity,
+    PropertyOwnershipEntity,
+    StateRegistrationEntity,
+    ProductionSiteEntity,
+    ProductionSiteParcelEntity,
+    ProductionSiteStateRegistrationEntity,
+    ExplorationContractEntity,
   ],
   migrations: [],
   subscribers: [],
