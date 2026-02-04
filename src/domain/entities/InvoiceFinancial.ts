@@ -6,13 +6,18 @@ export interface InvoiceFinancialProps {
   dueDate: Date;
   amount: number;
   paidAt?: Date | undefined;
+  clearedAt?: Date | undefined;
+  penalty?: number;
+  interest?: number;
+  bankAccountId?: string | null;
+  invoiceFinancialsTypeId?: string | null;
   status: InvoiceFinancialStatus;
   createdAt: Date;
   updatedAt: Date;
 }
 
 /**
- * Parcela financeira da Nota Fiscal: data de vencimento, valor e status de pagamento.
+ * Parcela financeira da Nota Fiscal: data de vencimento, valor, multa, juros, conta bancária, tipo de pagamento e status.
  */
 export class InvoiceFinancial {
   private readonly id: string;
@@ -20,6 +25,11 @@ export class InvoiceFinancial {
   private dueDate: Date;
   private amount: number;
   private paidAt?: Date | undefined;
+  private clearedAt?: Date | undefined;
+  private penalty: number;
+  private interest: number;
+  private bankAccountId: string | null;
+  private invoiceFinancialsTypeId: string | null;
   private status: InvoiceFinancialStatus;
   private readonly createdAt: Date;
   private updatedAt: Date;
@@ -31,23 +41,52 @@ export class InvoiceFinancial {
     this.dueDate = props.dueDate;
     this.amount = props.amount;
     this.paidAt = props.paidAt;
+    this.clearedAt = props.clearedAt;
+    this.penalty = props.penalty ?? 0;
+    this.interest = props.interest ?? 0;
+    this.bankAccountId = props.bankAccountId ?? null;
+    this.invoiceFinancialsTypeId = props.invoiceFinancialsTypeId ?? null;
     this.status = props.status;
     this.createdAt = props.createdAt;
     this.updatedAt = props.updatedAt;
   }
 
-  static create(invoiceId: string, dueDate: Date, amount: number): InvoiceFinancial {
+  static create(
+    invoiceId: string,
+    dueDate: Date,
+    amount: number,
+    options?: {
+      paidAt?: Date;
+      clearedAt?: Date;
+      penalty?: number;
+      interest?: number;
+      bankAccountId?: string | null;
+      invoiceFinancialsTypeId?: string | null;
+    }
+  ): InvoiceFinancial {
     const now = new Date();
     const status = dueDate < now ? InvoiceFinancialStatus.OVERDUE : InvoiceFinancialStatus.PENDING;
-    return new InvoiceFinancial({
+    const fin = new InvoiceFinancial({
       id: crypto.randomUUID(),
       invoiceId,
       dueDate,
       amount,
+      clearedAt: options?.clearedAt,
+      penalty: options?.penalty ?? 0,
+      interest: options?.interest ?? 0,
+      bankAccountId: options?.bankAccountId ?? null,
+      invoiceFinancialsTypeId: options?.invoiceFinancialsTypeId ?? null,
       status,
       createdAt: now,
       updatedAt: now,
     });
+    if (options?.paidAt) {
+      fin.markAsPaid(options.paidAt);
+    }
+    if (options?.clearedAt) {
+      fin.setClearedAt(options.clearedAt);
+    }
+    return fin;
   }
 
   private validateProps(props: InvoiceFinancialProps): void {
@@ -72,6 +111,11 @@ export class InvoiceFinancial {
     this.updatedAt = new Date();
   }
 
+  setClearedAt(clearedAt: Date): void {
+    this.clearedAt = clearedAt;
+    this.updatedAt = new Date();
+  }
+
   updateDueDateAndAmount(dueDate: Date, amount: number): void {
     if (!(dueDate instanceof Date) || Number.isNaN(dueDate.getTime())) {
       throw new Error('Due date is invalid');
@@ -90,6 +134,11 @@ export class InvoiceFinancial {
   getDueDate(): Date { return this.dueDate; }
   getAmount(): number { return this.amount; }
   getPaidAt(): Date | undefined { return this.paidAt; }
+  getClearedAt(): Date | undefined { return this.clearedAt; }
+  getPenalty(): number { return this.penalty; }
+  getInterest(): number { return this.interest; }
+  getBankAccountId(): string | null { return this.bankAccountId; }
+  getInvoiceFinancialsTypeId(): string | null { return this.invoiceFinancialsTypeId; }
   getStatus(): InvoiceFinancialStatus { return this.status; }
   getCreatedAt(): Date { return this.createdAt; }
   getUpdatedAt(): Date { return this.updatedAt; }
@@ -101,6 +150,11 @@ export class InvoiceFinancial {
       dueDate: this.dueDate,
       amount: this.amount,
       paidAt: this.paidAt,
+      clearedAt: this.clearedAt,
+      penalty: this.penalty,
+      interest: this.interest,
+      bankAccountId: this.bankAccountId,
+      invoiceFinancialsTypeId: this.invoiceFinancialsTypeId,
       status: this.status,
       createdAt: this.createdAt,
       updatedAt: this.updatedAt,

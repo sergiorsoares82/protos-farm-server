@@ -9,6 +9,8 @@ import {
   Index,
 } from 'typeorm';
 import type { InvoiceEntity } from './InvoiceEntity.js';
+import type { BankAccountEntity } from './BankAccountEntity.js';
+import type { InvoiceFinancialsTypeEntity } from './InvoiceFinancialsTypeEntity.js';
 
 @Entity('invoice_financials')
 export class InvoiceFinancialEntity {
@@ -28,6 +30,15 @@ export class InvoiceFinancialEntity {
   @Column({ type: 'timestamp', name: 'paid_at', nullable: true })
   paidAt!: Date | null;
 
+  @Column({ type: 'timestamp', name: 'cleared_at', nullable: true })
+  clearedAt!: Date | null;
+
+  @Column({ type: 'decimal', precision: 15, scale: 2, default: 0 })
+  penalty!: number;
+
+  @Column({ type: 'decimal', precision: 15, scale: 2, default: 0 })
+  interest!: number;
+
   @Column({ type: 'varchar', length: 20, default: 'PENDING' })
   status!: string;
 
@@ -40,4 +51,12 @@ export class InvoiceFinancialEntity {
   @ManyToOne('InvoiceEntity', 'financials', { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'invoice_id' })
   invoice!: InvoiceEntity;
+
+  @ManyToOne('BankAccountEntity', { nullable: true, onDelete: 'SET NULL' })
+  @JoinColumn({ name: 'bank_account_id' })
+  bankAccount!: BankAccountEntity | null;
+
+  @ManyToOne('InvoiceFinancialsTypeEntity', { nullable: true, onDelete: 'SET NULL' })
+  @JoinColumn({ name: 'invoice_financials_type_id' })
+  invoiceFinancialsType!: InvoiceFinancialsTypeEntity | null;
 }

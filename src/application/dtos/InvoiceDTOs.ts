@@ -24,6 +24,11 @@ export interface InvoiceFinancialDTO {
   dueDate: string;
   amount: number;
   paidAt?: string;
+  clearedAt?: string;
+  penalty?: number;
+  interest?: number;
+  bankAccountId?: string | null;
+  invoiceFinancialsTypeId?: string | null;
   status?: InvoiceFinancialStatus;
 }
 
@@ -55,5 +60,6 @@ export interface UpdateInvoiceFinancialDTO {
   dueDate?: string;
   amount?: number;
   paidAt?: string;
+  clearedAt?: string;
   status?: InvoiceFinancialStatus;
 }

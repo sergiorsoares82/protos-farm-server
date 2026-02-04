@@ -56,7 +56,14 @@ export class InvoiceService {
       if (Number.isNaN(dueDate.getTime())) {
         throw new Error('Data de vencimento inválida');
       }
-      const financial = InvoiceFinancial.create(invoice.getId(), dueDate, dto.amount);
+      const financial = InvoiceFinancial.create(invoice.getId(), dueDate, dto.amount, {
+        paidAt: dto.paidAt ? new Date(dto.paidAt) : undefined,
+        clearedAt: dto.clearedAt ? new Date(dto.clearedAt) : undefined,
+        penalty: dto.penalty ?? 0,
+        interest: dto.interest ?? 0,
+        bankAccountId: dto.bankAccountId ?? null,
+        invoiceFinancialsTypeId: dto.invoiceFinancialsTypeId ?? null,
+      });
       if (dto.paidAt) {
         financial.markAsPaid(new Date(dto.paidAt));
       }
@@ -134,7 +141,14 @@ export class InvoiceService {
         if (Number.isNaN(dueDate.getTime())) {
           throw new Error('Data de vencimento inválida');
         }
-        const financial = InvoiceFinancial.create(invoice.getId(), dueDate, dto.amount);
+        const financial = InvoiceFinancial.create(invoice.getId(), dueDate, dto.amount, {
+          paidAt: dto.paidAt ? new Date(dto.paidAt) : undefined,
+          clearedAt: dto.clearedAt ? new Date(dto.clearedAt) : undefined,
+          penalty: dto.penalty ?? 0,
+          interest: dto.interest ?? 0,
+          bankAccountId: dto.bankAccountId ?? null,
+          invoiceFinancialsTypeId: dto.invoiceFinancialsTypeId ?? null,
+        });
         if (dto.paidAt) {
           financial.markAsPaid(new Date(dto.paidAt));
         }

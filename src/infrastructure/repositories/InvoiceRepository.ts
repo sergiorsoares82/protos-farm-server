@@ -86,6 +86,11 @@ export class InvoiceRepository implements IInvoiceRepository {
       finEnt.dueDate = fin.getDueDate().toISOString().slice(0, 10);
       finEnt.amount = fin.getAmount();
       finEnt.paidAt = fin.getPaidAt() ?? null;
+      finEnt.clearedAt = fin.getClearedAt() ?? null;
+      finEnt.penalty = fin.getPenalty();
+      finEnt.interest = fin.getInterest();
+      finEnt.bankAccountId = fin.getBankAccountId();
+      finEnt.invoiceFinancialsTypeId = fin.getInvoiceFinancialsTypeId();
       finEnt.status = fin.getStatus();
       await this.financialRepo.save(finEnt);
     }
@@ -171,6 +176,11 @@ export class InvoiceRepository implements IInvoiceRepository {
       dueDate: new Date(entity.dueDate + 'T00:00:00'),
       amount: Number(entity.amount),
       paidAt: entity.paidAt ?? undefined,
+      clearedAt: entity.clearedAt ?? undefined,
+      penalty: Number(entity.penalty ?? 0),
+      interest: Number(entity.interest ?? 0),
+      bankAccountId: entity.bankAccountId ?? null,
+      invoiceFinancialsTypeId: entity.invoiceFinancialsTypeId ?? null,
       status: entity.status as InvoiceFinancialStatus,
       createdAt: entity.createdAt,
       updatedAt: entity.updatedAt,
