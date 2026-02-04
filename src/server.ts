@@ -29,6 +29,8 @@ import { createInvoiceRoutes } from './presentation/routes/invoice.routes.js';
 import { createInvoiceFinancialsTypeRoutes } from './presentation/routes/invoice-financials-type.routes.js';
 import { createSupplierRoutes } from './presentation/routes/supplier.routes.js';
 import { createBankAccountRoutes } from './presentation/routes/bank-account.routes.js';
+import { createRuralPropertyRoutes } from './presentation/routes/rural-property.routes.js';
+import { createLandRegistryRoutes } from './presentation/routes/land-registry.routes.js';
 
 const app = express();
 
@@ -149,6 +151,12 @@ app.use('/api/suppliers', createSupplierRoutes());
 
 // Bank accounts (contas bancárias)
 app.use('/api/bank-accounts', createBankAccountRoutes());
+
+// Rural properties (imóveis rurais INCRA/CNIR)
+app.use('/api/rural-properties', createRuralPropertyRoutes());
+
+// Land registries (matrículas de cartório)
+app.use('/api/land-registries', createLandRegistryRoutes());
 
 // 404 handler
 app.use((req, res) => {

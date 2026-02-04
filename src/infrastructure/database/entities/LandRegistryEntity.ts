@@ -31,6 +31,15 @@ export class LandRegistryEntity {
   @Column({ type: 'varchar', length: 255, name: 'cartorio' })
   cartorio!: string;
 
+  @Column({ type: 'date', name: 'data_registro', nullable: true })
+  dataRegistro!: string | null;
+
+  @Column({ type: 'varchar', length: 100, name: 'registro', nullable: true })
+  registro!: string | null;
+
+  @Column({ type: 'varchar', length: 100, name: 'livro_ou_ficha', nullable: true })
+  livroOuFicha!: string | null;
+
   @Column({ type: 'decimal', precision: 12, scale: 2, name: 'area_ha', nullable: true })
   areaHa!: number | null;
 
