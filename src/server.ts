@@ -31,6 +31,7 @@ import { createSupplierRoutes } from './presentation/routes/supplier.routes.js';
 import { createBankAccountRoutes } from './presentation/routes/bank-account.routes.js';
 import { createRuralPropertyRoutes } from './presentation/routes/rural-property.routes.js';
 import { createLandRegistryRoutes } from './presentation/routes/land-registry.routes.js';
+import { createStateRegistrationRoutes } from './presentation/routes/state-registration.routes.js';
 
 const app = express();
 
@@ -157,6 +158,9 @@ app.use('/api/rural-properties', createRuralPropertyRoutes());
 
 // Land registries (matrículas de cartório)
 app.use('/api/land-registries', createLandRegistryRoutes());
+
+// State registrations (inscrições estaduais – produtor rural/empresa)
+app.use('/api/state-registrations', createStateRegistrationRoutes());
 
 // 404 handler
 app.use((req, res) => {

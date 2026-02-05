@@ -40,6 +40,7 @@ import { RuralPropertyEntity } from './entities/RuralPropertyEntity.js';
 import { LandRegistryEntity } from './entities/LandRegistryEntity.js';
 import { PropertyOwnershipEntity } from './entities/PropertyOwnershipEntity.js';
 import { StateRegistrationEntity } from './entities/StateRegistrationEntity.js';
+import { StateRegistrationParticipantEntity } from './entities/StateRegistrationParticipantEntity.js';
 import { ProductionSiteEntity } from './entities/ProductionSiteEntity.js';
 import { ProductionSiteParcelEntity } from './entities/ProductionSiteParcelEntity.js';
 import { ProductionSiteStateRegistrationEntity } from './entities/ProductionSiteStateRegistrationEntity.js';
@@ -132,6 +133,7 @@ export const AppDataSource = new DataSource({
     LandRegistryEntity,
     PropertyOwnershipEntity,
     StateRegistrationEntity,
+    StateRegistrationParticipantEntity,
     ProductionSiteEntity,
     ProductionSiteParcelEntity,
     ProductionSiteStateRegistrationEntity,
