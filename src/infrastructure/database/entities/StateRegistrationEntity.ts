@@ -13,6 +13,7 @@ import { OrganizationEntity } from './OrganizationEntity.js';
 import { PersonEntity } from './PersonEntity.js';
 import { ProductionSiteStateRegistrationEntity } from './ProductionSiteStateRegistrationEntity.js';
 import { StateRegistrationParticipantEntity } from './StateRegistrationParticipantEntity.js';
+import { RuralPropertyEntity } from './RuralPropertyEntity.js';
 
 @Entity('state_registrations')
 export class StateRegistrationEntity {
@@ -109,6 +110,14 @@ export class StateRegistrationEntity {
   @ManyToOne(() => PersonEntity)
   @JoinColumn({ name: 'person_id' })
   person!: PersonEntity;
+
+  @Column({ type: 'uuid', name: 'rural_property_id', nullable: true })
+  @Index()
+  ruralPropertyId!: string | null;
+
+  @ManyToOne(() => RuralPropertyEntity, (rp) => rp.stateRegistrations, { nullable: true })
+  @JoinColumn({ name: 'rural_property_id' })
+  ruralProperty!: RuralPropertyEntity | null;
 
   @OneToMany(
     () => StateRegistrationParticipantEntity,

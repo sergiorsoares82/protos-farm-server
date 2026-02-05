@@ -9,6 +9,7 @@ export interface StateRegistrationResponseDTO {
   id: string;
   tenantId: string;
   personId: string;
+  ruralPropertyId?: string | null;
   numeroIe: string;
   cpfCnpj: string | null;
   nomeResponsavel: string | null;
@@ -38,6 +39,7 @@ export interface StateRegistrationResponseDTO {
 
 export interface CreateStateRegistrationRequestDTO {
   personId: string;
+  ruralPropertyId?: string | null;
   numeroIe: string;
   uf: string;
   situacao?: string;

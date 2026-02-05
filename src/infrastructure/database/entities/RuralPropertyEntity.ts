@@ -12,6 +12,7 @@ import {
 import { OrganizationEntity } from './OrganizationEntity.js';
 import { LandRegistryEntity } from './LandRegistryEntity.js';
 import { FarmRuralPropertyEntity } from './FarmRuralPropertyEntity.js';
+import { StateRegistrationEntity } from './StateRegistrationEntity.js';
 
 @Entity('rural_properties')
 export class RuralPropertyEntity {
@@ -53,5 +54,8 @@ export class RuralPropertyEntity {
 
   @OneToMany(() => FarmRuralPropertyEntity, (frp) => frp.ruralProperty)
   farmRuralProperties!: FarmRuralPropertyEntity[];
+
+  @OneToMany(() => StateRegistrationEntity, (sr) => sr.ruralProperty)
+  stateRegistrations!: StateRegistrationEntity[];
 }
 

@@ -19,6 +19,7 @@ export function mapStateRegistrationToDTO(entity: StateRegistrationEntity): Stat
     id: entity.id,
     tenantId: entity.tenantId,
     personId: entity.personId,
+    ruralPropertyId: entity.ruralPropertyId ?? null,
     numeroIe: entity.numeroIe,
     cpfCnpj: entity.cpfCnpj ?? null,
     nomeResponsavel: entity.nomeResponsavel ?? null,
@@ -54,6 +55,7 @@ function mapCreateToEntity(
   return {
     tenantId,
     personId: data.personId,
+    ruralPropertyId: data.ruralPropertyId?.trim() || null,
     numeroIe: data.numeroIe.trim(),
     uf: data.uf.trim().toUpperCase().slice(0, 2),
     situacao: data.situacao?.trim() || 'ATIVO',
@@ -108,6 +110,14 @@ export class StateRegistrationRepository {
     tenantId: string,
     data: CreateStateRegistrationRequestDTO,
   ): Promise<StateRegistrationResponseDTO> {
+    if (data.ruralPropertyId?.trim()) {
+      const existingForProperty = await this.repo.findOne({
+        where: { tenantId, ruralPropertyId: data.ruralPropertyId.trim() },
+      });
+      if (existingForProperty) {
+        throw new Error('Este imóvel rural já está vinculado a outro produtor rural');
+      }
+    }
     const entity = this.repo.create(mapCreateToEntity(tenantId, data));
     const saved = await this.repo.save(entity);
     await this.upsertParticipants(saved.id, data.participants ?? []);
@@ -123,6 +133,18 @@ export class StateRegistrationRepository {
   ): Promise<StateRegistrationResponseDTO> {
     const existing = await this.repo.findOne({ where: { id, tenantId } });
     if (!existing) throw new Error('Inscrição estadual não encontrada');
+    if (data.ruralPropertyId !== undefined) {
+      const newId = data.ruralPropertyId?.trim() || null;
+      if (newId) {
+        const existingForProperty = await this.repo.findOne({
+          where: { tenantId, ruralPropertyId: newId },
+        });
+        if (existingForProperty && existingForProperty.id !== id) {
+          throw new Error('Este imóvel rural já está vinculado a outro produtor rural');
+        }
+      }
+    }
+
     const updates: Partial<StateRegistrationEntity> = {
       ...(data.personId != null && { personId: data.personId }),
       ...(data.numeroIe != null && { numeroIe: data.numeroIe.trim() }),
@@ -146,6 +168,9 @@ export class StateRegistrationRepository {
       ...(data.numero !== undefined && { numero: data.numero?.trim() || null }),
       ...(data.complemento !== undefined && { complemento: data.complemento?.trim() || null }),
       ...(data.referenciaLocalizacao !== undefined && { referenciaLocalizacao: data.referenciaLocalizacao?.trim() || null }),
+      ...(data.ruralPropertyId !== undefined && {
+        ruralPropertyId: data.ruralPropertyId?.trim() || null,
+      }),
       ...(data.optanteProgramaLeite !== undefined && { optanteProgramaLeite: data.optanteProgramaLeite }),
     };
     await this.repo.update({ id, tenantId }, updates);
