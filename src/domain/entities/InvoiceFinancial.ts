@@ -56,8 +56,8 @@ export class InvoiceFinancial {
     dueDate: Date,
     amount: number,
     options?: {
-      paidAt?: Date;
-      clearedAt?: Date;
+      paidAt?: Date | undefined;
+      clearedAt?: Date | undefined;
       penalty?: number;
       interest?: number;
       bankAccountId?: string | null;

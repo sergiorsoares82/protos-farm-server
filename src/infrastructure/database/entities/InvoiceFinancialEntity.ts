@@ -42,6 +42,12 @@ export class InvoiceFinancialEntity {
   @Column({ type: 'varchar', length: 20, default: 'PENDING' })
   status!: string;
 
+  @Column({ type: 'uuid', name: 'bank_account_id', nullable: true })
+  bankAccountId!: string | null;
+
+  @Column({ type: 'uuid', name: 'invoice_financials_type_id', nullable: true })
+  invoiceFinancialsTypeId!: string | null;
+
   @CreateDateColumn({ name: 'created_at' })
   createdAt!: Date;
 

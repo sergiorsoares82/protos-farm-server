@@ -45,7 +45,7 @@ export class LandRegistryController {
   async upsertOwners(req: Request, res: Response): Promise<void> {
     try {
       const tenantId = req.tenant!.tenantId;
-      const landRegistryId = req.params.id;
+      const landRegistryId = req.params.id as string;
       const body = req.body as { owners: { personId: string; percentualPosse?: number; dataAquisicao?: string; tipoAquisicao?: string }[] };
       const updated = await this.upsertLandRegistryOwners.execute(tenantId, landRegistryId, body);
       res.json({ success: true, data: updated });
