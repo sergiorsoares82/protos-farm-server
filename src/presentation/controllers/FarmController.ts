@@ -1,6 +1,5 @@
 import type { Request, Response } from 'express';
 import type { FarmRepository } from '../../infrastructure/repositories/FarmRepository.js';
-import type { ProductionSiteRepository } from '../../infrastructure/repositories/ProductionSiteRepository.js';
 import { GetFarmsUseCase } from '../../application/use-cases/farm/GetFarmsUseCase.js';
 import { GetFarmUseCase } from '../../application/use-cases/farm/GetFarmUseCase.js';
 import { CreateFarmUseCase } from '../../application/use-cases/farm/CreateFarmUseCase.js';
@@ -13,18 +12,13 @@ export class FarmController {
   private createFarm: CreateFarmUseCase;
   private updateFarm: UpdateFarmUseCase;
   private deleteFarm: DeleteFarmUseCase;
-  private productionSiteRepository: ProductionSiteRepository;
 
-  constructor(
-    farmRepository: FarmRepository,
-    productionSiteRepository: ProductionSiteRepository,
-  ) {
+  constructor(farmRepository: FarmRepository) {
     this.getFarms = new GetFarmsUseCase(farmRepository);
     this.getFarm = new GetFarmUseCase(farmRepository);
     this.createFarm = new CreateFarmUseCase(farmRepository);
     this.updateFarm = new UpdateFarmUseCase(farmRepository);
     this.deleteFarm = new DeleteFarmUseCase(farmRepository);
-    this.productionSiteRepository = productionSiteRepository;
   }
 
   async getAll(req: Request, res: Response): Promise<void> {
@@ -50,23 +44,6 @@ export class FarmController {
         return;
       }
       console.error('FarmController.getById', e);
-      res.status(500).json({ success: false, error: 'Internal server error' });
-    }
-  }
-
-  async getProductionSites(req: Request, res: Response): Promise<void> {
-    try {
-      const tenantId = req.tenant!.tenantId;
-      const farmId = req.params.id as string;
-      await this.getFarm.execute(tenantId, farmId);
-      const list = await this.productionSiteRepository.findByFarmId(tenantId, farmId);
-      res.json({ success: true, data: list });
-    } catch (e) {
-      if (e instanceof Error && e.message === 'Farm not found') {
-        res.status(404).json({ success: false, error: e.message });
-        return;
-      }
-      console.error('FarmController.getProductionSites', e);
       res.status(500).json({ success: false, error: 'Internal server error' });
     }
   }

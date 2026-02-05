@@ -11,7 +11,6 @@ import {
 } from 'typeorm';
 import { OrganizationEntity } from './OrganizationEntity.js';
 import { PersonEntity } from './PersonEntity.js';
-import { ProductionSiteStateRegistrationEntity } from './ProductionSiteStateRegistrationEntity.js';
 import { StateRegistrationParticipantEntity } from './StateRegistrationParticipantEntity.js';
 import { RuralPropertyEntity } from './RuralPropertyEntity.js';
 
@@ -125,10 +124,4 @@ export class StateRegistrationEntity {
     { cascade: true },
   )
   participants!: StateRegistrationParticipantEntity[];
-
-  @OneToMany(
-    () => ProductionSiteStateRegistrationEntity,
-    (pssr) => pssr.stateRegistration,
-  )
-  productionSiteLinks!: ProductionSiteStateRegistrationEntity[];
 }
