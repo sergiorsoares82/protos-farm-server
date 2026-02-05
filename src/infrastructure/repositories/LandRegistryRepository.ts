@@ -6,6 +6,7 @@ import type {
   CreateLandRegistryRequestDTO,
   LandRegistryResponseDTO,
   UpsertLandRegistryOwnersRequestDTO,
+  UpdateLandRegistryRequestDTO,
 } from '../../application/dtos/LandRegistryDTOs.js';
 
 function mapToDTO(entity: LandRegistryEntity): LandRegistryResponseDTO {
@@ -104,6 +105,46 @@ export class LandRegistryRepository {
       uf: data.uf?.trim() || null,
     });
     const saved = await this.repo.save(entity);
+    return mapToDTO(saved);
+  }
+
+  async update(
+    tenantId: string,
+    id: string,
+    data: UpdateLandRegistryRequestDTO,
+  ): Promise<LandRegistryResponseDTO> {
+    const existing = await this.repo.findOne({ where: { id, tenantId } });
+    if (!existing) throw new Error('Matrícula não encontrada');
+
+    if (data.ruralPropertyId !== undefined) {
+      existing.ruralPropertyId = data.ruralPropertyId?.trim() || null;
+    }
+    if (data.numeroMatricula !== undefined) {
+      existing.numeroMatricula = data.numeroMatricula.trim();
+    }
+    if (data.cartorio !== undefined) {
+      existing.cartorio = data.cartorio.trim();
+    }
+    if (data.dataRegistro !== undefined) {
+      existing.dataRegistro = data.dataRegistro?.trim() || null;
+    }
+    if (data.registro !== undefined) {
+      existing.registro = data.registro?.trim() || null;
+    }
+    if (data.livroOuFicha !== undefined) {
+      existing.livroOuFicha = data.livroOuFicha?.trim() || null;
+    }
+    if (data.areaHa !== undefined) {
+      existing.areaHa = data.areaHa ?? null;
+    }
+    if (data.municipio !== undefined) {
+      existing.municipio = data.municipio?.trim() || null;
+    }
+    if (data.uf !== undefined) {
+      existing.uf = data.uf?.trim() || null;
+    }
+
+    const saved = await this.repo.save(existing);
     return mapToDTO(saved);
   }
 }

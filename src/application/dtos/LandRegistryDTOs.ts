@@ -45,3 +45,15 @@ export interface CreateLandRegistryRequestDTO {
   municipio?: string;
   uf?: string;
 }
+
+export interface UpdateLandRegistryRequestDTO {
+  ruralPropertyId?: string | null;
+  numeroMatricula?: string;
+  cartorio?: string;
+  dataRegistro?: string | null;
+  registro?: string | null;
+  livroOuFicha?: string | null;
+  areaHa?: number | null;
+  municipio?: string | null;
+  uf?: string | null;
+}

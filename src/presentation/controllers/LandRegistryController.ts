@@ -3,16 +3,19 @@ import type { LandRegistryRepository } from '../../infrastructure/repositories/L
 import { GetLandRegistriesUseCase } from '../../application/use-cases/land-registry/GetLandRegistriesUseCase.js';
 import { CreateLandRegistryUseCase } from '../../application/use-cases/land-registry/CreateLandRegistryUseCase.js';
 import { UpsertLandRegistryOwnersUseCase } from '../../application/use-cases/land-registry/UpsertLandRegistryOwnersUseCase.js';
+import { UpdateLandRegistryUseCase } from '../../application/use-cases/land-registry/UpdateLandRegistryUseCase.js';
 
 export class LandRegistryController {
   private getLandRegistries: GetLandRegistriesUseCase;
   private createLandRegistry: CreateLandRegistryUseCase;
   private upsertLandRegistryOwners: UpsertLandRegistryOwnersUseCase;
+  private updateLandRegistry: UpdateLandRegistryUseCase;
 
   constructor(landRegistryRepository: LandRegistryRepository) {
     this.getLandRegistries = new GetLandRegistriesUseCase(landRegistryRepository);
     this.createLandRegistry = new CreateLandRegistryUseCase(landRegistryRepository);
     this.upsertLandRegistryOwners = new UpsertLandRegistryOwnersUseCase(landRegistryRepository);
+    this.updateLandRegistry = new UpdateLandRegistryUseCase(landRegistryRepository);
   }
 
   async getAll(req: Request, res: Response): Promise<void> {
@@ -55,6 +58,23 @@ export class LandRegistryController {
         return;
       }
       console.error('LandRegistryController.upsertOwners', e);
+      res.status(500).json({ success: false, error: 'Internal server error' });
+    }
+  }
+
+  async update(req: Request, res: Response): Promise<void> {
+    try {
+      const tenantId = req.tenant!.tenantId;
+      const id = req.params.id as string;
+      const body = req.body;
+      const updated = await this.updateLandRegistry.execute(tenantId, id, body);
+      res.json({ success: true, data: updated });
+    } catch (e) {
+      if (e instanceof Error && e.message === 'Matrícula não encontrada') {
+        res.status(404).json({ success: false, error: e.message });
+        return;
+      }
+      console.error('LandRegistryController.update', e);
       res.status(500).json({ success: false, error: 'Internal server error' });
     }
   }
