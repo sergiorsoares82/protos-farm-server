@@ -5,11 +5,20 @@ export interface StateRegistrationParticipantItemDTO {
   participation: string | null;
 }
 
+export interface StateRegistrationLandRegistryItemDTO {
+  id: string;
+  numeroMatricula: string;
+  ruralPropertyId: string | null;
+  cartorio?: string | null;
+  areaHa?: number | null;
+}
+
 export interface StateRegistrationResponseDTO {
   id: string;
   tenantId: string;
   personId: string | null;
   ruralPropertyId?: string | null;
+  landRegistries: StateRegistrationLandRegistryItemDTO[];
   numeroIe: string;
   cpfCnpj: string | null;
   nomeResponsavel: string | null;
@@ -40,6 +49,7 @@ export interface StateRegistrationResponseDTO {
 export interface CreateStateRegistrationRequestDTO {
   personId?: string | null;
   ruralPropertyId?: string | null;
+  landRegistryIds?: string[];
   numeroIe: string;
   uf: string;
   situacao?: string;

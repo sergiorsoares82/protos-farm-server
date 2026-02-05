@@ -41,6 +41,7 @@ import { LandRegistryEntity } from './entities/LandRegistryEntity.js';
 import { PropertyOwnershipEntity } from './entities/PropertyOwnershipEntity.js';
 import { StateRegistrationEntity } from './entities/StateRegistrationEntity.js';
 import { StateRegistrationParticipantEntity } from './entities/StateRegistrationParticipantEntity.js';
+import { StateRegistrationLandRegistryEntity } from './entities/StateRegistrationLandRegistryEntity.js';
 // Get database configuration from environment variables
 const getDatabaseUrl = (): string => {
   // 1) Prefer DATABASE_URL if provided (Neon typically gives you this)
@@ -129,6 +130,7 @@ export const AppDataSource = new DataSource({
     PropertyOwnershipEntity,
     StateRegistrationEntity,
     StateRegistrationParticipantEntity,
+    StateRegistrationLandRegistryEntity,
   ],
   migrations: [],
   subscribers: [],

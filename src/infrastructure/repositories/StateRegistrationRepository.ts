@@ -1,6 +1,7 @@
 import { Repository } from 'typeorm';
 import { StateRegistrationEntity } from '../database/entities/StateRegistrationEntity.js';
 import { StateRegistrationParticipantEntity } from '../database/entities/StateRegistrationParticipantEntity.js';
+import { StateRegistrationLandRegistryEntity } from '../database/entities/StateRegistrationLandRegistryEntity.js';
 import { AppDataSource } from '../database/typeorm.config.js';
 import type {
   CreateStateRegistrationRequestDTO,
@@ -15,11 +16,25 @@ export function mapStateRegistrationToDTO(entity: StateRegistrationEntity): Stat
     nome: p.nome,
     participation: p.participation ?? null,
   }));
+  const landRegistries = (entity.landRegistryLinks || [])
+    .map((link) => {
+      const lr = link.landRegistry;
+      if (!lr) return null;
+      return {
+        id: lr.id,
+        numeroMatricula: lr.numeroMatricula,
+        ruralPropertyId: lr.ruralPropertyId ?? null,
+        cartorio: lr.cartorio ?? null,
+        areaHa: lr.areaHa != null ? Number(lr.areaHa) : null,
+      };
+    })
+    .filter((x): x is NonNullable<typeof x> => x != null);
   return {
     id: entity.id,
     tenantId: entity.tenantId,
     personId: entity.personId ?? null,
     ruralPropertyId: entity.ruralPropertyId ?? null,
+    landRegistries,
     numeroIe: entity.numeroIe,
     cpfCnpj: entity.cpfCnpj ?? null,
     nomeResponsavel: entity.nomeResponsavel ?? null,
@@ -84,16 +99,18 @@ function mapCreateToEntity(
 export class StateRegistrationRepository {
   private repo: Repository<StateRegistrationEntity>;
   private participantRepo: Repository<StateRegistrationParticipantEntity>;
+  private landRegistryLinkRepo: Repository<StateRegistrationLandRegistryEntity>;
 
   constructor() {
     this.repo = AppDataSource.getRepository(StateRegistrationEntity);
     this.participantRepo = AppDataSource.getRepository(StateRegistrationParticipantEntity);
+    this.landRegistryLinkRepo = AppDataSource.getRepository(StateRegistrationLandRegistryEntity);
   }
 
   async findAll(tenantId: string): Promise<StateRegistrationResponseDTO[]> {
     const list = await this.repo.find({
       where: { tenantId },
-      relations: ['participants'],
+      relations: ['participants', 'landRegistryLinks', 'landRegistryLinks.landRegistry'],
       order: { numeroIe: 'ASC' },
     });
     return list.map(mapStateRegistrationToDTO);
@@ -102,7 +119,7 @@ export class StateRegistrationRepository {
   async findById(id: string, tenantId: string): Promise<StateRegistrationEntity | null> {
     return this.repo.findOne({
       where: { id, tenantId },
-      relations: ['participants'],
+      relations: ['participants', 'landRegistryLinks', 'landRegistryLinks.landRegistry'],
     });
   }
 
@@ -110,17 +127,10 @@ export class StateRegistrationRepository {
     tenantId: string,
     data: CreateStateRegistrationRequestDTO,
   ): Promise<StateRegistrationResponseDTO> {
-    if (data.ruralPropertyId?.trim()) {
-      const existingForProperty = await this.repo.findOne({
-        where: { tenantId, ruralPropertyId: data.ruralPropertyId.trim() },
-      });
-      if (existingForProperty) {
-        throw new Error('Este imóvel rural já está vinculado a outro produtor rural');
-      }
-    }
     const entity = this.repo.create(mapCreateToEntity(tenantId, data));
     const saved = await this.repo.save(entity);
     await this.upsertParticipants(saved.id, data.participants ?? []);
+    await this.upsertLandRegistryLinks(tenantId, saved.id, data.landRegistryIds ?? []);
     const loaded = await this.findById(saved.id, tenantId);
     if (!loaded) throw new Error('Failed to load state registration after create');
     return mapStateRegistrationToDTO(loaded);
@@ -133,17 +143,6 @@ export class StateRegistrationRepository {
   ): Promise<StateRegistrationResponseDTO> {
     const existing = await this.repo.findOne({ where: { id, tenantId } });
     if (!existing) throw new Error('Inscrição estadual não encontrada');
-    if (data.ruralPropertyId !== undefined) {
-      const newId = data.ruralPropertyId?.trim() || null;
-      if (newId) {
-        const existingForProperty = await this.repo.findOne({
-          where: { tenantId, ruralPropertyId: newId },
-        });
-        if (existingForProperty && existingForProperty.id !== id) {
-          throw new Error('Este imóvel rural já está vinculado a outro produtor rural');
-        }
-      }
-    }
 
     const updates: Partial<StateRegistrationEntity> = {
       ...(data.personId !== undefined && { personId: data.personId?.trim() || null }),
@@ -177,6 +176,9 @@ export class StateRegistrationRepository {
     if (data.participants !== undefined) {
       await this.upsertParticipants(id, data.participants);
     }
+    if (data.landRegistryIds !== undefined) {
+      await this.upsertLandRegistryLinks(tenantId, id, data.landRegistryIds);
+    }
     const loaded = await this.findById(id, tenantId);
     if (!loaded) throw new Error('Failed to load state registration after update');
     return mapStateRegistrationToDTO(loaded);
@@ -201,6 +203,23 @@ export class StateRegistrationRepository {
             : null,
       });
       await this.participantRepo.save(entity);
+    }
+  }
+
+  private async upsertLandRegistryLinks(
+    tenantId: string,
+    stateRegistrationId: string,
+    landRegistryIds: string[],
+  ): Promise<void> {
+    await this.landRegistryLinkRepo.delete({ stateRegistrationId });
+    const uniqueIds = [...new Set(landRegistryIds.filter((id) => id?.trim()))];
+    for (const landRegistryId of uniqueIds) {
+      const link = this.landRegistryLinkRepo.create({
+        tenantId,
+        stateRegistrationId,
+        landRegistryId,
+      });
+      await this.landRegistryLinkRepo.save(link);
     }
   }
 }

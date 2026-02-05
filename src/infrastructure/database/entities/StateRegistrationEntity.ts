@@ -12,6 +12,7 @@ import {
 import { OrganizationEntity } from './OrganizationEntity.js';
 import { PersonEntity } from './PersonEntity.js';
 import { StateRegistrationParticipantEntity } from './StateRegistrationParticipantEntity.js';
+import { StateRegistrationLandRegistryEntity } from './StateRegistrationLandRegistryEntity.js';
 import { RuralPropertyEntity } from './RuralPropertyEntity.js';
 
 @Entity('state_registrations')
@@ -124,4 +125,11 @@ export class StateRegistrationEntity {
     { cascade: true },
   )
   participants!: StateRegistrationParticipantEntity[];
+
+  @OneToMany(
+    () => StateRegistrationLandRegistryEntity,
+    (lr) => lr.stateRegistration,
+    { cascade: true },
+  )
+  landRegistryLinks!: StateRegistrationLandRegistryEntity[];
 }
