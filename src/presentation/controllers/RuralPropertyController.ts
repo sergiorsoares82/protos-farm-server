@@ -2,14 +2,20 @@ import type { Request, Response } from 'express';
 import type { RuralPropertyRepository } from '../../infrastructure/repositories/RuralPropertyRepository.js';
 import { GetRuralPropertiesUseCase } from '../../application/use-cases/rural-property/GetRuralPropertiesUseCase.js';
 import { CreateRuralPropertyUseCase } from '../../application/use-cases/rural-property/CreateRuralPropertyUseCase.js';
+import { UpdateRuralPropertyUseCase } from '../../application/use-cases/rural-property/UpdateRuralPropertyUseCase.js';
+import { DeleteRuralPropertyUseCase } from '../../application/use-cases/rural-property/DeleteRuralPropertyUseCase.js';
 
 export class RuralPropertyController {
   private getRuralProperties: GetRuralPropertiesUseCase;
   private createRuralProperty: CreateRuralPropertyUseCase;
+  private updateRuralProperty: UpdateRuralPropertyUseCase;
+  private deleteRuralProperty: DeleteRuralPropertyUseCase;
 
   constructor(ruralPropertyRepository: RuralPropertyRepository) {
     this.getRuralProperties = new GetRuralPropertiesUseCase(ruralPropertyRepository);
     this.createRuralProperty = new CreateRuralPropertyUseCase(ruralPropertyRepository);
+    this.updateRuralProperty = new UpdateRuralPropertyUseCase(ruralPropertyRepository);
+    this.deleteRuralProperty = new DeleteRuralPropertyUseCase(ruralPropertyRepository);
   }
 
   async getAll(req: Request, res: Response): Promise<void> {
@@ -35,6 +41,43 @@ export class RuralPropertyController {
         return;
       }
       console.error('RuralPropertyController.create', e);
+      res.status(500).json({ success: false, error: 'Internal server error' });
+    }
+  }
+
+  async update(req: Request, res: Response): Promise<void> {
+    try {
+      const tenantId = req.tenant!.tenantId;
+      const id = req.params.id as string;
+      const body = req.body;
+      const updated = await this.updateRuralProperty.execute(id, tenantId, body);
+      res.json({ success: true, data: updated });
+    } catch (e) {
+      if (e instanceof Error && e.message === 'Imóvel rural não encontrado') {
+        res.status(404).json({ success: false, error: e.message });
+        return;
+      }
+      if (e instanceof Error && e.message.includes('Nome do imóvel')) {
+        res.status(400).json({ success: false, error: e.message });
+        return;
+      }
+      console.error('RuralPropertyController.update', e);
+      res.status(500).json({ success: false, error: 'Internal server error' });
+    }
+  }
+
+  async delete(req: Request, res: Response): Promise<void> {
+    try {
+      const tenantId = req.tenant!.tenantId;
+      const id = req.params.id as string;
+      await this.deleteRuralProperty.execute(id, tenantId);
+      res.json({ success: true });
+    } catch (e) {
+      if (e instanceof Error && e.message === 'Imóvel rural não encontrado') {
+        res.status(404).json({ success: false, error: e.message });
+        return;
+      }
+      console.error('RuralPropertyController.delete', e);
       res.status(500).json({ success: false, error: 'Internal server error' });
     }
   }

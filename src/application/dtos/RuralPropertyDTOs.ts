@@ -17,3 +17,11 @@ export interface CreateRuralPropertyRequestDTO {
   municipio?: string;
   uf?: string;
 }
+
+export interface UpdateRuralPropertyRequestDTO {
+  nomeImovelIncra?: string;
+  codigoSncr?: string | null;
+  nirf?: string | null;
+  municipio?: string | null;
+  uf?: string | null;
+}
