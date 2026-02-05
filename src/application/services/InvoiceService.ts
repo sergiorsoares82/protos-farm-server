@@ -21,16 +21,23 @@ export class InvoiceService {
       throw new Error('Data de emissão inválida');
     }
 
-    const invoice = Invoice.create(
-      tenantId,
-      data.number,
-      issueDate,
-      data.supplierId,
-      data.type,
-      data.series,
-      data.documentTypeId,
-      data.notes
-    );
+    if (data.type === InvoiceType.RECEITA) {
+      if (!data.emitterPartyId?.trim()) throw new Error('Emitente (produtor/empresa) é obrigatório em nota de venda');
+      if (!data.recipientClientId?.trim()) throw new Error('Destinatário (cliente) é obrigatório em nota de venda');
+    } else {
+      if (!data.emitterSupplierId?.trim()) throw new Error('Emitente (fornecedor) é obrigatório em nota de compra');
+      if (!data.recipientPartyId?.trim()) throw new Error('Destinatário (produtor/empresa) é obrigatório em nota de compra');
+    }
+
+    const invoice = Invoice.create(tenantId, data.number, issueDate, data.type, {
+      emitterSupplierId: data.emitterSupplierId ?? null,
+      emitterPartyId: data.emitterPartyId ?? null,
+      recipientClientId: data.recipientClientId ?? null,
+      recipientPartyId: data.recipientPartyId ?? null,
+      ...(data.series !== undefined && data.series !== '' && { series: data.series }),
+      ...(data.documentTypeId !== undefined && data.documentTypeId !== '' && { documentTypeId: data.documentTypeId }),
+      ...(data.notes !== undefined && data.notes !== '' && { notes: data.notes }),
+    });
 
     let lineOrder = 0;
     for (const dto of data.items ?? []) {
@@ -100,13 +107,24 @@ export class InvoiceService {
 
     const number = data.number ?? invoice.getNumber();
     const issueDate = data.issueDate ? new Date(data.issueDate) : invoice.getIssueDate();
-    const supplierId = data.supplierId ?? invoice.getSupplierId();
     const type = data.type ?? invoice.getType();
     const series = data.series !== undefined ? data.series : invoice.getSeries();
     const documentTypeId = data.documentTypeId !== undefined ? data.documentTypeId : invoice.getDocumentTypeId();
     const notes = data.notes !== undefined ? data.notes : invoice.getNotes();
+    const emitterSupplierId = data.emitterSupplierId !== undefined ? data.emitterSupplierId : invoice.getEmitterSupplierId();
+    const emitterPartyId = data.emitterPartyId !== undefined ? data.emitterPartyId : invoice.getEmitterPartyId();
+    const recipientClientId = data.recipientClientId !== undefined ? data.recipientClientId : invoice.getRecipientClientId();
+    const recipientPartyId = data.recipientPartyId !== undefined ? data.recipientPartyId : invoice.getRecipientPartyId();
 
-    invoice.updateHeader(number, issueDate, supplierId, type, series, documentTypeId, notes);
+    invoice.updateHeader(number, issueDate, type, {
+      emitterSupplierId,
+      emitterPartyId,
+      recipientClientId,
+      recipientPartyId,
+      ...(series !== undefined && { series }),
+      ...(documentTypeId !== undefined && { documentTypeId }),
+      ...(notes !== undefined && { notes }),
+    });
 
     if (data.items !== undefined) {
       for (const existing of invoice.getItems()) {

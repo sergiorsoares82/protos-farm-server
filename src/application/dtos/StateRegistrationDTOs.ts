@@ -13,11 +13,15 @@ export interface StateRegistrationLandRegistryItemDTO {
   areaHa?: number | null;
 }
 
+/** PRODUTOR_RURAL | EMPRESA - usado para distinguir na tela e em relatórios */
+export type StateRegistrationTipo = 'PRODUTOR_RURAL' | 'EMPRESA';
+
 export interface StateRegistrationResponseDTO {
   id: string;
   tenantId: string;
   personId: string | null;
   ruralPropertyId?: string | null;
+  tipo?: StateRegistrationTipo | null;
   landRegistries: StateRegistrationLandRegistryItemDTO[];
   numeroIe: string;
   cpfCnpj: string | null;
@@ -49,6 +53,7 @@ export interface StateRegistrationResponseDTO {
 export interface CreateStateRegistrationRequestDTO {
   personId?: string | null;
   ruralPropertyId?: string | null;
+  tipo?: StateRegistrationTipo | null;
   landRegistryIds?: string[];
   numeroIe: string;
   uf: string;

@@ -25,7 +25,7 @@ export class InvoiceRepository implements IInvoiceRepository {
   async findAll(tenantId: string): Promise<Invoice[]> {
     const entities = await this.invoiceRepo.find({
       where: { tenantId },
-      relations: ['items', 'financials', 'documentType'],
+      relations: ['items', 'financials', 'documentType', 'supplier', 'supplier.person', 'emitterSupplier', 'emitterSupplier.person', 'emitterParty', 'recipientClient', 'recipientClient.person', 'recipientParty'],
       order: { issueDate: 'DESC', createdAt: 'DESC' },
     });
     return entities.map((e) => this.toDomain(e));
@@ -34,7 +34,7 @@ export class InvoiceRepository implements IInvoiceRepository {
   async findById(id: string, tenantId: string): Promise<Invoice | null> {
     const entity = await this.invoiceRepo.findOne({
       where: { id, tenantId },
-      relations: ['items', 'financials', 'documentType'],
+      relations: ['items', 'financials', 'documentType', 'supplier', 'supplier.person', 'emitterSupplier', 'emitterSupplier.person', 'emitterParty', 'recipientClient', 'recipientClient.person', 'recipientParty'],
     });
     if (!entity) return null;
     return this.toDomain(entity);
@@ -49,7 +49,10 @@ export class InvoiceRepository implements IInvoiceRepository {
     invEntity.number = invoice.getNumber();
     invEntity.series = invoice.getSeries() ?? null;
     invEntity.issueDate = invoice.getIssueDate().toISOString().slice(0, 10);
-    invEntity.supplierId = invoice.getSupplierId();
+    invEntity.emitterSupplierId = invoice.getEmitterSupplierId();
+    invEntity.emitterPartyId = invoice.getEmitterPartyId();
+    invEntity.recipientClientId = invoice.getRecipientClientId();
+    invEntity.recipientPartyId = invoice.getRecipientPartyId();
     invEntity.documentTypeId = invoice.getDocumentTypeId() ?? null;
     invEntity.type = invoice.getType();
     invEntity.notes = invoice.getNotes() ?? null;
@@ -120,29 +123,81 @@ export class InvoiceRepository implements IInvoiceRepository {
     const items = (entity.items ?? []).map((i) => this.itemToDomain(i));
     const financials = (entity.financials ?? []).map((f) => this.financialToDomain(f));
 
+    const type = entity.type as InvoiceType;
+    const emitterSupplierId = entity.emitterSupplierId ?? (type === 'DESPESA' ? entity.supplierId : null);
+    const emitterPartyId = entity.emitterPartyId ?? (type === 'RECEITA' ? null : null);
+    const recipientClientId = entity.recipientClientId ?? null;
+    const recipientPartyId = entity.recipientPartyId ?? null;
+
     const invoice = new Invoice({
       id: entity.id,
       tenantId: entity.tenantId,
       number: entity.number,
       series: entity.series ?? undefined,
       issueDate: new Date(entity.issueDate + 'T00:00:00'),
-      supplierId: entity.supplierId,
+      emitterSupplierId: emitterSupplierId ?? null,
+      emitterPartyId: emitterPartyId ?? null,
+      recipientClientId: recipientClientId ?? null,
+      recipientPartyId: recipientPartyId ?? null,
       documentTypeId: entity.documentTypeId ?? undefined,
       notes: entity.notes ?? undefined,
-      type: entity.type as InvoiceType,
+      type,
       items,
       financials,
       createdAt: entity.createdAt,
       updatedAt: entity.updatedAt,
     });
 
-    // Store documentType for JSON serialization if available
     if (entity.documentType) {
       (invoice as any)._documentType = {
         id: entity.documentType.id,
         name: entity.documentType.name,
         group: entity.documentType.group,
         hasAccessKey: entity.documentType.hasAccessKey,
+      };
+    }
+
+    if (type === 'RECEITA' && entity.emitterParty) {
+      (invoice as any)._emitter = {
+        type: 'PARTY',
+        id: entity.emitterParty.id,
+        nomeEstabelecimento: entity.emitterParty.nomeEstabelecimento ?? entity.emitterParty.nomeResponsavel ?? '',
+        numeroIe: entity.emitterParty.numeroIe,
+        cpfCnpj: entity.emitterParty.cpfCnpj ?? null,
+      };
+    } else if (type === 'DESPESA' && entity.emitterSupplier?.person) {
+      const p = entity.emitterSupplier.person;
+      (invoice as any)._emitter = {
+        type: 'SUPPLIER',
+        id: entity.emitterSupplier.id,
+        nome: p.nome,
+        cpfCnpj: p.cpfCnpj ?? null,
+      };
+    } else if (type === 'DESPESA' && entity.supplier?.person) {
+      const p = entity.supplier.person;
+      (invoice as any)._emitter = {
+        type: 'SUPPLIER',
+        id: entity.supplier.id,
+        nome: p.nome,
+        cpfCnpj: p.cpfCnpj ?? null,
+      };
+    }
+
+    if (type === 'RECEITA' && entity.recipientClient?.person) {
+      const p = entity.recipientClient.person;
+      (invoice as any)._recipient = {
+        type: 'CLIENT',
+        id: entity.recipientClient.id,
+        nome: p.nome,
+        cpfCnpj: p.cpfCnpj ?? null,
+      };
+    } else if (type === 'DESPESA' && entity.recipientParty) {
+      (invoice as any)._recipient = {
+        type: 'PARTY',
+        id: entity.recipientParty.id,
+        nomeEstabelecimento: entity.recipientParty.nomeEstabelecimento ?? entity.recipientParty.nomeResponsavel ?? '',
+        numeroIe: entity.recipientParty.numeroIe,
+        cpfCnpj: entity.recipientParty.cpfCnpj ?? null,
       };
     }
 

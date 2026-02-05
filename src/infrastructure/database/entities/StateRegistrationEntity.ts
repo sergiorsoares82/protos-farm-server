@@ -28,6 +28,10 @@ export class StateRegistrationEntity {
   @Index()
   personId!: string | null;
 
+  /** PRODUTOR_RURAL (CPF) ou EMPRESA (CNPJ) - distingue na tela e relatórios */
+  @Column({ type: 'varchar', length: 20, name: 'tipo', nullable: true })
+  tipo!: string | null;
+
   // ---- Dados cadastrais (comprovante IE) ----
   @Column({ type: 'varchar', length: 50, name: 'numero_ie' })
   numeroIe!: string;

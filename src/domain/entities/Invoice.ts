@@ -8,7 +8,14 @@ export interface InvoiceProps {
   number: string;
   series?: string | undefined;
   issueDate: Date;
-  supplierId: string;
+  /** Compra (DESPESA): emitente é o fornecedor */
+  emitterSupplierId?: string | null;
+  /** Venda (RECEITA): emitente é produtor rural ou empresa (State Registration) */
+  emitterPartyId?: string | null;
+  /** Venda (RECEITA): destinatário é o cliente */
+  recipientClientId?: string | null;
+  /** Compra (DESPESA): destinatário é produtor rural ou empresa */
+  recipientPartyId?: string | null;
   documentTypeId?: string | undefined;
   notes?: string | undefined;
   type: InvoiceType;
@@ -19,8 +26,10 @@ export interface InvoiceProps {
 }
 
 /**
- * Nota Fiscal: cabeçalho com número, série, data de emissão, fornecedor e relacionamentos
- * com itens (produto/serviço) e parcelas financeiras (vencimentos).
+ * Nota Fiscal: cabeçalho com número, série, data de emissão, emitente/destinatário
+ * e relacionamentos com itens (produto/serviço) e parcelas financeiras (vencimentos).
+ * RECEITA: emitente = produtor/empresa (party), destinatário = cliente.
+ * DESPESA: emitente = fornecedor, destinatário = produtor/empresa (party).
  */
 export class Invoice {
   private readonly id: string;
@@ -28,7 +37,10 @@ export class Invoice {
   private number: string;
   private series?: string | undefined;
   private issueDate: Date;
-  private supplierId: string;
+  private emitterSupplierId: string | null;
+  private emitterPartyId: string | null;
+  private recipientClientId: string | null;
+  private recipientPartyId: string | null;
   private documentTypeId?: string | undefined;
   private notes?: string | undefined;
   private type: InvoiceType;
@@ -44,7 +56,10 @@ export class Invoice {
     this.number = props.number;
     this.series = props.series;
     this.issueDate = props.issueDate;
-    this.supplierId = props.supplierId;
+    this.emitterSupplierId = props.emitterSupplierId ?? null;
+    this.emitterPartyId = props.emitterPartyId ?? null;
+    this.recipientClientId = props.recipientClientId ?? null;
+    this.recipientPartyId = props.recipientPartyId ?? null;
     this.documentTypeId = props.documentTypeId;
     this.notes = props.notes;
     this.type = props.type;
@@ -58,22 +73,30 @@ export class Invoice {
     tenantId: string,
     number: string,
     issueDate: Date,
-    supplierId: string,
     type: InvoiceType,
-    series?: string,
-    documentTypeId?: string,
-    notes?: string
+    options: {
+      emitterSupplierId?: string | null;
+      emitterPartyId?: string | null;
+      recipientClientId?: string | null;
+      recipientPartyId?: string | null;
+      series?: string;
+      documentTypeId?: string;
+      notes?: string;
+    }
   ): Invoice {
     const now = new Date();
     return new Invoice({
       id: crypto.randomUUID(),
       tenantId,
       number,
-      series,
+      series: options.series,
       issueDate,
-      supplierId,
-      documentTypeId,
-      notes,
+      emitterSupplierId: options.emitterSupplierId ?? null,
+      emitterPartyId: options.emitterPartyId ?? null,
+      recipientClientId: options.recipientClientId ?? null,
+      recipientPartyId: options.recipientPartyId ?? null,
+      documentTypeId: options.documentTypeId,
+      notes: options.notes,
       type,
       items: [],
       financials: [],
@@ -88,30 +111,60 @@ export class Invoice {
     if (!(props.issueDate instanceof Date) || Number.isNaN(props.issueDate.getTime())) {
       throw new Error('Issue date is invalid');
     }
-    if (!props.supplierId?.trim()) throw new Error('Supplier is required');
+    if (props.type === InvoiceType.RECEITA) {
+      if (!props.emitterPartyId?.trim()) throw new Error('Emitente (produtor/empresa) é obrigatório em nota de venda');
+      if (!props.recipientClientId?.trim()) throw new Error('Destinatário (cliente) é obrigatório em nota de venda');
+      if (props.emitterSupplierId?.trim() || props.recipientPartyId?.trim()) {
+        throw new Error('Em nota de venda use apenas emitente produtor/empresa e destinatário cliente');
+      }
+    } else {
+      if (!props.emitterSupplierId?.trim()) throw new Error('Emitente (fornecedor) é obrigatório em nota de compra');
+      if (props.emitterPartyId?.trim() || props.recipientClientId?.trim()) {
+        throw new Error('Em nota de compra use apenas emitente fornecedor e destinatário produtor/empresa');
+      }
+      // recipientPartyId obrigatório apenas na criação/edição; legado pode ter null
+    }
   }
 
   updateHeader(
     number: string,
     issueDate: Date,
-    supplierId: string,
     type: InvoiceType,
-    series?: string,
-    documentTypeId?: string,
-    notes?: string
+    options: {
+      emitterSupplierId?: string | null;
+      emitterPartyId?: string | null;
+      recipientClientId?: string | null;
+      recipientPartyId?: string | null;
+      series?: string;
+      documentTypeId?: string;
+      notes?: string;
+    }
   ): void {
     if (!number?.trim()) throw new Error('Invoice number is required');
     if (!(issueDate instanceof Date) || Number.isNaN(issueDate.getTime())) {
       throw new Error('Issue date is invalid');
     }
-    if (!supplierId?.trim()) throw new Error('Supplier is required');
     this.number = number;
     this.issueDate = issueDate;
-    this.supplierId = supplierId;
     this.type = type;
-    this.series = series;
-    this.documentTypeId = documentTypeId;
-    this.notes = notes;
+    this.emitterSupplierId = options.emitterSupplierId ?? this.emitterSupplierId;
+    this.emitterPartyId = options.emitterPartyId ?? this.emitterPartyId;
+    this.recipientClientId = options.recipientClientId ?? this.recipientClientId;
+    this.recipientPartyId = options.recipientPartyId ?? this.recipientPartyId;
+    this.series = options.series;
+    this.documentTypeId = options.documentTypeId;
+    this.notes = options.notes;
+    if (this.type === InvoiceType.RECEITA) {
+      if (!this.emitterPartyId?.trim()) throw new Error('Emitente (produtor/empresa) é obrigatório em nota de venda');
+      if (!this.recipientClientId?.trim()) throw new Error('Destinatário (cliente) é obrigatório em nota de venda');
+      this.emitterSupplierId = null;
+      this.recipientPartyId = null;
+    } else {
+      if (!this.emitterSupplierId?.trim()) throw new Error('Emitente (fornecedor) é obrigatório em nota de compra');
+      this.emitterPartyId = null;
+      this.recipientClientId = null;
+      // recipientPartyId pode ser preenchido ou mantido
+    }
     this.updatedAt = new Date();
   }
 
@@ -152,7 +205,10 @@ export class Invoice {
   getNumber(): string { return this.number; }
   getSeries(): string | undefined { return this.series; }
   getIssueDate(): Date { return this.issueDate; }
-  getSupplierId(): string { return this.supplierId; }
+  getEmitterSupplierId(): string | null { return this.emitterSupplierId; }
+  getEmitterPartyId(): string | null { return this.emitterPartyId; }
+  getRecipientClientId(): string | null { return this.recipientClientId; }
+  getRecipientPartyId(): string | null { return this.recipientPartyId; }
   getDocumentTypeId(): string | undefined { return this.documentTypeId; }
   getNotes(): string | undefined { return this.notes; }
   getType(): InvoiceType { return this.type; }
@@ -161,6 +217,12 @@ export class Invoice {
   getCreatedAt(): Date { return this.createdAt; }
   getUpdatedAt(): Date { return this.updatedAt; }
 
+  /** Legado: em DESPESA retorna emitterSupplierId; em RECEITA não usado. */
+  getSupplierId(): string {
+    if (this.type === InvoiceType.DESPESA && this.emitterSupplierId) return this.emitterSupplierId;
+    return '';
+  }
+
   toJSON(): Record<string, unknown> {
     const json: Record<string, unknown> = {
       id: this.id,
@@ -168,7 +230,10 @@ export class Invoice {
       number: this.number,
       series: this.series,
       issueDate: this.issueDate,
-      supplierId: this.supplierId,
+      emitterSupplierId: this.emitterSupplierId,
+      emitterPartyId: this.emitterPartyId,
+      recipientClientId: this.recipientClientId,
+      recipientPartyId: this.recipientPartyId,
       documentTypeId: this.documentTypeId,
       notes: this.notes,
       type: this.type,
@@ -180,9 +245,14 @@ export class Invoice {
       updatedAt: this.updatedAt,
     };
 
-    // Include documentType if available (set by repository)
     if ((this as any)._documentType) {
       json.documentType = (this as any)._documentType;
+    }
+    if ((this as any)._emitter) {
+      json.emitter = (this as any)._emitter;
+    }
+    if ((this as any)._recipient) {
+      json.recipient = (this as any)._recipient;
     }
 
     return json;

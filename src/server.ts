@@ -28,6 +28,7 @@ import { createStockMovementRoutes } from './presentation/routes/stock-movement.
 import { createInvoiceRoutes } from './presentation/routes/invoice.routes.js';
 import { createInvoiceFinancialsTypeRoutes } from './presentation/routes/invoice-financials-type.routes.js';
 import { createSupplierRoutes } from './presentation/routes/supplier.routes.js';
+import { createClientRoutes } from './presentation/routes/client.routes.js';
 import { createBankAccountRoutes } from './presentation/routes/bank-account.routes.js';
 import { createRuralPropertyRoutes } from './presentation/routes/rural-property.routes.js';
 import { createLandRegistryRoutes } from './presentation/routes/land-registry.routes.js';
@@ -149,6 +150,9 @@ app.use('/api/invoice-financials-types', createInvoiceFinancialsTypeRoutes());
 
 // Suppliers (for invoice form dropdown)
 app.use('/api/suppliers', createSupplierRoutes());
+
+// Clients (for invoice recipient dropdown in RECEITA)
+app.use('/api/clients', createClientRoutes());
 
 // Bank accounts (contas bancárias)
 app.use('/api/bank-accounts', createBankAccountRoutes());

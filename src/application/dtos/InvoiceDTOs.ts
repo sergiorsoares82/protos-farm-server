@@ -36,7 +36,14 @@ export interface CreateInvoiceDTO {
   number: string;
   series?: string;
   issueDate: string;
-  supplierId: string;
+  /** RECEITA: obrigatório; DESPESA: nulo */
+  emitterPartyId?: string | null;
+  /** DESPESA: obrigatório; RECEITA: nulo */
+  emitterSupplierId?: string | null;
+  /** RECEITA: obrigatório; DESPESA: nulo */
+  recipientClientId?: string | null;
+  /** DESPESA: obrigatório; RECEITA: nulo */
+  recipientPartyId?: string | null;
   documentTypeId?: string;
   notes?: string;
   type: InvoiceType;
@@ -48,7 +55,10 @@ export interface UpdateInvoiceDTO {
   number?: string;
   series?: string;
   issueDate?: string;
-  supplierId?: string;
+  emitterPartyId?: string | null;
+  emitterSupplierId?: string | null;
+  recipientClientId?: string | null;
+  recipientPartyId?: string | null;
   documentTypeId?: string;
   notes?: string;
   type?: InvoiceType;

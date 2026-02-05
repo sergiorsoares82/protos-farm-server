@@ -6,6 +6,7 @@ import { AppDataSource } from '../database/typeorm.config.js';
 import type {
   CreateStateRegistrationRequestDTO,
   StateRegistrationResponseDTO,
+  StateRegistrationTipo,
   UpdateStateRegistrationRequestDTO,
 } from '../../application/dtos/StateRegistrationDTOs.js';
 
@@ -34,6 +35,7 @@ export function mapStateRegistrationToDTO(entity: StateRegistrationEntity): Stat
     tenantId: entity.tenantId,
     personId: entity.personId ?? null,
     ruralPropertyId: entity.ruralPropertyId ?? null,
+    tipo: (entity.tipo === 'PRODUTOR_RURAL' || entity.tipo === 'EMPRESA' ? (entity.tipo as StateRegistrationTipo) : null),
     landRegistries,
     numeroIe: entity.numeroIe,
     cpfCnpj: entity.cpfCnpj ?? null,
@@ -71,6 +73,7 @@ function mapCreateToEntity(
     tenantId,
     personId: data.personId?.trim() || null,
     ruralPropertyId: data.ruralPropertyId?.trim() || null,
+    tipo: data.tipo ?? null,
     numeroIe: data.numeroIe.trim(),
     uf: data.uf.trim().toUpperCase().slice(0, 2),
     situacao: data.situacao?.trim() || 'ATIVO',
@@ -170,6 +173,7 @@ export class StateRegistrationRepository {
       ...(data.ruralPropertyId !== undefined && {
         ruralPropertyId: data.ruralPropertyId?.trim() || null,
       }),
+      ...(data.tipo !== undefined && { tipo: data.tipo ?? null }),
       ...(data.optanteProgramaLeite !== undefined && { optanteProgramaLeite: data.optanteProgramaLeite }),
     };
     await this.repo.update({ id, tenantId }, updates);
