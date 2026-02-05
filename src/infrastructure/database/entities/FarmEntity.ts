@@ -30,6 +30,18 @@ export class FarmEntity {
   @Column({ type: 'decimal', precision: 12, scale: 2, name: 'total_area', nullable: true })
   totalArea!: number | null;
 
+  @Column({ type: 'varchar', length: 20, name: 'tipo_exploracao', default: 'PROPRIO' })
+  tipoExploracao!: string;
+
+  @Column({ type: 'text', name: 'proprietario_nome', nullable: true })
+  proprietarioNome!: string | null;
+
+  @Column({ type: 'date', name: 'data_inicio_arrendamento', nullable: true })
+  dataInicioArrendamento!: string | null;
+
+  @Column({ type: 'date', name: 'data_fim_arrendamento', nullable: true })
+  dataFimArrendamento!: string | null;
+
   @CreateDateColumn({ name: 'created_at' })
   createdAt!: Date;
 

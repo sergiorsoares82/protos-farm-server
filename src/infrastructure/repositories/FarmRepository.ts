@@ -40,6 +40,10 @@ export class FarmRepository {
       name: data.name.trim(),
       location: data.location?.trim() || null,
       totalArea: data.totalArea ?? null,
+      tipoExploracao: data.tipoExploracao ?? 'PROPRIO',
+      proprietarioNome: data.proprietarioNome?.trim() || null,
+      dataInicioArrendamento: data.dataInicioArrendamento ?? null,
+      dataFimArrendamento: data.dataFimArrendamento ?? null,
     });
     const saved = await this.farmRepo.save(farm);
     const ruralPropertyIds = data.ruralPropertyIds ?? [];
@@ -77,6 +81,10 @@ export class FarmRepository {
     if (data.name !== undefined) farm.name = data.name.trim();
     if (data.location !== undefined) farm.location = data.location?.trim() || null;
     if (data.totalArea !== undefined) farm.totalArea = data.totalArea ?? null;
+    if (data.tipoExploracao !== undefined) farm.tipoExploracao = data.tipoExploracao;
+    if (data.proprietarioNome !== undefined) farm.proprietarioNome = data.proprietarioNome?.trim() || null;
+    if (data.dataInicioArrendamento !== undefined) farm.dataInicioArrendamento = data.dataInicioArrendamento ?? null;
+    if (data.dataFimArrendamento !== undefined) farm.dataFimArrendamento = data.dataFimArrendamento ?? null;
     await this.farmRepo.save(farm);
 
     if (data.ruralPropertyIds !== undefined) {
