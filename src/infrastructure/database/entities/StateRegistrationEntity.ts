@@ -23,9 +23,9 @@ export class StateRegistrationEntity {
   @Index()
   tenantId!: string;
 
-  @Column({ type: 'uuid', name: 'person_id' })
+  @Column({ type: 'uuid', name: 'person_id', nullable: true })
   @Index()
-  personId!: string;
+  personId!: string | null;
 
   // ---- Dados cadastrais (comprovante IE) ----
   @Column({ type: 'varchar', length: 50, name: 'numero_ie' })
@@ -106,9 +106,9 @@ export class StateRegistrationEntity {
   @JoinColumn({ name: 'tenant_id' })
   tenant!: OrganizationEntity;
 
-  @ManyToOne(() => PersonEntity)
+  @ManyToOne(() => PersonEntity, { nullable: true })
   @JoinColumn({ name: 'person_id' })
-  person!: PersonEntity;
+  person!: PersonEntity | null;
 
   @Column({ type: 'uuid', name: 'rural_property_id', nullable: true })
   @Index()

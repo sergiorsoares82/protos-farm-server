@@ -17,9 +17,6 @@ export class CreateStateRegistrationUseCase {
     if (!data.uf?.trim()) {
       throw new Error('UF é obrigatória');
     }
-    if (!data.personId?.trim()) {
-      throw new Error('Responsável (pessoa) é obrigatório');
-    }
     return this.stateRegistrationRepository.create(tenantId, data);
   }
 }

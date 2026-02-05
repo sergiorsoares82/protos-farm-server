@@ -18,7 +18,7 @@ export function mapStateRegistrationToDTO(entity: StateRegistrationEntity): Stat
   return {
     id: entity.id,
     tenantId: entity.tenantId,
-    personId: entity.personId,
+    personId: entity.personId ?? null,
     ruralPropertyId: entity.ruralPropertyId ?? null,
     numeroIe: entity.numeroIe,
     cpfCnpj: entity.cpfCnpj ?? null,
@@ -54,7 +54,7 @@ function mapCreateToEntity(
 ): Partial<StateRegistrationEntity> {
   return {
     tenantId,
-    personId: data.personId,
+    personId: data.personId?.trim() || null,
     ruralPropertyId: data.ruralPropertyId?.trim() || null,
     numeroIe: data.numeroIe.trim(),
     uf: data.uf.trim().toUpperCase().slice(0, 2),
@@ -146,7 +146,7 @@ export class StateRegistrationRepository {
     }
 
     const updates: Partial<StateRegistrationEntity> = {
-      ...(data.personId != null && { personId: data.personId }),
+      ...(data.personId !== undefined && { personId: data.personId?.trim() || null }),
       ...(data.numeroIe != null && { numeroIe: data.numeroIe.trim() }),
       ...(data.uf != null && { uf: data.uf.trim().toUpperCase().slice(0, 2) }),
       ...(data.situacao != null && { situacao: data.situacao.trim() || 'ATIVO' }),
