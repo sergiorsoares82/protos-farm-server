@@ -9,6 +9,7 @@ import {
   JoinColumn,
   Index,
 } from 'typeorm';
+import type { StateRegistrationParticipantEntity } from './StateRegistrationParticipantEntity.js';
 import { OrganizationEntity } from './OrganizationEntity.js';
 import { PersonEntity } from './PersonEntity.js';
 import { StateRegistrationLandRegistryEntity } from './StateRegistrationLandRegistryEntity.js';
@@ -121,6 +122,9 @@ export class StateRegistrationEntity {
   @ManyToOne(() => RuralPropertyEntity, (rp) => rp.stateRegistrations, { nullable: true })
   @JoinColumn({ name: 'rural_property_id' })
   ruralProperty!: RuralPropertyEntity | null;
+
+  @OneToMany('StateRegistrationParticipantEntity', 'stateRegistration', { cascade: true })
+  participants!: StateRegistrationParticipantEntity[];
 
   @OneToMany(
     () => StateRegistrationLandRegistryEntity,

@@ -11,7 +11,7 @@ import type {
 } from '../../application/dtos/StateRegistrationDTOs.js';
 
 export function mapStateRegistrationToDTO(entity: StateRegistrationEntity): StateRegistrationResponseDTO {
-  const participants = (entity.participants || []).map((p) => ({
+  const participants = (entity.participants || []).map((p: StateRegistrationParticipantEntity) => ({
     id: p.id,
     cpf: p.cpf,
     nome: p.nome,

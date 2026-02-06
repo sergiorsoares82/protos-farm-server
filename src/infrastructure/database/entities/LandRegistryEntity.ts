@@ -5,9 +5,11 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   ManyToOne,
+  OneToMany,
   JoinColumn,
   Index,
 } from 'typeorm';
+import type { PropertyOwnershipEntity } from './PropertyOwnershipEntity.js';
 import { OrganizationEntity } from './OrganizationEntity.js';
 import { RuralPropertyEntity } from './RuralPropertyEntity.js';
 
@@ -60,5 +62,8 @@ export class LandRegistryEntity {
   @ManyToOne(() => RuralPropertyEntity, (rp) => rp.landRegistries, { nullable: true })
   @JoinColumn({ name: 'rural_property_id' })
   ruralProperty!: RuralPropertyEntity | null;
+
+  @OneToMany('PropertyOwnershipEntity', 'landRegistry')
+  propertyOwnerships!: PropertyOwnershipEntity[];
 }
 
