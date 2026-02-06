@@ -10,9 +10,9 @@ import {
   Index,
 } from 'typeorm';
 import type { StateRegistrationParticipantEntity } from './StateRegistrationParticipantEntity.js';
+import type { StateRegistrationLandRegistryEntity } from './StateRegistrationLandRegistryEntity.js';
 import { OrganizationEntity } from './OrganizationEntity.js';
 import { PersonEntity } from './PersonEntity.js';
-import { StateRegistrationLandRegistryEntity } from './StateRegistrationLandRegistryEntity.js';
 import { RuralPropertyEntity } from './RuralPropertyEntity.js';
 
 @Entity('state_registrations')
@@ -126,10 +126,6 @@ export class StateRegistrationEntity {
   @OneToMany('StateRegistrationParticipantEntity', 'stateRegistration', { cascade: true })
   participants!: StateRegistrationParticipantEntity[];
 
-  @OneToMany(
-    () => StateRegistrationLandRegistryEntity,
-    (lr) => lr.stateRegistration,
-    { cascade: true },
-  )
+  @OneToMany('StateRegistrationLandRegistryEntity', 'stateRegistration', { cascade: true })
   landRegistryLinks!: StateRegistrationLandRegistryEntity[];
 }
