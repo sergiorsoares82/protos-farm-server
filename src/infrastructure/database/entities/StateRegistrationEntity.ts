@@ -11,7 +11,6 @@ import {
 } from 'typeorm';
 import { OrganizationEntity } from './OrganizationEntity.js';
 import { PersonEntity } from './PersonEntity.js';
-import { StateRegistrationParticipantEntity } from './StateRegistrationParticipantEntity.js';
 import { StateRegistrationLandRegistryEntity } from './StateRegistrationLandRegistryEntity.js';
 import { RuralPropertyEntity } from './RuralPropertyEntity.js';
 
@@ -122,13 +121,6 @@ export class StateRegistrationEntity {
   @ManyToOne(() => RuralPropertyEntity, (rp) => rp.stateRegistrations, { nullable: true })
   @JoinColumn({ name: 'rural_property_id' })
   ruralProperty!: RuralPropertyEntity | null;
-
-  @OneToMany(
-    () => StateRegistrationParticipantEntity,
-    (p) => p.stateRegistration,
-    { cascade: true },
-  )
-  participants!: StateRegistrationParticipantEntity[];
 
   @OneToMany(
     () => StateRegistrationLandRegistryEntity,
