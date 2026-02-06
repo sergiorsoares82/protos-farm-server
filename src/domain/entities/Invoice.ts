@@ -111,14 +111,14 @@ export class Invoice {
     if (!(props.issueDate instanceof Date) || Number.isNaN(props.issueDate.getTime())) {
       throw new Error('Issue date is invalid');
     }
+    // Para dados carregados do banco (incluindo legado), não exigimos
+    // obrigatoriedade de emitente/destinatário aqui. Essas validações
+    // são feitas na camada de serviço (create/update) para novas notas.
     if (props.type === InvoiceType.RECEITA) {
-      if (!props.emitterPartyId?.trim()) throw new Error('Emitente (produtor/empresa) é obrigatório em nota de venda');
-      if (!props.recipientClientId?.trim()) throw new Error('Destinatário (cliente) é obrigatório em nota de venda');
       if (props.emitterSupplierId?.trim() || props.recipientPartyId?.trim()) {
         throw new Error('Em nota de venda use apenas emitente produtor/empresa e destinatário cliente');
       }
     } else {
-      if (!props.emitterSupplierId?.trim()) throw new Error('Emitente (fornecedor) é obrigatório em nota de compra');
       if (props.emitterPartyId?.trim() || props.recipientClientId?.trim()) {
         throw new Error('Em nota de compra use apenas emitente fornecedor e destinatário produtor/empresa');
       }
