@@ -51,7 +51,7 @@ export class PropertyOwnershipEntity {
   @JoinColumn({ name: 'tenant_id' })
   tenant!: OrganizationEntity;
 
-  @ManyToOne(() => LandRegistryEntity, (lr) => lr.propertyOwnerships, { onDelete: 'CASCADE' })
+  @ManyToOne(() => LandRegistryEntity, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'land_registry_id' })
   landRegistry!: LandRegistryEntity;
 
