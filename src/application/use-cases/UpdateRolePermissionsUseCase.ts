@@ -31,7 +31,7 @@ export class UpdateRolePermissionsUseCase {
     }
 
     // Delete existing role permissions
-    await this.rolePermissionRepository.deleteByRole(role, tenantId || null);
+    await this.rolePermissionRepository.deleteByRole(role, tenantId);
 
     // Create new role permissions
     const rolePermissions = permissionIds.map(permissionId =>
