@@ -36,6 +36,7 @@ export class CostCenterService {
             data.type,
             data.categoryId,
             data.assetId,
+            data.activityTypeId,
         );
 
         return this.costCenterRepository.save(costCenter);
@@ -86,6 +87,7 @@ export class CostCenterService {
                 data.type || costCenter.getType(),
                 data.categoryId !== undefined ? data.categoryId : costCenter.getCategoryId(),
                 data.assetId !== undefined ? data.assetId : costCenter.getAssetId(),
+                data.activityTypeId !== undefined ? data.activityTypeId : costCenter.getActivityTypeId(),
             );
         }
 
@@ -107,5 +109,10 @@ export class CostCenterService {
 
     async getAllCostCenters(tenantId: string): Promise<CostCenter[]> {
         return this.costCenterRepository.findAll(tenantId);
+    }
+
+    /** Retorna apenas centros de custo ativos da categoria informada (ex: AGR = Agricultura). */
+    async getCostCentersByCategoryCode(tenantId: string, categoryCode: string): Promise<CostCenter[]> {
+        return this.costCenterRepository.findByCategoryCode(tenantId, categoryCode);
     }
 }

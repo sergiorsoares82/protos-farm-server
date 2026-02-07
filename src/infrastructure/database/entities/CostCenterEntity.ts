@@ -11,6 +11,7 @@ import {
 import { OrganizationEntity } from './OrganizationEntity.js';
 import { CostCenterCategoryEntity } from './CostCenterCategoryEntity.js';
 import { AssetEntity } from './AssetEntity.js';
+import { ActivityTypeEntity } from './ActivityTypeEntity.js';
 
 @Entity('cost_centers')
 export class CostCenterEntity {
@@ -50,4 +51,8 @@ export class CostCenterEntity {
   @ManyToOne(() => AssetEntity, { onDelete: 'SET NULL', nullable: true })
   @JoinColumn({ name: 'asset_id' })
   asset?: AssetEntity | null;
+
+  @ManyToOne(() => ActivityTypeEntity, { onDelete: 'SET NULL', nullable: true })
+  @JoinColumn({ name: 'activity_type_id' })
+  activityType?: ActivityTypeEntity | null;
 }

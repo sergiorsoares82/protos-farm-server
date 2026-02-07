@@ -43,6 +43,7 @@ import { StateRegistrationEntity } from './entities/StateRegistrationEntity.js';
 import { StateRegistrationParticipantEntity } from './entities/StateRegistrationParticipantEntity.js';
 import { StateRegistrationLandRegistryEntity } from './entities/StateRegistrationLandRegistryEntity.js';
 import { ActivityTypeEntity } from './entities/ActivityTypeEntity.js';
+import { OperationEntity } from './entities/OperationEntity.js';
 import { PermissionEntity } from './entities/PermissionEntity.js';
 import { RolePermissionEntity } from './entities/RolePermissionEntity.js';
 import { RoleEntity } from './entities/RoleEntity.js';
@@ -136,6 +137,7 @@ export const AppDataSource = new DataSource({
     StateRegistrationParticipantEntity,
     StateRegistrationLandRegistryEntity,
     ActivityTypeEntity,
+    OperationEntity,
     PermissionEntity,
     RolePermissionEntity,
     RoleEntity,

@@ -10,7 +10,8 @@ import { PermissionAction } from '../domain/enums/PermissionAction.js';
 import { UserRole } from '../domain/enums/UserRole.js';
 
 /**
- * Seed script to initialize all permissions and default role permissions
+ * Seed script to initialize all permissions and default role permissions.
+ * Idempotent: only creates missing (entity, action) permissions and missing role-permission links.
  */
 async function seedPermissions() {
   try {
@@ -26,59 +27,64 @@ async function seedPermissions() {
     const entityTypes = Object.values(EntityType);
     const actions = Object.values(PermissionAction);
 
-    console.log(`📦 Creating ${entityTypes.length} × ${actions.length} = ${entityTypes.length * actions.length} permissions...`);
+    // Load existing permissions and build map (key -> id)
+    const existingPermissions = await permissionRepo.findAll();
+    const permissionMap = new Map<string, string>();
+    const permissions: Permission[] = [...existingPermissions];
+    for (const p of existingPermissions) {
+      permissionMap.set(p.getKey(), p.getId());
+    }
 
-    // Create all permissions (43 entities × 4 actions = 172 permissions)
-    const permissions: Permission[] = [];
-    
+    // Create only missing permissions
+    let created = 0;
     for (const entity of entityTypes) {
       for (const action of actions) {
+        const key = `${entity}:${action}`;
+        if (permissionMap.has(key)) continue;
         const description = generatePermissionDescription(entity, action);
         const permission = Permission.create(entity, action, description);
+        await permissionRepo.save(permission);
+        permissionMap.set(key, permission.getId());
         permissions.push(permission);
+        created++;
       }
     }
+    console.log(`📦 Permissions: ${existingPermissions.length} existing, ${created} created (${permissions.length} total)`);
 
-    // Save all permissions
-    await permissionRepo.saveMany(permissions);
-    console.log(`✅ Created ${permissions.length} permissions`);
-
-    // Create a map of permission keys to IDs for easy lookup
-    const permissionMap = new Map<string, string>();
-    for (const permission of permissions) {
-      permissionMap.set(permission.getKey(), permission.getId());
-    }
-
-    // Configure default permissions for each role
+    // Configure default permissions for each role (only insert missing links)
     console.log('🔐 Configuring default role permissions...');
 
+    const existingByRole = async (role: UserRole) => {
+      const list = await rolePermissionRepo.findByRole(role);
+      return new Set(list.map(rp => rp.getPermissionId()));
+    };
+
     // SUPER_ADMIN: All permissions
-    const superAdminPermissions = permissions.map(p => 
-      RolePermission.create(UserRole.SUPER_ADMIN, p.getId(), null)
-    );
-    await rolePermissionRepo.saveMany(superAdminPermissions);
-    console.log(`✅ SUPER_ADMIN: ${superAdminPermissions.length} permissions`);
+    const superAdminExisting = await existingByRole(UserRole.SUPER_ADMIN);
+    const superAdminPermissions = permissions
+      .filter(p => !superAdminExisting.has(p.getId()))
+      .map(p => RolePermission.create(UserRole.SUPER_ADMIN, p.getId(), null));
+    if (superAdminPermissions.length > 0) {
+      await rolePermissionRepo.saveMany(superAdminPermissions);
+    }
+    console.log(`✅ SUPER_ADMIN: ${superAdminPermissions.length} new, ${superAdminExisting.size} existing`);
 
     // ORG_ADMIN: All permissions except managing ORGANIZATION and USER entities
-    const orgAdminExcludedEntities = [EntityType.ORGANIZATION];
-    const orgAdminPermissions = permissions
-      .filter(p => {
-        // Exclude ORGANIZATION management completely
-        if (p.getEntity() === EntityType.ORGANIZATION) {
-          return false;
-        }
-        
-        // For USER entity, only allow VIEW and EDIT (no CREATE or DELETE)
-        if (p.getEntity() === EntityType.USER) {
-          return p.getAction() === PermissionAction.VIEW || p.getAction() === PermissionAction.EDIT;
-        }
-        
-        return true;
-      })
+    const orgAdminPermsList = permissions.filter(p => {
+      if (p.getEntity() === EntityType.ORGANIZATION) return false;
+      if (p.getEntity() === EntityType.USER) {
+        return p.getAction() === PermissionAction.VIEW || p.getAction() === PermissionAction.EDIT;
+      }
+      return true;
+    });
+    const orgAdminExisting = await existingByRole(UserRole.ORG_ADMIN);
+    const orgAdminPermissions = orgAdminPermsList
+      .filter(p => !orgAdminExisting.has(p.getId()))
       .map(p => RolePermission.create(UserRole.ORG_ADMIN, p.getId(), null));
-    
-    await rolePermissionRepo.saveMany(orgAdminPermissions);
-    console.log(`✅ ORG_ADMIN: ${orgAdminPermissions.length} permissions`);
+    if (orgAdminPermissions.length > 0) {
+      await rolePermissionRepo.saveMany(orgAdminPermissions);
+    }
+    console.log(`✅ ORG_ADMIN: ${orgAdminPermissions.length} new, ${orgAdminExisting.size} existing`);
 
     // USER: Read-only access to most entities, limited write access
     const userReadOnlyEntities = [
@@ -134,6 +140,7 @@ async function seedPermissions() {
 
     const userReadOnlySystemEntities = [
       EntityType.ACTIVITY_TYPE,
+      EntityType.OPERATION,
       EntityType.DOCUMENT_TYPE,
       EntityType.INVOICE_FINANCIALS_TYPE,
       EntityType.MACHINE_TYPE,
@@ -145,35 +152,32 @@ async function seedPermissions() {
       EntityType.MANAGEMENT_ACCOUNT_COST_CENTER_TYPE,
     ];
 
-    const userPermissions = permissions
-      .filter(p => {
-        const entity = p.getEntity();
-        const action = p.getAction();
-        
-        // Full CRUD access to main entities
-        if (userReadOnlyEntities.includes(entity)) {
-          return true;
-        }
-        
-        // Read-only access to system/reference entities
-        if (userReadOnlySystemEntities.includes(entity)) {
-          return action === PermissionAction.VIEW;
-        }
-        
-        return false;
-      })
+    const userPermsList = permissions.filter(p => {
+      const entity = p.getEntity();
+      const action = p.getAction();
+      if (userReadOnlyEntities.includes(entity)) return true;
+      if (userReadOnlySystemEntities.includes(entity)) return action === PermissionAction.VIEW;
+      return false;
+    });
+    const userExisting = await existingByRole(UserRole.USER);
+    const userPermissions = userPermsList
+      .filter(p => !userExisting.has(p.getId()))
       .map(p => RolePermission.create(UserRole.USER, p.getId(), null));
-    
-    await rolePermissionRepo.saveMany(userPermissions);
-    console.log(`✅ USER: ${userPermissions.length} permissions`);
+    if (userPermissions.length > 0) {
+      await rolePermissionRepo.saveMany(userPermissions);
+    }
+    console.log(`✅ USER: ${userPermissions.length} new, ${userExisting.size} existing`);
 
     console.log('🎉 Permission seeding completed successfully!');
+    const superAdminTotal = superAdminExisting.size + superAdminPermissions.length;
+    const orgAdminTotal = orgAdminExisting.size + orgAdminPermissions.length;
+    const userTotal = userExisting.size + userPermissions.length;
     console.log(`
 📊 Summary:
    - Total Permissions: ${permissions.length}
-   - SUPER_ADMIN: ${superAdminPermissions.length} permissions (full access)
-   - ORG_ADMIN: ${orgAdminPermissions.length} permissions (limited)
-   - USER: ${userPermissions.length} permissions (restricted)
+   - SUPER_ADMIN: ${superAdminTotal} total (${superAdminPermissions.length} newly linked)
+   - ORG_ADMIN: ${orgAdminTotal} total (${orgAdminPermissions.length} newly linked)
+   - USER: ${userTotal} total (${userPermissions.length} newly linked)
     `);
 
   } catch (error) {

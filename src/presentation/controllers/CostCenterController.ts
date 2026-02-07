@@ -16,6 +16,23 @@ export class CostCenterController {
         }
     }
 
+    /** Centros de custo por categoria (ex: AGR = Agricultura). Usado no cadastro de safra para talhões. */
+    async getCostCentersByCategory(req: Request, res: Response): Promise<void> {
+        try {
+            const tenantId = req.user!.tenantId;
+            const categoryCode = (req.params.categoryCode ?? '').toUpperCase();
+            if (!categoryCode) {
+                res.status(400).json({ error: 'Category code is required' });
+                return;
+            }
+            const items = await this.costCenterService.getCostCentersByCategoryCode(tenantId, categoryCode);
+            res.json(items);
+        } catch (error) {
+            console.error('Error fetching cost centers by category:', error);
+            res.status(500).json({ error: 'Internal server error' });
+        }
+    }
+
     async createCostCenter(req: Request, res: Response): Promise<void> {
         try {
             const tenantId = req.user!.tenantId;

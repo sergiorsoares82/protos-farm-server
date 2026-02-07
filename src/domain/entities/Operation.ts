@@ -1,42 +1,31 @@
-import { CostCenterType } from '../enums/CostCenterType.js';
-
-export interface CostCenterProps {
+export interface OperationProps {
     id: string;
     tenantId: string;
     code: string;
     description: string;
-    type: CostCenterType;
-    categoryId?: string | undefined;
-    assetId?: string | undefined;
-    activityTypeId?: string | undefined;
+    activityTypeIds?: string[];
     isActive: boolean;
     createdAt: Date;
     updatedAt: Date;
 }
 
-export class CostCenter {
+export class Operation {
     private readonly id: string;
     private readonly tenantId: string;
     private code: string;
     private description: string;
-    private type: CostCenterType;
-    private categoryId?: string | undefined;
-    private assetId?: string | undefined;
-    private activityTypeId?: string | undefined;
+    private activityTypeIds: string[];
     private isActive: boolean;
     private readonly createdAt: Date;
     private updatedAt: Date;
 
-    constructor(props: CostCenterProps) {
+    constructor(props: OperationProps) {
         this.validateProps(props);
         this.id = props.id;
         this.tenantId = props.tenantId;
         this.code = props.code;
         this.description = props.description;
-        this.type = props.type;
-        this.categoryId = props.categoryId;
-        this.assetId = props.assetId;
-        this.activityTypeId = props.activityTypeId;
+        this.activityTypeIds = props.activityTypeIds ?? [];
         this.isActive = props.isActive;
         this.createdAt = props.createdAt;
         this.updatedAt = props.updatedAt;
@@ -46,30 +35,24 @@ export class CostCenter {
         tenantId: string,
         code: string,
         description: string,
-        type: CostCenterType,
-        categoryId?: string,
-        assetId?: string,
-        activityTypeId?: string,
-    ): CostCenter {
+        activityTypeIds?: string[]
+    ): Operation {
         const now = new Date();
-        return new CostCenter({
+        return new Operation({
             id: crypto.randomUUID(),
             tenantId,
             code,
             description,
-            type,
-            categoryId,
-            assetId,
-            activityTypeId,
+            activityTypeIds,
             isActive: true,
             createdAt: now,
             updatedAt: now,
         });
     }
 
-    private validateProps(props: CostCenterProps): void {
+    private validateProps(props: OperationProps): void {
         if (!props.code || props.code.trim().length === 0) {
-            throw new Error('Code (Sigla) is required');
+            throw new Error('Code is required');
         }
         if (!props.description || props.description.trim().length === 0) {
             throw new Error('Description is required');
@@ -79,14 +62,7 @@ export class CostCenter {
         }
     }
 
-    update(
-        code: string,
-        description: string,
-        type: CostCenterType,
-        categoryId?: string,
-        assetId?: string | undefined,
-        activityTypeId?: string | undefined,
-    ): void {
+    update(code: string, description: string, activityTypeIds?: string[]): void {
         if (!code || code.trim().length === 0) {
             throw new Error('Code is required');
         }
@@ -96,10 +72,9 @@ export class CostCenter {
 
         this.code = code;
         this.description = description;
-        this.type = type;
-        this.categoryId = categoryId;
-        this.assetId = assetId;
-        this.activityTypeId = activityTypeId;
+        if (activityTypeIds !== undefined) {
+            this.activityTypeIds = activityTypeIds;
+        }
         this.updatedAt = new Date();
     }
 
@@ -113,32 +88,12 @@ export class CostCenter {
         this.updatedAt = new Date();
     }
 
-    // Getters
     getId(): string { return this.id; }
     getTenantId(): string { return this.tenantId; }
     getCode(): string { return this.code; }
     getDescription(): string { return this.description; }
-    getType(): CostCenterType { return this.type; }
-    getCategoryId(): string | undefined { return this.categoryId; }
-    getAssetId(): string | undefined { return this.assetId; }
-    getActivityTypeId(): string | undefined { return this.activityTypeId; }
+    getActivityTypeIds(): string[] { return this.activityTypeIds; }
     getIsActive(): boolean { return this.isActive; }
     getCreatedAt(): Date { return this.createdAt; }
     getUpdatedAt(): Date { return this.updatedAt; }
-
-    toJSON() {
-        return {
-            id: this.id,
-            tenantId: this.tenantId,
-            code: this.code,
-            description: this.description,
-            type: this.type,
-            categoryId: this.categoryId,
-            assetId: this.assetId,
-            activityTypeId: this.activityTypeId,
-            isActive: this.isActive,
-            createdAt: this.createdAt,
-            updatedAt: this.updatedAt,
-        };
-    }
 }

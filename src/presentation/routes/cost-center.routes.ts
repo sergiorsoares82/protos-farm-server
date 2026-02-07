@@ -24,6 +24,7 @@ export function createCostCenterRoutes(): Router {
     router.use(requireTenant);
 
     router.get('/', canViewEntity(EntityType.COST_CENTER), (req, res) => costCenterController.getAllCostCenters(req, res));
+    router.get('/by-category/:categoryCode', canViewEntity(EntityType.COST_CENTER), (req, res) => costCenterController.getCostCentersByCategory(req, res));
     router.post('/', canCreateEntity(EntityType.COST_CENTER), (req, res) => costCenterController.createCostCenter(req, res));
     router.get('/:id', canViewEntity(EntityType.COST_CENTER), (req, res) => costCenterController.getCostCenter(req, res));
     router.put('/:id', canEditEntity(EntityType.COST_CENTER), (req, res) => costCenterController.updateCostCenter(req, res));

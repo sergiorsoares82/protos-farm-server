@@ -113,14 +113,14 @@ export class SeasonService {
     }
     const categoryId = costCenter.getCategoryId();
     if (!categoryId) {
-      throw new Error('Cost center must be assigned to a Lavoura category');
+      throw new Error('Cost center must be assigned to an Agricultura category');
     }
     const category = await this.categoryRepository.findById(categoryId, tenantId);
     if (!category) {
       throw new Error('Cost center category not found');
     }
-    if (category.getCode() !== 'LAV') {
-      throw new Error('Cost center must belong to Lavoura category');
+    if (category.getCode() !== 'AGR') {
+      throw new Error('Cost center must belong to Agricultura category');
     }
     const defaultArea = workLocation.getAreaHectares();
     const area =

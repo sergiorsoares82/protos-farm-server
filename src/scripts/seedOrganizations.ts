@@ -1,3 +1,6 @@
+// Carregar variáveis de ambiente primeiro (arquivo .env/.env)
+import '../config/env.js';
+
 import { AppDataSource, initializeDatabase } from '../infrastructure/database/typeorm.config.js';
 import { OrganizationEntity } from '../infrastructure/database/entities/OrganizationEntity.js';
 import { UserEntity } from '../infrastructure/database/entities/UserEntity.js';
@@ -22,17 +25,64 @@ async function seedOrganizations() {
     const userRepo = AppDataSource.getRepository(UserEntity);
     const accountRepo = AppDataSource.getRepository(ManagementAccountEntity);
     const categoryRepo = AppDataSource.getRepository(CostCenterCategoryEntity);
-    
+
+    const seedBaseAccountsAndCategories = async (tenantId: string, orgName: string) => {
+      const existing = await accountRepo.count({ where: { tenantId } });
+      if (existing === 0) {
+        const income = new ManagementAccountEntity();
+        income.tenantId = tenantId;
+        income.code = '01';
+        income.description = 'Income';
+        income.type = AccountType.REVENUE;
+        income.isActive = true;
+
+        const expense = new ManagementAccountEntity();
+        expense.tenantId = tenantId;
+        expense.code = '02';
+        expense.description = 'Expense';
+        expense.type = AccountType.EXPENSE;
+        expense.isActive = true;
+
+        await accountRepo.save([income, expense]);
+        console.log(`✅ Seeded base management accounts (01 Income, 02 Expense) for ${orgName}`);
+      } else {
+        console.log(
+          `ℹ️  Management accounts already exist for ${orgName}, skipping base account seeding.`,
+        );
+      }
+
+      const defaultCategories = [
+        { code: 'AGR', name: 'Agricultura', description: 'Categoria principal para atividades agrícolas (lavouras, cultivos)' },
+        { code: 'PEC', name: 'Pecuária', description: 'Categoria principal para atividades pecuárias (rebanhos, criação)' },
+      ];
+      for (const def of defaultCategories) {
+        const existingCat = await categoryRepo.count({
+          where: { tenantId, code: def.code },
+        });
+        if (existingCat === 0) {
+          const cat = new CostCenterCategoryEntity();
+          cat.tenantId = tenantId;
+          cat.code = def.code;
+          cat.name = def.name;
+          cat.description = def.description;
+          cat.isActive = true;
+          await categoryRepo.save(cat);
+          console.log(`✅ Seeded cost center category "${def.name}" (${def.code}) for ${orgName}`);
+        } else {
+          console.log(
+            `ℹ️  Cost center category ${def.code} already exists for ${orgName}, skipping.`,
+          );
+        }
+      }
+    };
+
     // Check if organizations already exist
     const existingOrgs = await orgRepo.count();
+    const orgs = await orgRepo.find();
     if (existingOrgs > 0) {
-      console.log('ℹ️  Organizations already exist. Skipping seeding.');
+      console.log('ℹ️  Organizations already exist. Skipping creation of new orgs.');
       console.log(`Found ${existingOrgs} organization(s).`);
-      
-      // List existing organizations
-      const orgs = await orgRepo.find();
       const users = await userRepo.find();
-      
       console.log('\n📋 Existing Organizations:');
       for (const org of orgs) {
         const orgUsers = users.filter(u => u.tenantId === org.id);
@@ -41,7 +91,11 @@ async function seedOrganizations() {
           console.log(`    └─ ${user.email}`);
         }
       }
-      console.log('\n💡 To reset, run: docker-compose down -v && docker-compose up -d');
+      // Seed default cost center categories (Agricultura, Pecuária) for all existing orgs
+      for (const org of orgs) {
+        await seedBaseAccountsAndCategories(org.id, org.name);
+      }
+      console.log('\n💡 To reset DB, run: docker-compose down -v && docker-compose up -d');
       await AppDataSource.destroy();
       process.exit(0);
     }
@@ -152,51 +206,7 @@ async function seedOrganizations() {
     await userRepo.save(regularUser3);
     console.log('✅ Created regular user: user@sunriseranch.com (Password: User@123!)');
     
-    // Seed base Management Accounts for each organization
-    const seedBaseAccountsAndCategories = async (tenantId: string, orgName: string) => {
-      const existing = await accountRepo.count({ where: { tenantId } });
-      if (existing === 0) {
-        const income = new ManagementAccountEntity();
-        income.tenantId = tenantId;
-        income.code = '01';
-        income.description = 'Income';
-        income.type = AccountType.REVENUE;
-        income.isActive = true;
-
-        const expense = new ManagementAccountEntity();
-        expense.tenantId = tenantId;
-        expense.code = '02';
-        expense.description = 'Expense';
-        expense.type = AccountType.EXPENSE;
-        expense.isActive = true;
-
-        await accountRepo.save([income, expense]);
-        console.log(`✅ Seeded base management accounts (01 Income, 02 Expense) for ${orgName}`);
-      } else {
-        console.log(
-          `ℹ️  Management accounts already exist for ${orgName}, skipping base account seeding.`,
-        );
-      }
-
-      const existingCategory = await categoryRepo.count({
-        where: { tenantId, code: 'LAV' },
-      });
-      if (existingCategory === 0) {
-        const lavouraCat = new CostCenterCategoryEntity();
-        lavouraCat.tenantId = tenantId;
-        lavouraCat.code = 'LAV';
-        lavouraCat.name = 'Lavoura';
-        lavouraCat.description = 'Categoria padrão para lavouras';
-        lavouraCat.isActive = true;
-        await categoryRepo.save(lavouraCat);
-        console.log(`✅ Seeded default Lavoura cost center category for ${orgName}`);
-      } else {
-        console.log(
-          `ℹ️  Lavoura cost center category already exists for ${orgName}, skipping seeding.`,
-        );
-      }
-    };
-
+    // Seed base Management Accounts and cost center categories for each organization
     await seedBaseAccountsAndCategories(org1.id, 'Acme Farm');
     await seedBaseAccountsAndCategories(org2.id, 'Green Valley Farms');
     await seedBaseAccountsAndCategories(org3.id, 'Sunrise Ranch');
