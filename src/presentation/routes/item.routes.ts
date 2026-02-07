@@ -12,6 +12,8 @@ import { CostCenterRepository } from '../../infrastructure/repositories/CostCent
 import { ManagementAccountRepository } from '../../infrastructure/repositories/ManagementAccountRepository.js';
 import { authenticate } from '../middleware/auth.js';
 import { tenantContextMiddleware, requireTenant } from '../../infrastructure/middleware/tenantContext.js';
+import { canViewEntity, canCreateEntity, canEditEntity, canDeleteEntity } from '../middleware/authorize.js';
+import { EntityType } from '../../domain/enums/EntityType.js';
 
 /**
  * Create and configure item routes
@@ -54,6 +56,7 @@ export function createItemRoutes(): Router {
      */
     router.get(
         '/',
+        canViewEntity(EntityType.ITEM),
         (req, res) => itemController.getAllItems(req, res)
     );
 
@@ -63,6 +66,7 @@ export function createItemRoutes(): Router {
      */
     router.post(
         '/',
+        canCreateEntity(EntityType.ITEM),
         (req, res) => itemController.createItem(req, res)
     );
 
@@ -72,6 +76,7 @@ export function createItemRoutes(): Router {
      */
     router.get(
         '/:id',
+        canViewEntity(EntityType.ITEM),
         (req, res) => itemController.getItem(req, res)
     );
 
@@ -81,6 +86,7 @@ export function createItemRoutes(): Router {
      */
     router.put(
         '/:id',
+        canEditEntity(EntityType.ITEM),
         (req, res) => itemController.updateItem(req, res)
     );
 
@@ -90,6 +96,7 @@ export function createItemRoutes(): Router {
      */
     router.delete(
         '/:id',
+        canDeleteEntity(EntityType.ITEM),
         (req, res) => itemController.deleteItem(req, res)
     );
 

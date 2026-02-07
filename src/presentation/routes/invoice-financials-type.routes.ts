@@ -3,9 +3,10 @@ import { InvoiceFinancialsTypeController } from '../controllers/InvoiceFinancial
 import { InvoiceFinancialsTypeService } from '../../application/services/InvoiceFinancialsTypeService.js';
 import { InvoiceFinancialsTypeRepository } from '../../infrastructure/repositories/InvoiceFinancialsTypeRepository.js';
 import { authenticate } from '../middleware/auth.js';
-import { requireOrgAdmin, canManageInvoiceFinancialType } from '../middleware/authorize.js';
+import { requireOrgAdmin, canManageInvoiceFinancialType, canViewEntity, canCreateEntity, canEditEntity, canDeleteEntity } from '../middleware/authorize.js';
 import { validate } from '../middleware/validation.js';
 import { z } from 'zod';
+import { EntityType } from '../../domain/enums/EntityType.js';
 
 const createSchema = z.object({
   name: z.string().min(1, 'Name is required'),
@@ -26,14 +27,14 @@ export function createInvoiceFinancialsTypeRoutes(): Router {
 
   router.use(authenticate);
 
-  router.get('/', requireOrgAdmin, (req, res) => controller.list(req, res));
-  router.get('/:id', requireOrgAdmin, (req, res) => controller.getById(req, res));
+  router.get('/', requireOrgAdmin, canViewEntity(EntityType.INVOICE_FINANCIALS_TYPE), (req, res) => controller.list(req, res));
+  router.get('/:id', requireOrgAdmin, canViewEntity(EntityType.INVOICE_FINANCIALS_TYPE), (req, res) => controller.getById(req, res));
 
-  router.post('/', requireOrgAdmin, validate(createSchema), (req, res) => controller.create(req, res));
-  router.put('/:id', requireOrgAdmin, canManageInvoiceFinancialType, validate(updateSchema), (req, res) =>
+  router.post('/', requireOrgAdmin, canCreateEntity(EntityType.INVOICE_FINANCIALS_TYPE), validate(createSchema), (req, res) => controller.create(req, res));
+  router.put('/:id', requireOrgAdmin, canManageInvoiceFinancialType, canEditEntity(EntityType.INVOICE_FINANCIALS_TYPE), validate(updateSchema), (req, res) =>
     controller.update(req, res),
   );
-  router.delete('/:id', requireOrgAdmin, canManageInvoiceFinancialType, (req, res) =>
+  router.delete('/:id', requireOrgAdmin, canManageInvoiceFinancialType, canDeleteEntity(EntityType.INVOICE_FINANCIALS_TYPE), (req, res) =>
     controller.delete(req, res),
   );
 

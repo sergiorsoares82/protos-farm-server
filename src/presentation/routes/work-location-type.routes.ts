@@ -4,7 +4,8 @@ import { WorkLocationTypeService } from '../../application/services/WorkLocation
 import { WorkLocationTypeRepository } from '../../infrastructure/repositories/WorkLocationTypeRepository.js';
 import { authenticate } from '../middleware/auth.js';
 import { tenantContextMiddleware, requireTenant } from '../../infrastructure/middleware/tenantContext.js';
-import { requireOrgAdmin } from '../middleware/authorize.js';
+import { requireOrgAdmin, canViewEntity, canCreateEntity, canEditEntity, canDeleteEntity } from '../middleware/authorize.js';
+import { EntityType } from '../../domain/enums/EntityType.js';
 
 export function createWorkLocationTypeRoutes(): Router {
   const router = Router();
@@ -17,13 +18,13 @@ export function createWorkLocationTypeRoutes(): Router {
   router.use(tenantContextMiddleware);
   router.use(requireTenant);
 
-  router.get('/', (req, res) => workLocationTypeController.getAllTypes(req, res));
-  router.get('/:id', (req, res) => workLocationTypeController.getType(req, res));
+  router.get('/', canViewEntity(EntityType.WORK_LOCATION_TYPE), (req, res) => workLocationTypeController.getAllTypes(req, res));
+  router.get('/:id', canViewEntity(EntityType.WORK_LOCATION_TYPE), (req, res) => workLocationTypeController.getType(req, res));
 
   router.use(requireOrgAdmin);
-  router.post('/', (req, res) => workLocationTypeController.createType(req, res));
-  router.put('/:id', (req, res) => workLocationTypeController.updateType(req, res));
-  router.delete('/:id', (req, res) => workLocationTypeController.deleteType(req, res));
+  router.post('/', canCreateEntity(EntityType.WORK_LOCATION_TYPE), (req, res) => workLocationTypeController.createType(req, res));
+  router.put('/:id', canEditEntity(EntityType.WORK_LOCATION_TYPE), (req, res) => workLocationTypeController.updateType(req, res));
+  router.delete('/:id', canDeleteEntity(EntityType.WORK_LOCATION_TYPE), (req, res) => workLocationTypeController.deleteType(req, res));
 
   return router;
 }

@@ -4,6 +4,8 @@ import { PersonRepository } from '../../infrastructure/repositories/PersonReposi
 import { validate, createPersonSchema, updatePersonSchema, assignRoleSchema } from '../middleware/validation.js';
 import { authenticate } from '../middleware/auth.js';
 import { tenantContextMiddleware, requireTenant } from '../../infrastructure/middleware/tenantContext.js';
+import { canViewEntity, canCreateEntity, canEditEntity, canDeleteEntity } from '../middleware/authorize.js';
+import { EntityType } from '../../domain/enums/EntityType.js';
 
 /**
  * Create and configure person routes
@@ -26,7 +28,7 @@ export function createPersonRoutes(): Router {
    * GET /api/persons
    * Get all persons
    */
-  router.get('/', wrap((req, res) => personController.getAllPersons(req, res)));
+  router.get('/', canViewEntity(EntityType.PERSON), wrap((req, res) => personController.getAllPersons(req, res)));
 
   /**
    * POST /api/persons
@@ -34,6 +36,7 @@ export function createPersonRoutes(): Router {
    */
   router.post(
     '/',
+    canCreateEntity(EntityType.PERSON),
     validate(createPersonSchema),
     wrap((req, res) => personController.createPerson(req, res))
   );
@@ -42,7 +45,7 @@ export function createPersonRoutes(): Router {
    * GET /api/persons/:id
    * Get person by ID with all roles
    */
-  router.get('/:id', wrap((req, res) => personController.getPerson(req, res)));
+  router.get('/:id', canViewEntity(EntityType.PERSON), wrap((req, res) => personController.getPerson(req, res)));
 
   /**
    * PUT /api/persons/:id
@@ -50,6 +53,7 @@ export function createPersonRoutes(): Router {
    */
   router.put(
     '/:id',
+    canEditEntity(EntityType.PERSON),
     validate(updatePersonSchema),
     wrap((req, res) => personController.updatePerson(req, res))
   );
@@ -60,6 +64,7 @@ export function createPersonRoutes(): Router {
    */
   router.post(
     '/:id/roles',
+    canEditEntity(EntityType.PERSON),
     validate(assignRoleSchema),
     wrap((req, res) => personController.assignRole(req, res))
   );
@@ -70,6 +75,7 @@ export function createPersonRoutes(): Router {
    */
   router.delete(
     '/:id/roles/:role',
+    canEditEntity(EntityType.PERSON),
     wrap((req, res) => personController.removeRole(req, res))
   );
 
@@ -77,7 +83,7 @@ export function createPersonRoutes(): Router {
    * DELETE /api/persons/:id
    * Delete a person (not yet implemented)
    */
-  router.delete('/:id', wrap((req, res) => personController.deletePerson(req, res)));
+  router.delete('/:id', canDeleteEntity(EntityType.PERSON), wrap((req, res) => personController.deletePerson(req, res)));
 
   return router;
 }

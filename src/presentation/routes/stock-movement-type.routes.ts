@@ -4,7 +4,8 @@ import { StockMovementTypeService } from '../../application/services/StockMoveme
 import { StockMovementTypeRepository } from '../../infrastructure/repositories/StockMovementTypeRepository.js';
 import { authenticate } from '../middleware/auth.js';
 import { tenantContextMiddleware, requireTenant } from '../../infrastructure/middleware/tenantContext.js';
-import { requireOrgAdmin } from '../middleware/authorize.js';
+import { requireOrgAdmin, canViewEntity, canCreateEntity, canEditEntity, canDeleteEntity } from '../middleware/authorize.js';
+import { EntityType } from '../../domain/enums/EntityType.js';
 
 export function createStockMovementTypeRoutes(): Router {
   const router = Router();
@@ -17,13 +18,13 @@ export function createStockMovementTypeRoutes(): Router {
   router.use(tenantContextMiddleware);
   router.use(requireTenant);
 
-  router.get('/', (req, res) => stockMovementTypeController.getAllTypes(req, res));
-  router.get('/:id', (req, res) => stockMovementTypeController.getType(req, res));
+  router.get('/', canViewEntity(EntityType.STOCK_MOVEMENT_TYPE), (req, res) => stockMovementTypeController.getAllTypes(req, res));
+  router.get('/:id', canViewEntity(EntityType.STOCK_MOVEMENT_TYPE), (req, res) => stockMovementTypeController.getType(req, res));
 
   router.use(requireOrgAdmin);
-  router.post('/', (req, res) => stockMovementTypeController.createType(req, res));
-  router.put('/:id', (req, res) => stockMovementTypeController.updateType(req, res));
-  router.delete('/:id', (req, res) => stockMovementTypeController.deleteType(req, res));
+  router.post('/', canCreateEntity(EntityType.STOCK_MOVEMENT_TYPE), (req, res) => stockMovementTypeController.createType(req, res));
+  router.put('/:id', canEditEntity(EntityType.STOCK_MOVEMENT_TYPE), (req, res) => stockMovementTypeController.updateType(req, res));
+  router.delete('/:id', canDeleteEntity(EntityType.STOCK_MOVEMENT_TYPE), (req, res) => stockMovementTypeController.deleteType(req, res));
 
   return router;
 }

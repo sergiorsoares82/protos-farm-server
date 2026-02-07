@@ -1,10 +1,11 @@
 import { Router } from 'express';
 import { authenticate } from '../middleware/auth.js';
-import { requireSuperAdmin, requireOrgAdmin, canManageDocumentType } from '../middleware/authorize.js';
+import { requireSuperAdmin, requireOrgAdmin, canManageDocumentType, canViewEntity, canCreateEntity, canEditEntity, canDeleteEntity } from '../middleware/authorize.js';
 import { validate } from '../middleware/validation.js';
 import { z } from 'zod';
 import { DocumentTypeRepository } from '../../infrastructure/repositories/DocumentTypeRepository.js';
 import { DocumentTypeController } from '../controllers/DocumentTypeController.js';
+import { EntityType } from '../../domain/enums/EntityType.js';
 
 export function createDocumentTypeRoutes(): Router {
   const router = Router();
@@ -28,16 +29,16 @@ export function createDocumentTypeRoutes(): Router {
   });
 
   // List: Super admin sees all, org admin sees system + their own
-  router.get('/', requireOrgAdmin, (req, res) => controller.list(req, res));
+  router.get('/', requireOrgAdmin, canViewEntity(EntityType.DOCUMENT_TYPE), (req, res) => controller.list(req, res));
 
   // Create: Super admin can create system types (tenantId = null) or org types, org admin can only create org types
-  router.post('/', requireOrgAdmin, validate(createSchema), (req, res) => controller.create(req, res));
+  router.post('/', requireOrgAdmin, canCreateEntity(EntityType.DOCUMENT_TYPE), validate(createSchema), (req, res) => controller.create(req, res));
 
   // Update: Super admin can update all, org admin can only update their own (not system types)
-  router.put('/:id', requireOrgAdmin, canManageDocumentType, validate(updateSchema), (req, res) => controller.update(req, res));
+  router.put('/:id', requireOrgAdmin, canManageDocumentType, canEditEntity(EntityType.DOCUMENT_TYPE), validate(updateSchema), (req, res) => controller.update(req, res));
 
   // Delete: Super admin can delete all, org admin can only delete their own (not system types)
-  router.delete('/:id', requireOrgAdmin, canManageDocumentType, (req, res) => controller.delete(req, res));
+  router.delete('/:id', requireOrgAdmin, canManageDocumentType, canDeleteEntity(EntityType.DOCUMENT_TYPE), (req, res) => controller.delete(req, res));
 
   return router;
 }

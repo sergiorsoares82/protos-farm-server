@@ -5,6 +5,8 @@ import { CostCenterRepository } from '../../infrastructure/repositories/CostCent
 import { AssetRepository } from '../../infrastructure/repositories/AssetRepository.js';
 import { authenticate } from '../middleware/auth.js';
 import { tenantContextMiddleware, requireTenant } from '../../infrastructure/middleware/tenantContext.js';
+import { canViewEntity, canCreateEntity, canEditEntity, canDeleteEntity } from '../middleware/authorize.js';
+import { EntityType } from '../../domain/enums/EntityType.js';
 
 export function createCostCenterRoutes(): Router {
     const router = Router();
@@ -21,11 +23,11 @@ export function createCostCenterRoutes(): Router {
     router.use(tenantContextMiddleware);
     router.use(requireTenant);
 
-    router.get('/', (req, res) => costCenterController.getAllCostCenters(req, res));
-    router.post('/', (req, res) => costCenterController.createCostCenter(req, res));
-    router.get('/:id', (req, res) => costCenterController.getCostCenter(req, res));
-    router.put('/:id', (req, res) => costCenterController.updateCostCenter(req, res));
-    router.delete('/:id', (req, res) => costCenterController.deleteCostCenter(req, res));
+    router.get('/', canViewEntity(EntityType.COST_CENTER), (req, res) => costCenterController.getAllCostCenters(req, res));
+    router.post('/', canCreateEntity(EntityType.COST_CENTER), (req, res) => costCenterController.createCostCenter(req, res));
+    router.get('/:id', canViewEntity(EntityType.COST_CENTER), (req, res) => costCenterController.getCostCenter(req, res));
+    router.put('/:id', canEditEntity(EntityType.COST_CENTER), (req, res) => costCenterController.updateCostCenter(req, res));
+    router.delete('/:id', canDeleteEntity(EntityType.COST_CENTER), (req, res) => costCenterController.deleteCostCenter(req, res));
 
     return router;
 }

@@ -7,6 +7,8 @@ import {
   tenantContextMiddleware,
   requireTenant,
 } from '../../infrastructure/middleware/tenantContext.js';
+import { canViewEntity, canCreateEntity, canEditEntity, canDeleteEntity } from '../middleware/authorize.js';
+import { EntityType } from '../../domain/enums/EntityType.js';
 
 export function createBankAccountRoutes(): Router {
   const router = Router();
@@ -19,13 +21,13 @@ export function createBankAccountRoutes(): Router {
   router.use(tenantContextMiddleware);
   router.use(requireTenant);
 
-  router.get('/', (req, res) => bankAccountController.getAllAccounts(req, res));
-  router.post('/', (req, res) => bankAccountController.createAccount(req, res));
-  router.get('/:id', (req, res) => bankAccountController.getAccount(req, res));
-  router.put('/:id', (req, res) =>
+  router.get('/', canViewEntity(EntityType.BANK_ACCOUNT), (req, res) => bankAccountController.getAllAccounts(req, res));
+  router.post('/', canCreateEntity(EntityType.BANK_ACCOUNT), (req, res) => bankAccountController.createAccount(req, res));
+  router.get('/:id', canViewEntity(EntityType.BANK_ACCOUNT), (req, res) => bankAccountController.getAccount(req, res));
+  router.put('/:id', canEditEntity(EntityType.BANK_ACCOUNT), (req, res) =>
     bankAccountController.updateAccount(req, res),
   );
-  router.delete('/:id', (req, res) =>
+  router.delete('/:id', canDeleteEntity(EntityType.BANK_ACCOUNT), (req, res) =>
     bankAccountController.deleteAccount(req, res),
   );
 

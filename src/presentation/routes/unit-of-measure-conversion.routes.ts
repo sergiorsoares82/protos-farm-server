@@ -5,7 +5,8 @@ import { UnitOfMeasureConversionRepository } from '../../infrastructure/reposito
 import { UnitOfMeasureRepository } from '../../infrastructure/repositories/UnitOfMeasureRepository.js';
 import { authenticate } from '../middleware/auth.js';
 import { tenantContextMiddleware, requireTenant } from '../../infrastructure/middleware/tenantContext.js';
-import { requireOrgAdmin } from '../middleware/authorize.js';
+import { requireOrgAdmin, canViewEntity, canCreateEntity, canEditEntity, canDeleteEntity } from '../middleware/authorize.js';
+import { EntityType } from '../../domain/enums/EntityType.js';
 
 /**
  * Conversão de unidade de medida (ex.: 1 T = 1000 KG).
@@ -26,13 +27,13 @@ export function createUnitOfMeasureConversionRoutes(): Router {
   router.use(tenantContextMiddleware);
   router.use(requireTenant);
 
-  router.get('/', (req, res) => conversionController.getAll(req, res));
-  router.get('/:id', (req, res) => conversionController.get(req, res));
+  router.get('/', canViewEntity(EntityType.UNIT_OF_MEASURE_CONVERSION), (req, res) => conversionController.getAll(req, res));
+  router.get('/:id', canViewEntity(EntityType.UNIT_OF_MEASURE_CONVERSION), (req, res) => conversionController.get(req, res));
 
   router.use(requireOrgAdmin);
-  router.post('/', (req, res) => conversionController.create(req, res));
-  router.put('/:id', (req, res) => conversionController.update(req, res));
-  router.delete('/:id', (req, res) => conversionController.delete(req, res));
+  router.post('/', canCreateEntity(EntityType.UNIT_OF_MEASURE_CONVERSION), (req, res) => conversionController.create(req, res));
+  router.put('/:id', canEditEntity(EntityType.UNIT_OF_MEASURE_CONVERSION), (req, res) => conversionController.update(req, res));
+  router.delete('/:id', canDeleteEntity(EntityType.UNIT_OF_MEASURE_CONVERSION), (req, res) => conversionController.delete(req, res));
 
   return router;
 }

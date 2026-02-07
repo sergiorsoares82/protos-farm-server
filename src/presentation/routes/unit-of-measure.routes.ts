@@ -4,7 +4,8 @@ import { UnitOfMeasureService } from '../../application/services/UnitOfMeasureSe
 import { UnitOfMeasureRepository } from '../../infrastructure/repositories/UnitOfMeasureRepository.js';
 import { authenticate } from '../middleware/auth.js';
 import { tenantContextMiddleware, requireTenant } from '../../infrastructure/middleware/tenantContext.js';
-import { requireOrgAdmin } from '../middleware/authorize.js';
+import { requireOrgAdmin, canViewEntity, canCreateEntity, canEditEntity, canDeleteEntity } from '../middleware/authorize.js';
+import { EntityType } from '../../domain/enums/EntityType.js';
 
 /**
  * Unidade de medida: SuperAdmin edita registros de sistema (todas as orgs) e de qualquer org.
@@ -21,13 +22,13 @@ export function createUnitOfMeasureRoutes(): Router {
   router.use(tenantContextMiddleware);
   router.use(requireTenant);
 
-  router.get('/', (req, res) => unitOfMeasureController.getAll(req, res));
-  router.get('/:id', (req, res) => unitOfMeasureController.get(req, res));
+  router.get('/', canViewEntity(EntityType.UNIT_OF_MEASURE), (req, res) => unitOfMeasureController.getAll(req, res));
+  router.get('/:id', canViewEntity(EntityType.UNIT_OF_MEASURE), (req, res) => unitOfMeasureController.get(req, res));
 
   router.use(requireOrgAdmin);
-  router.post('/', (req, res) => unitOfMeasureController.create(req, res));
-  router.put('/:id', (req, res) => unitOfMeasureController.update(req, res));
-  router.delete('/:id', (req, res) => unitOfMeasureController.delete(req, res));
+  router.post('/', canCreateEntity(EntityType.UNIT_OF_MEASURE), (req, res) => unitOfMeasureController.create(req, res));
+  router.put('/:id', canEditEntity(EntityType.UNIT_OF_MEASURE), (req, res) => unitOfMeasureController.update(req, res));
+  router.delete('/:id', canDeleteEntity(EntityType.UNIT_OF_MEASURE), (req, res) => unitOfMeasureController.delete(req, res));
 
   return router;
 }

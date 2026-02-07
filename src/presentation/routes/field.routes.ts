@@ -4,6 +4,8 @@ import { FieldService } from '../../application/services/FieldService.js';
 import { FieldRepository } from '../../infrastructure/repositories/FieldRepository.js';
 import { authenticate } from '../middleware/auth.js';
 import { tenantContextMiddleware, requireTenant } from '../../infrastructure/middleware/tenantContext.js';
+import { canViewEntity, canCreateEntity, canEditEntity, canDeleteEntity } from '../middleware/authorize.js';
+import { EntityType } from '../../domain/enums/EntityType.js';
 
 export function createFieldRoutes(): Router {
   const router = Router();
@@ -16,11 +18,11 @@ export function createFieldRoutes(): Router {
   router.use(tenantContextMiddleware);
   router.use(requireTenant);
 
-  router.get('/', (req, res) => fieldController.getAllFields(req, res));
-  router.post('/', (req, res) => fieldController.createField(req, res));
-  router.get('/:id', (req, res) => fieldController.getField(req, res));
-  router.put('/:id', (req, res) => fieldController.updateField(req, res));
-  router.delete('/:id', (req, res) => fieldController.deleteField(req, res));
+  router.get('/', canViewEntity(EntityType.FIELD), (req, res) => fieldController.getAllFields(req, res));
+  router.post('/', canCreateEntity(EntityType.FIELD), (req, res) => fieldController.createField(req, res));
+  router.get('/:id', canViewEntity(EntityType.FIELD), (req, res) => fieldController.getField(req, res));
+  router.put('/:id', canEditEntity(EntityType.FIELD), (req, res) => fieldController.updateField(req, res));
+  router.delete('/:id', canDeleteEntity(EntityType.FIELD), (req, res) => fieldController.deleteField(req, res));
 
   return router;
 }

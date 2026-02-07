@@ -1,5 +1,15 @@
 import type { Request, Response, NextFunction } from 'express';
 import { UserRole } from '../../domain/enums/UserRole.js';
+import { EntityType } from '../../domain/enums/EntityType.js';
+import { PermissionAction } from '../../domain/enums/PermissionAction.js';
+import { PermissionService } from '../../application/services/PermissionService.js';
+import { PermissionRepository } from '../../infrastructure/repositories/PermissionRepository.js';
+import { RolePermissionRepository } from '../../infrastructure/repositories/RolePermissionRepository.js';
+
+// Initialize permission service singleton
+const permissionRepository = new PermissionRepository();
+const rolePermissionRepository = new RolePermissionRepository();
+export const permissionService = new PermissionService(permissionRepository, rolePermissionRepository);
 
 /**
  * Middleware to check if user has one of the required roles
@@ -206,3 +216,121 @@ export const canManageInvoiceFinancialType = async (req: Request, res: Response,
     error: 'Insufficient permissions',
   });
 };
+
+/**
+ * Middleware to check if user can manage an activity type (update/delete).
+ * Super admin can manage all (including system types).
+ * Org admin can only manage their own organization's types (not system types).
+ */
+export const canManageActivityType = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  const user = (req as any).user;
+  const { id } = req.params;
+
+  if (!user) {
+    res.status(401).json({
+      success: false,
+      error: 'Authentication required',
+    });
+    return;
+  }
+
+  if (user.role === UserRole.SUPER_ADMIN) {
+    next();
+    return;
+  }
+
+  if (user.role === UserRole.ORG_ADMIN) {
+    const typeId = typeof id === 'string' ? id : undefined;
+    if (!typeId) {
+      res.status(400).json({ success: false, error: 'Invalid activity type id' });
+      return;
+    }
+    const { ActivityTypeRepository } = await import('../../infrastructure/repositories/ActivityTypeRepository.js');
+    const repository = new ActivityTypeRepository();
+    const type = await repository.findByIdAny(typeId);
+
+    if (!type) {
+      res.status(404).json({
+        success: false,
+        error: 'Activity type not found',
+      });
+      return;
+    }
+
+    if (type.getIsSystem()) {
+      res.status(403).json({
+        success: false,
+        error: 'Cannot edit system activity types',
+      });
+      return;
+    }
+
+    if (type.getTenantId() === user.tenantId) {
+      next();
+      return;
+    }
+
+    res.status(403).json({
+      success: false,
+      error: 'Cannot manage this activity type',
+    });
+    return;
+  }
+
+  res.status(403).json({
+    success: false,
+    error: 'Insufficient permissions',
+  });
+};
+
+/**
+ * Generic permission-based middleware
+ * Checks if user has specific permission for an entity and action
+ */
+export const requirePermission = (entity: EntityType, action: PermissionAction) => {
+  return async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    const user = (req as any).user;
+    const tenant = (req as any).tenant;
+
+    if (!user) {
+      res.status(401).json({
+        success: false,
+        error: 'Authentication required',
+      });
+      return;
+    }
+
+    try {
+      const hasPermission = await permissionService.hasPermission(
+        user.role,
+        entity,
+        action,
+        tenant?.id
+      );
+
+      if (!hasPermission) {
+        res.status(403).json({
+          success: false,
+          error: `Permission denied: ${entity}:${action}`,
+        });
+        return;
+      }
+
+      next();
+    } catch (error) {
+      console.error('Permission check error:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Error checking permissions',
+      });
+    }
+  };
+};
+
+/**
+ * Helper middleware functions for common permission checks
+ */
+export const canViewEntity = (entity: EntityType) => requirePermission(entity, PermissionAction.VIEW);
+export const canCreateEntity = (entity: EntityType) => requirePermission(entity, PermissionAction.CREATE);
+export const canEditEntity = (entity: EntityType) => requirePermission(entity, PermissionAction.EDIT);
+export const canDeleteEntity = (entity: EntityType) => requirePermission(entity, PermissionAction.DELETE);

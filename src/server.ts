@@ -33,6 +33,8 @@ import { createBankAccountRoutes } from './presentation/routes/bank-account.rout
 import { createRuralPropertyRoutes } from './presentation/routes/rural-property.routes.js';
 import { createLandRegistryRoutes } from './presentation/routes/land-registry.routes.js';
 import { createStateRegistrationRoutes } from './presentation/routes/state-registration.routes.js';
+import { createActivityTypeRoutes } from './presentation/routes/activity-type.routes.js';
+import { createPermissionRoutes } from './presentation/routes/permission.routes.js';
 
 const app = express();
 
@@ -118,6 +120,9 @@ app.use('/api/work-locations', createWorkLocationRoutes());
 // Work location types (managed by SuperAdmin and OrgAdmin only)
 app.use('/api/work-location-types', createWorkLocationTypeRoutes());
 
+// Activity types (Tipo de Atividade: name + is_active)
+app.use('/api/activity-types', createActivityTypeRoutes());
+
 // Units of measure (unidade de medida: system + per-org; SuperAdmin/OrgAdmin)
 app.use('/api/unit-of-measures', createUnitOfMeasureRoutes());
 
@@ -165,6 +170,9 @@ app.use('/api/land-registries', createLandRegistryRoutes());
 
 // State registrations (inscrições estaduais – produtor rural/empresa)
 app.use('/api/state-registrations', createStateRegistrationRoutes());
+
+// Permission management (RBAC)
+app.use('/api/permissions', createPermissionRoutes());
 
 // 404 handler
 app.use((req, res) => {

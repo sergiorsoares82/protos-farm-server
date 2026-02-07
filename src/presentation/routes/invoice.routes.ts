@@ -15,6 +15,8 @@ import { StockMovementTypeRepository } from '../../infrastructure/repositories/S
 import { ItemRepository } from '../../infrastructure/repositories/ItemRepository.js';
 import { authenticate } from '../middleware/auth.js';
 import { tenantContextMiddleware, requireTenant } from '../../infrastructure/middleware/tenantContext.js';
+import { canViewEntity, canCreateEntity, canEditEntity, canDeleteEntity } from '../middleware/authorize.js';
+import { EntityType } from '../../domain/enums/EntityType.js';
 
 export function createInvoiceRoutes(): Router {
   const router = Router();
@@ -59,19 +61,20 @@ export function createInvoiceRoutes(): Router {
   const invoiceReceiptController = new InvoiceReceiptController(invoiceReceiptService);
   const invoiceShipmentController = new InvoiceShipmentController(invoiceShipmentService);
 
-  router.get('/', (req, res) => invoiceController.getAllInvoices(req, res));
-  router.get('/:invoiceId/receipts', (req, res) => invoiceReceiptController.getReceiptsByInvoiceId(req, res));
-  router.post('/:invoiceId/receipts', (req, res) => invoiceReceiptController.createReceipt(req, res));
-  router.delete('/:invoiceId/receipts/:receiptId', (req, res) => invoiceReceiptController.deleteReceipt(req, res));
-  router.get('/:invoiceId/shipments', (req, res) => invoiceShipmentController.getShipmentsByInvoiceId(req, res));
-  router.post('/:invoiceId/shipments', (req, res) => invoiceShipmentController.createShipment(req, res));
-  router.delete('/:invoiceId/shipments/:shipmentId', (req, res) => invoiceShipmentController.deleteShipment(req, res));
-  router.get('/:id', (req, res) => invoiceController.getInvoice(req, res));
-  router.post('/', (req, res) => invoiceController.createInvoice(req, res));
-  router.put('/:id', (req, res) => invoiceController.updateInvoice(req, res));
-  router.delete('/:id', (req, res) => invoiceController.deleteInvoice(req, res));
+  router.get('/', canViewEntity(EntityType.INVOICE), (req, res) => invoiceController.getAllInvoices(req, res));
+  router.get('/:invoiceId/receipts', canViewEntity(EntityType.INVOICE_RECEIPT), (req, res) => invoiceReceiptController.getReceiptsByInvoiceId(req, res));
+  router.post('/:invoiceId/receipts', canCreateEntity(EntityType.INVOICE_RECEIPT), (req, res) => invoiceReceiptController.createReceipt(req, res));
+  router.delete('/:invoiceId/receipts/:receiptId', canDeleteEntity(EntityType.INVOICE_RECEIPT), (req, res) => invoiceReceiptController.deleteReceipt(req, res));
+  router.get('/:invoiceId/shipments', canViewEntity(EntityType.INVOICE_SHIPMENT), (req, res) => invoiceShipmentController.getShipmentsByInvoiceId(req, res));
+  router.post('/:invoiceId/shipments', canCreateEntity(EntityType.INVOICE_SHIPMENT), (req, res) => invoiceShipmentController.createShipment(req, res));
+  router.delete('/:invoiceId/shipments/:shipmentId', canDeleteEntity(EntityType.INVOICE_SHIPMENT), (req, res) => invoiceShipmentController.deleteShipment(req, res));
+  router.get('/:id', canViewEntity(EntityType.INVOICE), (req, res) => invoiceController.getInvoice(req, res));
+  router.post('/', canCreateEntity(EntityType.INVOICE), (req, res) => invoiceController.createInvoice(req, res));
+  router.put('/:id', canEditEntity(EntityType.INVOICE), (req, res) => invoiceController.updateInvoice(req, res));
+  router.delete('/:id', canDeleteEntity(EntityType.INVOICE), (req, res) => invoiceController.deleteInvoice(req, res));
   router.post(
     '/:invoiceId/financials/:financialId/mark-paid',
+    canEditEntity(EntityType.INVOICE_FINANCIAL),
     (req, res) => invoiceController.markFinancialAsPaid(req, res)
   );
 

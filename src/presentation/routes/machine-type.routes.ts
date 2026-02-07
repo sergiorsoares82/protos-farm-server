@@ -4,6 +4,8 @@ import { MachineTypeService } from '../../application/services/MachineTypeServic
 import { MachineTypeRepository } from '../../infrastructure/repositories/MachineTypeRepository.js';
 import { authenticate } from '../middleware/auth.js';
 import { tenantContextMiddleware, requireTenant } from '../../infrastructure/middleware/tenantContext.js';
+import { canViewEntity, canCreateEntity, canEditEntity, canDeleteEntity } from '../middleware/authorize.js';
+import { EntityType } from '../../domain/enums/EntityType.js';
 
 export function createMachineTypeRoutes(): Router {
   const router = Router();
@@ -16,11 +18,11 @@ export function createMachineTypeRoutes(): Router {
   router.use(tenantContextMiddleware);
   router.use(requireTenant);
 
-  router.get('/', (req, res) => controller.getAllMachineTypes(req, res));
-  router.post('/', (req, res) => controller.createMachineType(req, res));
-  router.get('/:id', (req, res) => controller.getMachineType(req, res));
-  router.put('/:id', (req, res) => controller.updateMachineType(req, res));
-  router.delete('/:id', (req, res) => controller.deleteMachineType(req, res));
+  router.get('/', canViewEntity(EntityType.MACHINE_TYPE), (req, res) => controller.getAllMachineTypes(req, res));
+  router.post('/', canCreateEntity(EntityType.MACHINE_TYPE), (req, res) => controller.createMachineType(req, res));
+  router.get('/:id', canViewEntity(EntityType.MACHINE_TYPE), (req, res) => controller.getMachineType(req, res));
+  router.put('/:id', canEditEntity(EntityType.MACHINE_TYPE), (req, res) => controller.updateMachineType(req, res));
+  router.delete('/:id', canDeleteEntity(EntityType.MACHINE_TYPE), (req, res) => controller.deleteMachineType(req, res));
 
   return router;
 }

@@ -10,6 +10,8 @@ import { CostCenterRepository } from '../../infrastructure/repositories/CostCent
 import { ManagementAccountRepository } from '../../infrastructure/repositories/ManagementAccountRepository.js';
 import { authenticate } from '../middleware/auth.js';
 import { tenantContextMiddleware, requireTenant } from '../../infrastructure/middleware/tenantContext.js';
+import { canViewEntity, canCreateEntity, canEditEntity, canDeleteEntity } from '../middleware/authorize.js';
+import { EntityType } from '../../domain/enums/EntityType.js';
 
 export function createStockMovementRoutes(): Router {
   const router = Router();
@@ -37,11 +39,11 @@ export function createStockMovementRoutes(): Router {
   router.use(tenantContextMiddleware);
   router.use(requireTenant);
 
-  router.get('/', (req, res) => stockMovementController.getAllMovements(req, res));
-  router.post('/', (req, res) => stockMovementController.createMovement(req, res));
-  router.get('/:id', (req, res) => stockMovementController.getMovement(req, res));
-  router.put('/:id', (req, res) => stockMovementController.updateMovement(req, res));
-  router.delete('/:id', (req, res) => stockMovementController.deleteMovement(req, res));
+  router.get('/', canViewEntity(EntityType.STOCK_MOVEMENT), (req, res) => stockMovementController.getAllMovements(req, res));
+  router.post('/', canCreateEntity(EntityType.STOCK_MOVEMENT), (req, res) => stockMovementController.createMovement(req, res));
+  router.get('/:id', canViewEntity(EntityType.STOCK_MOVEMENT), (req, res) => stockMovementController.getMovement(req, res));
+  router.put('/:id', canEditEntity(EntityType.STOCK_MOVEMENT), (req, res) => stockMovementController.updateMovement(req, res));
+  router.delete('/:id', canDeleteEntity(EntityType.STOCK_MOVEMENT), (req, res) => stockMovementController.deleteMovement(req, res));
 
   return router;
 }

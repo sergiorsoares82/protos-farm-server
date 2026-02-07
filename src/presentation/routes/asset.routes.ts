@@ -10,6 +10,8 @@ import { MachineTypeRepository } from '../../infrastructure/repositories/Machine
 import { CostCenterRepository } from '../../infrastructure/repositories/CostCenterRepository.js';
 import { authenticate } from '../middleware/auth.js';
 import { tenantContextMiddleware, requireTenant } from '../../infrastructure/middleware/tenantContext.js';
+import { canViewEntity, canCreateEntity, canEditEntity, canDeleteEntity } from '../middleware/authorize.js';
+import { EntityType } from '../../domain/enums/EntityType.js';
 
 export function createAssetRoutes(): Router {
   const router = Router();
@@ -40,14 +42,14 @@ export function createAssetRoutes(): Router {
   router.use(tenantContextMiddleware);
   router.use(requireTenant);
 
-  router.get('/', (req, res) => assetController.getAllAssets(req, res));
-  router.post('/', (req, res) => assetController.createAsset(req, res));
-  router.post('/full-machine', (req, res) =>
+  router.get('/', canViewEntity(EntityType.ASSET), (req, res) => assetController.getAllAssets(req, res));
+  router.post('/', canCreateEntity(EntityType.ASSET), (req, res) => assetController.createAsset(req, res));
+  router.post('/full-machine', canCreateEntity(EntityType.ASSET), (req, res) =>
     fullMachineController.createFullMachine(req, res),
   );
-  router.get('/:id', (req, res) => assetController.getAsset(req, res));
-  router.put('/:id', (req, res) => assetController.updateAsset(req, res));
-  router.delete('/:id', (req, res) => assetController.deleteAsset(req, res));
+  router.get('/:id', canViewEntity(EntityType.ASSET), (req, res) => assetController.getAsset(req, res));
+  router.put('/:id', canEditEntity(EntityType.ASSET), (req, res) => assetController.updateAsset(req, res));
+  router.delete('/:id', canDeleteEntity(EntityType.ASSET), (req, res) => assetController.deleteAsset(req, res));
 
   return router;
 }
