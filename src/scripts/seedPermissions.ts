@@ -1,4 +1,5 @@
 import 'reflect-metadata';
+import '../config/env.js';
 import { AppDataSource, initializeDatabase } from '../infrastructure/database/typeorm.config.js';
 import { PermissionRepository } from '../infrastructure/repositories/PermissionRepository.js';
 import { RolePermissionRepository } from '../infrastructure/repositories/RolePermissionRepository.js';

@@ -39,10 +39,13 @@ export class PermissionController {
   /**
    * GET /api/permissions/roles/:role
    * Get permissions for a specific role
+   * Query params: 
+   *   - tenantId (optional, SUPER_ADMIN only): get permissions for specific tenant
    */
   async getRolePermissions(req: Request, res: Response): Promise<void> {
     try {
       const { role } = req.params;
+      const { tenantId: queryTenantId } = req.query;
       const user = (req as any).user;
       const tenant = (req as any).tenant;
 
@@ -55,25 +58,43 @@ export class PermissionController {
         return;
       }
 
-      // Only SUPER_ADMIN can view any role's permissions
-      // ORG_ADMIN can only view their own role's permissions
-      if (user.role !== UserRole.SUPER_ADMIN && user.role !== role) {
+      // Determine which tenant's permissions to retrieve
+      let targetTenantId: string | undefined;
+      
+      if (user.role === UserRole.SUPER_ADMIN) {
+        // SUPER_ADMIN can view permissions for any tenant or system-wide
+        targetTenantId = queryTenantId ? (queryTenantId as string) : undefined;
+      } else if (user.role === UserRole.ORG_ADMIN) {
+        // ORG_ADMIN can only view their own organization's permissions
+        targetTenantId = tenant?.id;
+        
+        // Prevent ORG_ADMIN from accessing other tenants
+        if (queryTenantId && queryTenantId !== tenant?.id) {
+          res.status(403).json({
+            success: false,
+            error: 'Cannot view permissions for other organizations',
+          });
+          return;
+        }
+      } else {
+        // Regular users cannot manage permissions
         res.status(403).json({
           success: false,
-          error: 'Cannot view permissions for other roles',
+          error: 'Insufficient permissions to view role permissions',
         });
         return;
       }
 
       const permissions = await this.getRolePermissionsUseCase.execute(
         role as UserRole,
-        tenant?.id
+        targetTenantId
       );
 
       res.json({
         success: true,
         data: {
           role,
+          tenantId: targetTenantId || null,
           permissions: permissions.map(p => p.toJSON()),
         },
       });
@@ -89,11 +110,15 @@ export class PermissionController {
   /**
    * PUT /api/permissions/roles/:role
    * Update permissions for a specific role
+   * Body:
+   *   - permissionIds: string[] - Array of permission IDs to assign
+   *   - tenantId (optional, SUPER_ADMIN only): update permissions for specific tenant
    */
   async updateRolePermissions(req: Request, res: Response): Promise<void> {
     try {
       const { role } = req.params;
-      const { permissionIds } = req.body;
+      const { permissionIds, tenantId: bodyTenantId } = req.body;
+      const user = (req as any).user;
       const tenant = (req as any).tenant;
 
       // Validate role
@@ -114,15 +139,51 @@ export class PermissionController {
         return;
       }
 
+      // Determine which tenant's permissions to update
+      let targetTenantId: string | undefined;
+      
+      if (user.role === UserRole.SUPER_ADMIN) {
+        // SUPER_ADMIN can update permissions for any tenant or system-wide
+        targetTenantId = bodyTenantId || undefined;
+      } else if (user.role === UserRole.ORG_ADMIN) {
+        // ORG_ADMIN can only update their own organization's permissions
+        targetTenantId = tenant?.id;
+        
+        // Prevent ORG_ADMIN from updating other tenants
+        if (bodyTenantId && bodyTenantId !== tenant?.id) {
+          res.status(403).json({
+            success: false,
+            error: 'Cannot update permissions for other organizations',
+          });
+          return;
+        }
+        
+        // ORG_ADMIN cannot update SUPER_ADMIN or ORG_ADMIN roles
+        if (role === UserRole.SUPER_ADMIN || role === UserRole.ORG_ADMIN) {
+          res.status(403).json({
+            success: false,
+            error: 'ORG_ADMIN can only manage USER role permissions',
+          });
+          return;
+        }
+      } else {
+        // Regular users cannot manage permissions
+        res.status(403).json({
+          success: false,
+          error: 'Insufficient permissions to update role permissions',
+        });
+        return;
+      }
+
       await this.updateRolePermissionsUseCase.execute({
         role: role as UserRole,
         permissionIds,
-        tenantId: tenant?.id,
+        tenantId: targetTenantId,
       });
 
       res.json({
         success: true,
-        message: `Permissions updated for role ${role}`,
+        message: `Permissions updated for role ${role}${targetTenantId ? ` in tenant ${targetTenantId}` : ' (system-wide)'}`,
       });
     } catch (error) {
       console.error('Error updating role permissions:', error);

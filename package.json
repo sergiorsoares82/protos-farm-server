@@ -24,6 +24,7 @@
     "seed:unit-of-measure-conversions": "tsx src/scripts/seedUnitOfMeasureConversions.ts",
     "seed:document-types": "tsx src/scripts/seedDocumentTypes.ts",
     "seed:invoice-financials-types": "tsx src/scripts/seedInvoiceFinancialsTypes.ts",
+    "seed:permissions": "tsx src/scripts/seedPermissions.ts",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {

@@ -1,5 +1,5 @@
-import { IPermissionRepository } from '../../domain/repositories/IPermissionRepository.js';
-import { IRolePermissionRepository } from '../../domain/repositories/IRolePermissionRepository.js';
+import type { IPermissionRepository } from '../../domain/repositories/IPermissionRepository.js';
+import type { IRolePermissionRepository } from '../../domain/repositories/IRolePermissionRepository.js';
 import { Permission } from '../../domain/entities/Permission.js';
 import { UserRole } from '../../domain/enums/UserRole.js';
 import { EntityType } from '../../domain/enums/EntityType.js';

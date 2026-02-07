@@ -1,4 +1,4 @@
-import { IPermissionRepository } from '../../domain/repositories/IPermissionRepository.js';
+import type { IPermissionRepository } from '../../domain/repositories/IPermissionRepository.js';
 import { Permission } from '../../domain/entities/Permission.js';
 
 export class GetAllPermissionsUseCase {

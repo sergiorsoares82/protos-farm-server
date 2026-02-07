@@ -43,14 +43,14 @@ export function createPermissionRoutes(): Router {
   router.use(requireTenant);
 
   // Routes
-  // GET /api/permissions - Get all permissions (SUPER_ADMIN only)
-  router.get('/', requireSuperAdmin, controller.getAllPermissions.bind(controller));
+  // GET /api/permissions - Get all permissions (ORG_ADMIN and above)
+  router.get('/', requireOrgAdmin, controller.getAllPermissions.bind(controller));
 
   // GET /api/permissions/roles/:role - Get permissions for a role (ORG_ADMIN and above)
   router.get('/roles/:role', requireOrgAdmin, controller.getRolePermissions.bind(controller));
 
-  // PUT /api/permissions/roles/:role - Update permissions for a role (SUPER_ADMIN only)
-  router.put('/roles/:role', requireSuperAdmin, controller.updateRolePermissions.bind(controller));
+  // PUT /api/permissions/roles/:role - Update permissions for a role (ORG_ADMIN and above, with restrictions)
+  router.put('/roles/:role', requireOrgAdmin, controller.updateRolePermissions.bind(controller));
 
   // GET /api/permissions/check - Check if user has specific permission (any authenticated user)
   router.get('/check', controller.checkPermission.bind(controller));
