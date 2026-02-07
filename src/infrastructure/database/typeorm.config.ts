@@ -45,6 +45,7 @@ import { StateRegistrationLandRegistryEntity } from './entities/StateRegistratio
 import { ActivityTypeEntity } from './entities/ActivityTypeEntity.js';
 import { PermissionEntity } from './entities/PermissionEntity.js';
 import { RolePermissionEntity } from './entities/RolePermissionEntity.js';
+import { RoleEntity } from './entities/RoleEntity.js';
 // Get database configuration from environment variables
 const getDatabaseUrl = (): string => {
   // 1) Prefer DATABASE_URL if provided (Neon typically gives you this)
@@ -137,6 +138,7 @@ export const AppDataSource = new DataSource({
     ActivityTypeEntity,
     PermissionEntity,
     RolePermissionEntity,
+    RoleEntity,
   ],
   migrations: [],
   subscribers: [],

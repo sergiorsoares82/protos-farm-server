@@ -35,6 +35,7 @@ import { createLandRegistryRoutes } from './presentation/routes/land-registry.ro
 import { createStateRegistrationRoutes } from './presentation/routes/state-registration.routes.js';
 import { createActivityTypeRoutes } from './presentation/routes/activity-type.routes.js';
 import { createPermissionRoutes } from './presentation/routes/permission.routes.js';
+import { createRoleRoutes } from './presentation/routes/role.routes.js';
 
 const app = express();
 
@@ -173,6 +174,9 @@ app.use('/api/state-registrations', createStateRegistrationRoutes());
 
 // Permission management (RBAC)
 app.use('/api/permissions', createPermissionRoutes());
+
+// Role management
+app.use('/api/roles', createRoleRoutes());
 
 // 404 handler
 app.use((req, res) => {
