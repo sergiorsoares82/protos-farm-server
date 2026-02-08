@@ -35,6 +35,7 @@ import { createLandRegistryRoutes } from './presentation/routes/land-registry.ro
 import { createStateRegistrationRoutes } from './presentation/routes/state-registration.routes.js';
 import { createActivityTypeRoutes } from './presentation/routes/activity-type.routes.js';
 import { createOperationRoutes } from './presentation/routes/operation.routes.js';
+import { createOperationRecordRoutes } from './presentation/routes/operationRecord.routes.js';
 import { createPermissionRoutes } from './presentation/routes/permission.routes.js';
 import { createRoleRoutes } from './presentation/routes/role.routes.js';
 
@@ -127,6 +128,9 @@ app.use('/api/activity-types', createActivityTypeRoutes());
 
 // Operations (Operações: code + hierarchy + activity types)
 app.use('/api/operations', createOperationRoutes());
+
+// Operation Records (Apontamentos de Operações)
+app.use('/api/operation-records', createOperationRecordRoutes());
 
 // Units of measure (unidade de medida: system + per-org; SuperAdmin/OrgAdmin)
 app.use('/api/unit-of-measures', createUnitOfMeasureRoutes());
