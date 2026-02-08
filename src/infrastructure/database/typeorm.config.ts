@@ -44,6 +44,9 @@ import { StateRegistrationParticipantEntity } from './entities/StateRegistration
 import { StateRegistrationLandRegistryEntity } from './entities/StateRegistrationLandRegistryEntity.js';
 import { ActivityTypeEntity } from './entities/ActivityTypeEntity.js';
 import { OperationEntity } from './entities/OperationEntity.js';
+import { OperationRecordEntity } from './entities/OperationRecordEntity.js';
+import { OperationRecordWorkerEntity } from './entities/OperationRecordWorkerEntity.js';
+import { OperationRecordProductEntity } from './entities/OperationRecordProductEntity.js';
 import { PermissionEntity } from './entities/PermissionEntity.js';
 import { RolePermissionEntity } from './entities/RolePermissionEntity.js';
 import { RoleEntity } from './entities/RoleEntity.js';
@@ -138,6 +141,9 @@ export const AppDataSource = new DataSource({
     StateRegistrationLandRegistryEntity,
     ActivityTypeEntity,
     OperationEntity,
+    OperationRecordEntity,
+    OperationRecordWorkerEntity,
+    OperationRecordProductEntity,
     PermissionEntity,
     RolePermissionEntity,
     RoleEntity,
