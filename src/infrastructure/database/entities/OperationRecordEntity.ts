@@ -10,6 +10,7 @@ import {
   Index,
 } from 'typeorm';
 import { OrganizationEntity } from './OrganizationEntity.js';
+import { SeasonEntity } from './SeasonEntity.js';
 import { OperationEntity } from './OperationEntity.js';
 import { MachineEntity } from './MachineEntity.js';
 import { AssetEntity } from './AssetEntity.js';
@@ -29,6 +30,9 @@ export class OperationRecordEntity {
 
   @Column({ type: 'date', name: 'service_date' })
   serviceDate!: Date;
+
+  @Column({ type: 'uuid', name: 'season_id', nullable: true })
+  seasonId!: string | null;
 
   @Column({ type: 'uuid', name: 'operation_id' })
   operationId!: string;
@@ -66,6 +70,10 @@ export class OperationRecordEntity {
   @ManyToOne(() => OrganizationEntity)
   @JoinColumn({ name: 'tenant_id' })
   tenant!: OrganizationEntity;
+
+  @ManyToOne(() => SeasonEntity, { onDelete: 'SET NULL', nullable: true })
+  @JoinColumn({ name: 'season_id' })
+  season?: SeasonEntity | null;
 
   @ManyToOne(() => OperationEntity, { onDelete: 'RESTRICT' })
   @JoinColumn({ name: 'operation_id' })

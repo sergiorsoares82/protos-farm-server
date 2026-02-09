@@ -5,6 +5,7 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   ManyToOne,
+  OneToOne,
   JoinColumn,
   Index,
 } from 'typeorm';
@@ -12,6 +13,8 @@ import { OrganizationEntity } from './OrganizationEntity.js';
 import { CostCenterCategoryEntity } from './CostCenterCategoryEntity.js';
 import { AssetEntity } from './AssetEntity.js';
 import { ActivityTypeEntity } from './ActivityTypeEntity.js';
+import { MachineEntity } from './MachineEntity.js';
+import { BuildingEntity } from './BuildingEntity.js';
 
 @Entity('cost_centers')
 export class CostCenterEntity {
@@ -23,13 +26,32 @@ export class CostCenterEntity {
     tenantId!: string;
 
     @Column({ type: 'varchar', length: 20 })
-    code!: string; // Sigla
+    code!: string; // Sigla única
+
+    @Column({ type: 'varchar', length: 200, nullable: true })
+    name?: string | null; // Nome descritivo
 
     @Column({ type: 'varchar', length: 200 })
     description!: string;
 
+    @Column({ type: 'varchar', length: 50, default: 'GENERAL' })
+    kind!: string; // 'MACHINE', 'BUILDING', 'GENERAL'
+
     @Column({ type: 'varchar', length: 50 })
     type!: string; // 'PRODUCTIVE', 'ADMINISTRATIVE', 'SHARED'
+
+    @Column({ type: 'boolean', default: false, name: 'has_technical_data' })
+    hasTechnicalData!: boolean;
+
+    // Dados patrimoniais (para todos os tipos)
+    @Column({ type: 'date', nullable: true, name: 'acquisition_date' })
+    acquisitionDate?: Date | null;
+
+    @Column({ type: 'decimal', precision: 12, scale: 2, nullable: true, name: 'acquisition_value' })
+    acquisitionValue?: number | null;
+
+    @Column({ type: 'decimal', precision: 12, scale: 2, nullable: true, name: 'current_value' })
+    currentValue?: number | null;
 
     @Column({ type: 'boolean', default: true, name: 'is_active' })
     isActive!: boolean;
@@ -55,4 +77,11 @@ export class CostCenterEntity {
   @ManyToOne(() => ActivityTypeEntity, { onDelete: 'SET NULL', nullable: true })
   @JoinColumn({ name: 'activity_type_id' })
   activityType?: ActivityTypeEntity | null;
+
+  // Relacionamentos reversos (1:1 opcionais)
+  @OneToOne(() => MachineEntity, machine => machine.costCenter, { nullable: true })
+  machine?: MachineEntity | null;
+
+  @OneToOne(() => BuildingEntity, building => building.costCenter, { nullable: true })
+  building?: BuildingEntity | null;
 }

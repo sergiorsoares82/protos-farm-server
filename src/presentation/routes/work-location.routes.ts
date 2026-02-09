@@ -4,6 +4,7 @@ import { WorkLocationService } from '../../application/services/WorkLocationServ
 import { WorkLocationTypeService } from '../../application/services/WorkLocationTypeService.js';
 import { WorkLocationRepository } from '../../infrastructure/repositories/WorkLocationRepository.js';
 import { WorkLocationTypeRepository } from '../../infrastructure/repositories/WorkLocationTypeRepository.js';
+import { FieldSeasonRepository } from '../../infrastructure/repositories/FieldSeasonRepository.js';
 import { authenticate } from '../middleware/auth.js';
 import { tenantContextMiddleware, requireTenant } from '../../infrastructure/middleware/tenantContext.js';
 import { canViewEntity, canCreateEntity, canEditEntity, canDeleteEntity } from '../middleware/authorize.js';
@@ -14,13 +15,14 @@ export function createWorkLocationRoutes(): Router {
 
   const workLocationRepository = new WorkLocationRepository();
   const workLocationTypeRepository = new WorkLocationTypeRepository();
+  const fieldSeasonRepository = new FieldSeasonRepository();
   const workLocationTypeService = new WorkLocationTypeService(workLocationTypeRepository);
   const workLocationService = new WorkLocationService(
     workLocationRepository,
     workLocationTypeRepository,
     workLocationTypeService,
   );
-  const workLocationController = new WorkLocationController(workLocationService);
+  const workLocationController = new WorkLocationController(workLocationService, fieldSeasonRepository);
 
   router.use(authenticate);
   router.use(tenantContextMiddleware);
@@ -29,6 +31,7 @@ export function createWorkLocationRoutes(): Router {
   router.get('/', canViewEntity(EntityType.FIELD), (req, res) => workLocationController.getAllWorkLocations(req, res));
   router.post('/', canCreateEntity(EntityType.FIELD), (req, res) => workLocationController.createWorkLocation(req, res));
   router.get('/:id', canViewEntity(EntityType.FIELD), (req, res) => workLocationController.getWorkLocation(req, res));
+  router.get('/:id/latest-season', canViewEntity(EntityType.FIELD_SEASON), (req, res) => workLocationController.getLatestSeason(req, res));
   router.put('/:id', canEditEntity(EntityType.FIELD), (req, res) => workLocationController.updateWorkLocation(req, res));
   router.delete('/:id', canDeleteEntity(EntityType.FIELD), (req, res) => workLocationController.deleteWorkLocation(req, res));
 

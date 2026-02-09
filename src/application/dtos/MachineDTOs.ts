@@ -1,12 +1,22 @@
 export interface CreateMachineDTO {
-  name: string;
+  costCenterId?: string;
   machineTypeId: string;
-  assetId?: string;
+  brand?: string;
+  model?: string;
+  serialNumber?: string;
+  horimeterInitial?: number;
+  horimeterCurrent?: number;
+  powerHp?: number;
+  fuelType?: string;
 }
 
 export interface UpdateMachineDTO {
-  name?: string;
   machineTypeId?: string;
-  assetId?: string;
+  brand?: string;
+  model?: string;
+  serialNumber?: string;
+  horimeterCurrent?: number;
+  powerHp?: number;
+  fuelType?: string;
   isActive?: boolean;
 }

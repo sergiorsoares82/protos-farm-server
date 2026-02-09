@@ -16,6 +16,7 @@ export interface OperationRecordProps {
   id: string;
   tenantId: string;
   serviceDate: Date;
+  seasonId?: string | null;
   operationId: string;
   machineId: string;
   horimeterStart: number;
@@ -163,6 +164,7 @@ export class OperationRecord {
   private readonly id: string;
   private readonly tenantId: string;
   private serviceDate: Date;
+  private seasonId?: string | null;
   private operationId: string;
   private machineId: string;
   private horimeterStart: number;
@@ -182,6 +184,7 @@ export class OperationRecord {
     this.id = props.id;
     this.tenantId = props.tenantId;
     this.serviceDate = props.serviceDate;
+    this.seasonId = props.seasonId;
     this.operationId = props.operationId;
     this.machineId = props.machineId;
     this.horimeterStart = props.horimeterStart;
@@ -200,6 +203,7 @@ export class OperationRecord {
   static create(
     tenantId: string,
     serviceDate: Date,
+    seasonId: string | null | undefined,
     operationId: string,
     machineId: string,
     horimeterStart: number,
@@ -214,6 +218,7 @@ export class OperationRecord {
       id: crypto.randomUUID(),
       tenantId,
       serviceDate,
+      seasonId,
       operationId,
       machineId,
       horimeterStart,
@@ -243,6 +248,7 @@ export class OperationRecord {
     if (props.serviceDate > today) {
       throw new Error('Service date cannot be in the future');
     }
+    // Season is optional
     if (!props.operationId || props.operationId.trim().length === 0) {
       throw new Error('Operation ID is required');
     }
@@ -268,6 +274,7 @@ export class OperationRecord {
 
   update(
     serviceDate: Date,
+    seasonId: string | null | undefined,
     operationId: string,
     machineId: string,
     horimeterStart: number,
@@ -281,6 +288,7 @@ export class OperationRecord {
       id: this.id,
       tenantId: this.tenantId,
       serviceDate,
+      seasonId,
       operationId,
       machineId,
       horimeterStart,
@@ -307,6 +315,7 @@ export class OperationRecord {
     };
     this.validateProps(tempProps);
     this.serviceDate = serviceDate;
+    this.seasonId = seasonId;
     this.operationId = operationId;
     this.machineId = machineId;
     this.horimeterStart = horimeterStart;
@@ -369,6 +378,10 @@ export class OperationRecord {
 
   getServiceDate(): Date {
     return this.serviceDate;
+  }
+
+  getSeasonId(): string | null | undefined {
+    return this.seasonId;
   }
 
   getOperationId(): string {

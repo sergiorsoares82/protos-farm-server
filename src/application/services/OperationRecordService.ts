@@ -4,6 +4,7 @@ import {
   OperationRecordProduct,
 } from '../../domain/entities/OperationRecord.js';
 import type { IOperationRecordRepository } from '../../domain/repositories/IOperationRecordRepository.js';
+import type { ISeasonRepository } from '../../domain/repositories/ISeasonRepository.js';
 import type { IOperationRepository } from '../../domain/repositories/IOperationRepository.js';
 import type { IMachineRepository } from '../../domain/repositories/IMachineRepository.js';
 import type { IAssetRepository } from '../../domain/repositories/IAssetRepository.js';
@@ -24,6 +25,7 @@ export class OperationRecordService {
 
   constructor(
     private readonly operationRecordRepository: IOperationRecordRepository,
+    private readonly seasonRepository: ISeasonRepository,
     private readonly operationRepository: IOperationRepository,
     private readonly machineRepository: IMachineRepository,
     private readonly assetRepository: IAssetRepository,
@@ -36,6 +38,17 @@ export class OperationRecordService {
   }
 
   async createOperationRecord(tenantId: string, data: CreateOperationRecordDTO): Promise<OperationRecord> {
+    // Validate season if provided
+    if (data.seasonId) {
+      const season = await this.seasonRepository.findById(data.seasonId, tenantId);
+      if (!season) {
+        throw new Error('Season not found');
+      }
+      if (!season.getIsActive()) {
+        throw new Error('Season is not active');
+      }
+    }
+
     // Validate operation exists
     const operation = await this.operationRepository.findById(data.operationId, tenantId);
     if (!operation) {
@@ -122,6 +135,7 @@ export class OperationRecordService {
     const operationRecord = OperationRecord.create(
       tenantId,
       new Date(data.serviceDate),
+      data.seasonId,
       data.operationId,
       data.machineId,
       data.horimeterStart,
@@ -161,6 +175,17 @@ export class OperationRecordService {
     data: UpdateOperationRecordDTO
   ): Promise<OperationRecord> {
     const operationRecord = await this.getOperationRecord(tenantId, id);
+
+    // Validate season if provided
+    if (data.seasonId) {
+      const season = await this.seasonRepository.findById(data.seasonId, tenantId);
+      if (!season) {
+        throw new Error('Season not found');
+      }
+      if (!season.getIsActive()) {
+        throw new Error('Season is not active');
+      }
+    }
 
     // Validate operation if provided
     if (data.operationId) {
@@ -261,6 +286,7 @@ export class OperationRecordService {
     // Update main fields
     if (
       data.serviceDate !== undefined ||
+      data.seasonId !== undefined ||
       data.operationId !== undefined ||
       data.machineId !== undefined ||
       data.horimeterStart !== undefined ||
@@ -272,6 +298,7 @@ export class OperationRecordService {
     ) {
       operationRecord.update(
         data.serviceDate ? new Date(data.serviceDate) : operationRecord.getServiceDate(),
+        data.seasonId ?? operationRecord.getSeasonId(),
         data.operationId ?? operationRecord.getOperationId(),
         data.machineId ?? operationRecord.getMachineId(),
         data.horimeterStart ?? operationRecord.getHorimeterStart(),

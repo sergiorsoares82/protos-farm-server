@@ -14,13 +14,17 @@ export class MachineRepository implements IMachineRepository {
   async findAll(tenantId: string): Promise<Machine[]> {
     const entities = await this.repo.find({
       where: { tenantId },
-      order: { name: 'ASC' },
+      order: { createdAt: 'DESC' },
+      relations: ['costCenter'],
     });
     return entities.map((e) => this.toDomain(e));
   }
 
   async findById(id: string, tenantId: string): Promise<Machine | null> {
-    const entity = await this.repo.findOne({ where: { id, tenantId } });
+    const entity = await this.repo.findOne({ 
+      where: { id, tenantId },
+      relations: ['costCenter'],
+    });
     return entity ? this.toDomain(entity) : null;
   }
 
@@ -28,9 +32,15 @@ export class MachineRepository implements IMachineRepository {
     const entity = new MachineEntity();
     (entity as any).id = machine.getId();
     entity.tenantId = machine.getTenantId();
-    entity.name = machine.getName();
+    entity.costCenterId = machine.getCostCenterId() ?? null;
     entity.machineTypeId = machine.getMachineTypeId();
-    entity.assetId = machine.getAssetId() ?? null;
+    entity.brand = machine.getBrand() ?? null;
+    entity.model = machine.getModel() ?? null;
+    entity.serialNumber = machine.getSerialNumber() ?? null;
+    entity.horimeterInitial = machine.getHorimeterInitial();
+    entity.horimeterCurrent = machine.getHorimeterCurrent() ?? null;
+    entity.powerHp = machine.getPowerHp() ?? null;
+    entity.fuelType = machine.getFuelType() ?? null;
     entity.isActive = machine.getIsActive();
     const saved = await this.repo.save(entity);
     return this.toDomain(saved);
@@ -44,9 +54,15 @@ export class MachineRepository implements IMachineRepository {
     return new Machine({
       id: entity.id,
       tenantId: entity.tenantId,
-      name: entity.name,
+      costCenterId: entity.costCenterId ?? undefined,
       machineTypeId: entity.machineTypeId,
-      assetId: entity.assetId ?? undefined,
+      brand: entity.brand ?? undefined,
+      model: entity.model ?? undefined,
+      serialNumber: entity.serialNumber ?? undefined,
+      horimeterInitial: entity.horimeterInitial,
+      horimeterCurrent: entity.horimeterCurrent ?? undefined,
+      powerHp: entity.powerHp ?? undefined,
+      fuelType: entity.fuelType ?? undefined,
       isActive: entity.isActive,
       createdAt: entity.createdAt,
       updatedAt: entity.updatedAt,

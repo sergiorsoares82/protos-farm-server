@@ -1,11 +1,18 @@
 import { CostCenterType } from '../enums/CostCenterType.js';
+import { CostCenterKind } from '../enums/CostCenterKind.js';
 
 export interface CostCenterProps {
     id: string;
     tenantId: string;
     code: string;
+    name?: string | undefined;
     description: string;
+    kind: CostCenterKind;
     type: CostCenterType;
+    hasTechnicalData: boolean;
+    acquisitionDate?: Date | undefined;
+    acquisitionValue?: number | undefined;
+    currentValue?: number | undefined;
     categoryId?: string | undefined;
     assetId?: string | undefined;
     activityTypeId?: string | undefined;
@@ -18,8 +25,14 @@ export class CostCenter {
     private readonly id: string;
     private readonly tenantId: string;
     private code: string;
+    private name?: string | undefined;
     private description: string;
+    private kind: CostCenterKind;
     private type: CostCenterType;
+    private hasTechnicalData: boolean;
+    private acquisitionDate?: Date | undefined;
+    private acquisitionValue?: number | undefined;
+    private currentValue?: number | undefined;
     private categoryId?: string | undefined;
     private assetId?: string | undefined;
     private activityTypeId?: string | undefined;
@@ -32,8 +45,14 @@ export class CostCenter {
         this.id = props.id;
         this.tenantId = props.tenantId;
         this.code = props.code;
+        this.name = props.name;
         this.description = props.description;
+        this.kind = props.kind;
         this.type = props.type;
+        this.hasTechnicalData = props.hasTechnicalData;
+        this.acquisitionDate = props.acquisitionDate;
+        this.acquisitionValue = props.acquisitionValue;
+        this.currentValue = props.currentValue;
         this.categoryId = props.categoryId;
         this.assetId = props.assetId;
         this.activityTypeId = props.activityTypeId;
@@ -47,6 +66,8 @@ export class CostCenter {
         code: string,
         description: string,
         type: CostCenterType,
+        kind: CostCenterKind = CostCenterKind.GENERAL,
+        name?: string,
         categoryId?: string,
         assetId?: string,
         activityTypeId?: string,
@@ -56,8 +77,11 @@ export class CostCenter {
             id: crypto.randomUUID(),
             tenantId,
             code,
+            name,
             description,
+            kind,
             type,
+            hasTechnicalData: false,
             categoryId,
             assetId,
             activityTypeId,
@@ -83,6 +107,8 @@ export class CostCenter {
         code: string,
         description: string,
         type: CostCenterType,
+        kind?: CostCenterKind,
+        name?: string,
         categoryId?: string,
         assetId?: string | undefined,
         activityTypeId?: string | undefined,
@@ -97,9 +123,45 @@ export class CostCenter {
         this.code = code;
         this.description = description;
         this.type = type;
+        if (kind !== undefined) {
+            this.kind = kind;
+        }
+        if (name !== undefined) {
+            this.name = name;
+        }
         this.categoryId = categoryId;
         this.assetId = assetId;
         this.activityTypeId = activityTypeId;
+        this.updatedAt = new Date();
+    }
+
+    setKind(kind: CostCenterKind): void {
+        this.kind = kind;
+        this.updatedAt = new Date();
+    }
+
+    setName(name: string): void {
+        this.name = name;
+        this.updatedAt = new Date();
+    }
+
+    setHasTechnicalData(hasTechnicalData: boolean): void {
+        this.hasTechnicalData = hasTechnicalData;
+        this.updatedAt = new Date();
+    }
+
+    setAcquisitionDate(date: Date | undefined): void {
+        this.acquisitionDate = date;
+        this.updatedAt = new Date();
+    }
+
+    setAcquisitionValue(value: number | undefined): void {
+        this.acquisitionValue = value;
+        this.updatedAt = new Date();
+    }
+
+    setCurrentValue(value: number | undefined): void {
+        this.currentValue = value;
         this.updatedAt = new Date();
     }
 
@@ -117,8 +179,14 @@ export class CostCenter {
     getId(): string { return this.id; }
     getTenantId(): string { return this.tenantId; }
     getCode(): string { return this.code; }
+    getName(): string | undefined { return this.name; }
     getDescription(): string { return this.description; }
+    getKind(): CostCenterKind { return this.kind; }
     getType(): CostCenterType { return this.type; }
+    getHasTechnicalData(): boolean { return this.hasTechnicalData; }
+    getAcquisitionDate(): Date | undefined { return this.acquisitionDate; }
+    getAcquisitionValue(): number | undefined { return this.acquisitionValue; }
+    getCurrentValue(): number | undefined { return this.currentValue; }
     getCategoryId(): string | undefined { return this.categoryId; }
     getAssetId(): string | undefined { return this.assetId; }
     getActivityTypeId(): string | undefined { return this.activityTypeId; }
@@ -131,8 +199,14 @@ export class CostCenter {
             id: this.id,
             tenantId: this.tenantId,
             code: this.code,
+            name: this.name,
             description: this.description,
+            kind: this.kind,
             type: this.type,
+            hasTechnicalData: this.hasTechnicalData,
+            acquisitionDate: this.acquisitionDate,
+            acquisitionValue: this.acquisitionValue,
+            currentValue: this.currentValue,
             categoryId: this.categoryId,
             assetId: this.assetId,
             activityTypeId: this.activityTypeId,

@@ -2,6 +2,7 @@ import { Repository } from 'typeorm';
 import type { ICostCenterRepository } from '../../domain/repositories/ICostCenterRepository.js';
 import { CostCenter } from '../../domain/entities/CostCenter.js';
 import { CostCenterType } from '../../domain/enums/CostCenterType.js';
+import { CostCenterKind } from '../../domain/enums/CostCenterKind.js';
 import { CostCenterEntity } from '../database/entities/CostCenterEntity.js';
 import { AppDataSource } from '../database/typeorm.config.js';
 
@@ -67,8 +68,14 @@ export class CostCenterRepository implements ICostCenterRepository {
         entity.id = costCenter.getId();
         entity.tenantId = costCenter.getTenantId();
         entity.code = costCenter.getCode();
+        entity.name = costCenter.getName() ?? null;
         entity.description = costCenter.getDescription();
+        entity.kind = costCenter.getKind();
         entity.type = costCenter.getType();
+        entity.hasTechnicalData = costCenter.getHasTechnicalData();
+        entity.acquisitionDate = costCenter.getAcquisitionDate() ?? null;
+        entity.acquisitionValue = costCenter.getAcquisitionValue() ?? null;
+        entity.currentValue = costCenter.getCurrentValue() ?? null;
         entity.isActive = costCenter.getIsActive();
         const categoryId = costCenter.getCategoryId();
         if (categoryId) {
@@ -102,8 +109,14 @@ export class CostCenterRepository implements ICostCenterRepository {
             id: entity.id,
             tenantId: entity.tenantId,
             code: entity.code,
+            name: entity.name ?? undefined,
             description: entity.description,
+            kind: (entity.kind as CostCenterKind) || CostCenterKind.GENERAL,
             type: entity.type as CostCenterType,
+            hasTechnicalData: entity.hasTechnicalData || false,
+            acquisitionDate: entity.acquisitionDate ?? undefined,
+            acquisitionValue: entity.acquisitionValue ? Number(entity.acquisitionValue) : undefined,
+            currentValue: entity.currentValue ? Number(entity.currentValue) : undefined,
             categoryId: (entity as any).category?.id ?? undefined,
             assetId: (entity as any).asset?.id ?? undefined,
             activityTypeId: (entity as any).activityType?.id ?? undefined,

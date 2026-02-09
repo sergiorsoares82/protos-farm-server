@@ -25,6 +25,7 @@ import { FieldSeasonEntity } from './entities/FieldSeasonEntity.js';
 import { MachineTypeEntity } from './entities/MachineTypeEntity.js';
 import { MachineEntity } from './entities/MachineEntity.js';
 import { AssetEntity } from './entities/AssetEntity.js';
+import { BuildingEntity } from './entities/BuildingEntity.js';
 import { StockMovementTypeEntity } from './entities/StockMovementTypeEntity.js';
 import { StockMovementEntity } from './entities/StockMovementEntity.js';
 import { InvoiceEntity } from './entities/InvoiceEntity.js';
@@ -122,6 +123,7 @@ export const AppDataSource = new DataSource({
     MachineTypeEntity,
     MachineEntity,
     AssetEntity,
+    BuildingEntity,
     StockMovementTypeEntity,
     StockMovementEntity,
     InvoiceEntity,

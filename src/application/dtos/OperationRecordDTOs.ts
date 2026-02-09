@@ -12,6 +12,7 @@ export interface OperationRecordProductDTO {
 
 export interface CreateOperationRecordDTO {
   serviceDate: string; // ISO date string
+  seasonId?: string;
   operationId: string;
   machineId: string;
   horimeterStart: number;
@@ -26,6 +27,7 @@ export interface CreateOperationRecordDTO {
 
 export interface UpdateOperationRecordDTO {
   serviceDate?: string; // ISO date string
+  seasonId?: string;
   operationId?: string;
   machineId?: string;
   horimeterStart?: number;

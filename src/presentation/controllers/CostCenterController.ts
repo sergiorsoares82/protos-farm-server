@@ -1,6 +1,7 @@
 import type { Request, Response } from 'express';
 import { CostCenterService } from '../../application/services/CostCenterService.js';
-import type { CreateCostCenterDTO, UpdateCostCenterDTO } from '../../application/dtos/CostCenterDTOs.js';
+import type { CreateCostCenterDTO, UpdateCostCenterDTO, CreateMachineWithCostCenterDTO } from '../../application/dtos/CostCenterDTOs.js';
+import type { CreateBuildingWithCostCenterDTO } from '../../application/dtos/BuildingDTOs.js';
 
 export class CostCenterController {
     constructor(private costCenterService: CostCenterService) { }
@@ -87,6 +88,38 @@ export class CostCenterController {
         } catch (error) {
             console.error('Error deleting cost center:', error);
             res.status(500).json({ error: 'Internal server error' });
+        }
+    }
+
+    async createMachineWithCostCenter(req: Request, res: Response): Promise<void> {
+        try {
+            const tenantId = req.user!.tenantId;
+            const data: CreateMachineWithCostCenterDTO = req.body;
+            const result = await this.costCenterService.createMachineWithCostCenter(tenantId, data);
+            res.status(201).json(result);
+        } catch (error) {
+            console.error('Error creating machine with cost center:', error);
+            if (error instanceof Error && error.message.includes('already exists')) {
+                res.status(409).json({ error: error.message });
+            } else {
+                res.status(400).json({ error: error instanceof Error ? error.message : 'Invalid request' });
+            }
+        }
+    }
+
+    async createBuildingWithCostCenter(req: Request, res: Response): Promise<void> {
+        try {
+            const tenantId = req.user!.tenantId;
+            const data: CreateBuildingWithCostCenterDTO = req.body;
+            const result = await this.costCenterService.createBuildingWithCostCenter(tenantId, data);
+            res.status(201).json(result);
+        } catch (error) {
+            console.error('Error creating building with cost center:', error);
+            if (error instanceof Error && error.message.includes('already exists')) {
+                res.status(409).json({ error: error.message });
+            } else {
+                res.status(400).json({ error: error instanceof Error ? error.message : 'Invalid request' });
+            }
         }
     }
 }

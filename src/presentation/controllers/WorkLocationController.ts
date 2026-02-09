@@ -1,12 +1,16 @@
 import type { Request, Response } from 'express';
 import { WorkLocationService } from '../../application/services/WorkLocationService.js';
+import type { IFieldSeasonRepository } from '../../domain/repositories/IFieldSeasonRepository.js';
 import type {
   CreateWorkLocationDTO,
   UpdateWorkLocationDTO,
 } from '../../application/dtos/WorkLocationDTOs.js';
 
 export class WorkLocationController {
-  constructor(private workLocationService: WorkLocationService) {}
+  constructor(
+    private workLocationService: WorkLocationService,
+    private fieldSeasonRepository?: IFieldSeasonRepository,
+  ) {}
 
   async getAllWorkLocations(req: Request, res: Response): Promise<void> {
     try {
@@ -46,6 +50,30 @@ export class WorkLocationController {
     } catch (error) {
       console.error('Error fetching work location:', error);
       res.status(404).json({ error: 'Work location not found' });
+    }
+  }
+
+  async getLatestSeason(req: Request, res: Response): Promise<void> {
+    try {
+      const tenantId = req.user!.tenantId;
+      const { id } = req.params;
+      
+      if (!this.fieldSeasonRepository) {
+        res.status(404).json({ error: 'Field season repository not available' });
+        return;
+      }
+
+      const link = await this.fieldSeasonRepository.getLatestSeasonForField(id as string, tenantId);
+      
+      if (!link) {
+        res.status(404).json({ error: 'No season found for this field' });
+        return;
+      }
+
+      res.json(link);
+    } catch (error) {
+      console.error('Error fetching latest season:', error);
+      res.status(500).json({ error: 'Internal server error' });
     }
   }
 

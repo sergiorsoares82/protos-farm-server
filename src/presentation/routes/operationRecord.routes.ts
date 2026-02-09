@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { OperationRecordController } from '../controllers/OperationRecordController.js';
 import { OperationRecordService } from '../../application/services/OperationRecordService.js';
 import { OperationRecordRepository } from '../../infrastructure/repositories/OperationRecordRepository.js';
+import { SeasonRepository } from '../../infrastructure/repositories/SeasonRepository.js';
 import { OperationRepository } from '../../infrastructure/repositories/OperationRepository.js';
 import { MachineRepository } from '../../infrastructure/repositories/MachineRepository.js';
 import { AssetRepository } from '../../infrastructure/repositories/AssetRepository.js';
@@ -17,6 +18,7 @@ export function createOperationRecordRoutes(): Router {
   const router = Router();
 
   const operationRecordRepository = new OperationRecordRepository();
+  const seasonRepository = new SeasonRepository();
   const operationRepository = new OperationRepository();
   const machineRepository = new MachineRepository();
   const assetRepository = new AssetRepository();
@@ -26,6 +28,7 @@ export function createOperationRecordRoutes(): Router {
 
   const operationRecordService = new OperationRecordService(
     operationRecordRepository,
+    seasonRepository,
     operationRepository,
     machineRepository,
     assetRepository,

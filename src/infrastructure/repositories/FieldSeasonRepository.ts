@@ -19,9 +19,27 @@ export class FieldSeasonRepository implements IFieldSeasonRepository {
     });
     return links.map((l) => ({
       fieldId: l.fieldId,
+      seasonId: l.seasonId,
       areaHectares: Number(l.areaHectares),
       costCenterId: l.costCenterId,
     }));
+  }
+
+  async getLatestSeasonForField(fieldId: string, tenantId: string): Promise<FieldSeasonLink | null> {
+    const link = await this.repo.findOne({
+      where: { fieldId, tenantId },
+      relations: ['season'],
+      order: { season: { startDate: 'DESC' } },
+    });
+    
+    if (!link) return null;
+    
+    return {
+      fieldId: link.fieldId,
+      seasonId: link.seasonId,
+      areaHectares: Number(link.areaHectares),
+      costCenterId: link.costCenterId,
+    };
   }
 
   async upsertLink(

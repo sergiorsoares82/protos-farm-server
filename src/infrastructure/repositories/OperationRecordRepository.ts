@@ -49,6 +49,7 @@ export class OperationRecordRepository implements IOperationRecordRepository {
       (entity as any).id = operationRecord.getId();
       entity.tenantId = operationRecord.getTenantId();
       entity.serviceDate = operationRecord.getServiceDate();
+      entity.seasonId = operationRecord.getSeasonId();
       entity.operationId = operationRecord.getOperationId();
       entity.machineId = operationRecord.getMachineId();
       entity.horimeterStart = operationRecord.getHorimeterStart();
@@ -115,6 +116,7 @@ export class OperationRecordRepository implements IOperationRecordRepository {
       id: entity.id,
       tenantId: entity.tenantId,
       serviceDate: entity.serviceDate,
+      seasonId: entity.seasonId,
       operationId: entity.operationId,
       machineId: entity.machineId,
       horimeterStart: Number(entity.horimeterStart),
