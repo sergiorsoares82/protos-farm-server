@@ -15,20 +15,21 @@ export class RolePermissionRepository implements IRolePermissionRepository {
   }
 
   async findByRole(role: UserRole, tenantId?: string): Promise<RolePermission[]> {
-    const whereConditions: any = { role };
-    
-    // If tenantId is provided, get both system-wide and tenant-specific permissions
-    // If tenantId is undefined, get all permissions
-    // If tenantId is explicitly null in the query, get only system-wide
+    const qb = this.repository
+      .createQueryBuilder('rp')
+      .leftJoinAndSelect('rp.permission', 'p')
+      .where('rp.role = :role', { role })
+      .andWhere('rp.roleId IS NULL');
+
     if (tenantId !== undefined) {
-      whereConditions.tenantId = tenantId === null ? null : In([null, tenantId]);
+      if (tenantId === null) {
+        qb.andWhere('rp.tenantId IS NULL');
+      } else {
+        qb.andWhere('(rp.tenantId IS NULL OR rp.tenantId = :tenantId)', { tenantId });
+      }
     }
 
-    const entities = await this.repository.find({
-      where: whereConditions,
-      relations: ['permission'],
-    });
-
+    const entities = await qb.getMany();
     return entities.map(entity => this.toDomain(entity));
   }
 
@@ -41,6 +42,7 @@ export class RolePermissionRepository implements IRolePermissionRepository {
       .createQueryBuilder('rp')
       .leftJoinAndSelect('rp.permission', 'p')
       .where('rp.role = :role', { role })
+      .andWhere('rp.roleId IS NULL')
       .andWhere('p.entity = :entity', { entity });
 
     if (tenantId !== undefined) {
@@ -60,39 +62,26 @@ export class RolePermissionRepository implements IRolePermissionRepository {
     permissionId: string,
     tenantId?: string
   ): Promise<RolePermission | null> {
-    const whereConditions: any = { role, permissionId };
-    
+    const qb = this.repository
+      .createQueryBuilder('rp')
+      .leftJoinAndSelect('rp.permission', 'p')
+      .where('rp.role = :role', { role })
+      .andWhere('rp.roleId IS NULL')
+      .andWhere('rp.permissionId = :permissionId', { permissionId });
+
     if (tenantId !== undefined) {
       if (tenantId === null) {
-        whereConditions.tenantId = null;
+        qb.andWhere('rp.tenantId IS NULL');
       } else {
-        // For specific tenant, check both system-wide and tenant-specific
-        const entities = await this.repository.find({
-          where: [
-            { role, permissionId, tenantId: null },
-            { role, permissionId, tenantId },
-          ],
-        });
-        
-        if (entities.length === 0) {
-          return null;
-        }
-        
-        // Prioritize tenant-specific over system-wide
-        const tenantSpecific = entities.find(e => e.tenantId === tenantId);
-        return this.toDomain(tenantSpecific || entities[0]);
+        qb.andWhere('(rp.tenantId IS NULL OR rp.tenantId = :tenantId)', { tenantId });
       }
     }
 
-    const entity = await this.repository.findOne({
-      where: whereConditions,
-    });
-
-    if (!entity) {
-      return null;
-    }
-
-    return this.toDomain(entity);
+    const entities = await qb.getMany();
+    if (entities.length === 0) return null;
+    const tenantSpecific = tenantId ? entities.find(e => e.tenantId === tenantId) : null;
+    const chosen = tenantSpecific ?? entities[0];
+    return this.toDomain(chosen!);
   }
 
   async save(rolePermission: RolePermission): Promise<RolePermission> {
@@ -107,13 +96,15 @@ export class RolePermissionRepository implements IRolePermissionRepository {
   }
 
   async deleteByRole(role: UserRole, tenantId?: string): Promise<void> {
-    const whereConditions: any = { role };
-    
+    const qb = this.repository
+      .createQueryBuilder()
+      .delete()
+      .where('role = :role', { role })
+      .andWhere('roleId IS NULL');
     if (tenantId !== undefined) {
-      whereConditions.tenantId = tenantId;
+      qb.andWhere('tenantId = :tenantId', { tenantId: tenantId ?? null });
     }
-
-    await this.repository.delete(whereConditions);
+    await qb.execute();
   }
 
   async delete(id: string): Promise<void> {
@@ -125,16 +116,16 @@ export class RolePermissionRepository implements IRolePermissionRepository {
     permissionIds: string[],
     tenantId?: string
   ): Promise<void> {
-    const whereConditions: any = {
-      role,
-      permissionId: In(permissionIds),
-    };
-
+    const qb = this.repository
+      .createQueryBuilder()
+      .delete()
+      .where('role = :role', { role })
+      .andWhere('roleId IS NULL')
+      .andWhere('permissionId IN (:...permissionIds)', { permissionIds });
     if (tenantId !== undefined) {
-      whereConditions.tenantId = tenantId;
+      qb.andWhere('tenantId = :tenantId', { tenantId: tenantId ?? null });
     }
-
-    await this.repository.delete(whereConditions);
+    await qb.execute();
   }
 
   async hasPermission(
@@ -146,6 +137,55 @@ export class RolePermissionRepository implements IRolePermissionRepository {
     return rolePermission !== null;
   }
 
+  async findByRoleId(roleId: string, tenantId?: string): Promise<RolePermission[]> {
+    const qb = this.repository
+      .createQueryBuilder('rp')
+      .leftJoinAndSelect('rp.permission', 'p')
+      .where('rp.roleId = :roleId', { roleId });
+
+    if (tenantId !== undefined) {
+      if (tenantId === null) {
+        qb.andWhere('rp.tenantId IS NULL');
+      } else {
+        qb.andWhere('(rp.tenantId IS NULL OR rp.tenantId = :tenantId)', { tenantId });
+      }
+    }
+
+    const entities = await qb.getMany();
+    return entities.map(entity => this.toDomain(entity));
+  }
+
+  async deleteByRoleId(roleId: string, tenantId?: string): Promise<void> {
+    const qb = this.repository
+      .createQueryBuilder()
+      .delete()
+      .where('roleId = :roleId', { roleId });
+    if (tenantId !== undefined) {
+      qb.andWhere('tenantId = :tenantId', { tenantId: tenantId ?? null });
+    }
+    await qb.execute();
+  }
+
+  async hasPermissionForRoleId(
+    roleId: string,
+    permissionId: string,
+    tenantId?: string
+  ): Promise<boolean> {
+    const qb = this.repository
+      .createQueryBuilder('rp')
+      .where('rp.roleId = :roleId', { roleId })
+      .andWhere('rp.permissionId = :permissionId', { permissionId });
+    if (tenantId !== undefined) {
+      if (tenantId === null) {
+        qb.andWhere('rp.tenantId IS NULL');
+      } else {
+        qb.andWhere('(rp.tenantId IS NULL OR rp.tenantId = :tenantId)', { tenantId });
+      }
+    }
+    const count = await qb.getCount();
+    return count > 0;
+  }
+
   /**
    * Convert domain RolePermission entity to TypeORM entity
    */
@@ -153,6 +193,7 @@ export class RolePermissionRepository implements IRolePermissionRepository {
     const entity = new RolePermissionEntity();
     entity.id = rolePermission.getId();
     entity.role = rolePermission.getRole();
+    entity.roleId = rolePermission.getRoleId();
     entity.permissionId = rolePermission.getPermissionId();
     entity.tenantId = rolePermission.getTenantId();
     entity.createdAt = rolePermission.getCreatedAt();
@@ -166,7 +207,8 @@ export class RolePermissionRepository implements IRolePermissionRepository {
   private toDomain(entity: RolePermissionEntity): RolePermission {
     return new RolePermission({
       id: entity.id,
-      role: entity.role as UserRole,
+      role: entity.role as UserRole | null,
+      roleId: entity.roleId,
       permissionId: entity.permissionId,
       tenantId: entity.tenantId,
       createdAt: entity.createdAt,

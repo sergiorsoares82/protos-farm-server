@@ -1,6 +1,7 @@
 import type { Request, Response } from 'express';
 import { WorkLocationService } from '../../application/services/WorkLocationService.js';
 import type { IFieldSeasonRepository } from '../../domain/repositories/IFieldSeasonRepository.js';
+import type { SeasonService } from '../../application/services/SeasonService.js';
 import type {
   CreateWorkLocationDTO,
   UpdateWorkLocationDTO,
@@ -10,6 +11,7 @@ export class WorkLocationController {
   constructor(
     private workLocationService: WorkLocationService,
     private fieldSeasonRepository?: IFieldSeasonRepository,
+    private seasonService?: SeasonService,
   ) {}
 
   async getAllWorkLocations(req: Request, res: Response): Promise<void> {
@@ -73,6 +75,32 @@ export class WorkLocationController {
       res.json(link);
     } catch (error) {
       console.error('Error fetching latest season:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  }
+
+  /** Contexto de operação: cultura/safra ativa no talhão na data (para exibir em readonly no formulário). */
+  async getOperationContext(req: Request, res: Response): Promise<void> {
+    try {
+      const tenantId = req.user!.tenantId;
+      const workLocationId = req.params.id as string;
+      const date = req.query.date as string;
+      if (!workLocationId || !date) {
+        res.status(400).json({ error: 'Work location ID and query parameter date (YYYY-MM-DD) are required' });
+        return;
+      }
+      if (!this.seasonService) {
+        res.status(503).json({ error: 'Operation context not available' });
+        return;
+      }
+      const context = await this.seasonService.getOperationContext(tenantId, workLocationId, date);
+      if (!context) {
+        res.json({ costCenterId: null, message: 'Nenhuma cultura ativa nesta data neste talhão' });
+        return;
+      }
+      res.json(context);
+    } catch (error) {
+      console.error('Error fetching operation context:', error);
       res.status(500).json({ error: 'Internal server error' });
     }
   }

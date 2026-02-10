@@ -1,5 +1,9 @@
 import 'reflect-metadata';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import { DataSource } from 'typeorm';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 import { OrganizationEntity } from './entities/OrganizationEntity.js';
 import { UserEntity } from './entities/UserEntity.js';
 import { PersonEntity } from './entities/PersonEntity.js';
@@ -15,6 +19,7 @@ import { ProductEntity } from './entities/ProductEntity.js';
 import { CostCenterEntity } from './entities/CostCenterEntity.js';
 import { ManagementAccountEntity } from './entities/ManagementAccountEntity.js';
 import { CostCenterCategoryEntity } from './entities/CostCenterCategoryEntity.js';
+import { CostCenterKindCategoryEntity } from './entities/CostCenterKindCategoryEntity.js';
 import { ManagementAccountCostCenterTypeEntity } from './entities/ManagementAccountCostCenterTypeEntity.js';
 import { FieldEntity } from './entities/FieldEntity.js';
 import { WorkLocationTypeEntity } from './entities/WorkLocationTypeEntity.js';
@@ -113,6 +118,7 @@ export const AppDataSource = new DataSource({
     CostCenterEntity,
     ManagementAccountEntity,
     CostCenterCategoryEntity,
+    CostCenterKindCategoryEntity,
     ManagementAccountCostCenterTypeEntity,
     FieldEntity,
     WorkLocationTypeEntity,
@@ -150,7 +156,11 @@ export const AppDataSource = new DataSource({
     RolePermissionEntity,
     RoleEntity,
   ],
-  migrations: [],
+  // Run with tsx (dev) loads .ts; run from dist (prod) loads .js
+  migrations: [
+    path.join(__dirname, 'migrations', '*.ts'),
+    path.join(__dirname, 'migrations', '*.js'),
+  ],
   subscribers: [],
   // Neon requires SSL; local docker/postgres usually does not.
   ssl: isNeon ? { rejectUnauthorized: false } : false,

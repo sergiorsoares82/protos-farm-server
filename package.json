@@ -26,6 +26,8 @@
     "seed:invoice-financials-types": "tsx src/scripts/seedInvoiceFinancialsTypes.ts",
     "seed:permissions": "tsx src/scripts/seedPermissions.ts",
     "migrate:cost-centers": "tsx src/scripts/migrateToCostCenterUnified.ts",
+    "migration:run": "tsx src/scripts/runMigrations.ts",
+    "migration:revert": "tsx src/scripts/revertMigration.ts",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {

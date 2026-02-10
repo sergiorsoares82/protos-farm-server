@@ -117,6 +117,7 @@ async function seedPermissions() {
       EntityType.BANK_ACCOUNT,
       EntityType.COST_CENTER,
       EntityType.COST_CENTER_CATEGORY,
+      EntityType.COST_CENTER_KIND_CATEGORY,
       EntityType.MANAGEMENT_ACCOUNT,
       
       // Invoice (full access)

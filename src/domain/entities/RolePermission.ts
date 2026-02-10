@@ -2,7 +2,8 @@ import { UserRole } from '../enums/UserRole.js';
 
 export interface RolePermissionProps {
   id: string;
-  role: UserRole;
+  role: UserRole | null;
+  roleId: string | null;
   permissionId: string;
   tenantId: string | null;
   createdAt: Date;
@@ -11,7 +12,8 @@ export interface RolePermissionProps {
 
 export class RolePermission {
   private readonly id: string;
-  private readonly role: UserRole;
+  private readonly role: UserRole | null;
+  private readonly roleId: string | null;
   private readonly permissionId: string;
   private readonly tenantId: string | null;
   private readonly createdAt: Date;
@@ -20,6 +22,7 @@ export class RolePermission {
   constructor(props: RolePermissionProps) {
     this.id = props.id;
     this.role = props.role;
+    this.roleId = props.roleId;
     this.permissionId = props.permissionId;
     this.tenantId = props.tenantId;
     this.createdAt = props.createdAt;
@@ -27,10 +30,7 @@ export class RolePermission {
   }
 
   /**
-   * Factory method to create a new role permission
-   * @param role - User role
-   * @param permissionId - Permission ID
-   * @param tenantId - Optional tenant ID (null for system-wide permissions)
+   * Factory method to create a new role permission for a system role (UserRole)
    */
   static create(
     role: UserRole,
@@ -38,10 +38,30 @@ export class RolePermission {
     tenantId: string | null = null
   ): RolePermission {
     const now = new Date();
-
     return new RolePermission({
       id: crypto.randomUUID(),
       role,
+      roleId: null,
+      permissionId,
+      tenantId,
+      createdAt: now,
+      updatedAt: now,
+    });
+  }
+
+  /**
+   * Factory method to create a role permission for a custom role (by role entity id)
+   */
+  static createForCustomRole(
+    roleId: string,
+    permissionId: string,
+    tenantId: string | null = null
+  ): RolePermission {
+    const now = new Date();
+    return new RolePermission({
+      id: crypto.randomUUID(),
+      role: null,
+      roleId,
       permissionId,
       tenantId,
       createdAt: now,
@@ -68,8 +88,16 @@ export class RolePermission {
     return this.id;
   }
 
-  getRole(): UserRole {
+  getRole(): UserRole | null {
     return this.role;
+  }
+
+  getRoleId(): string | null {
+    return this.roleId;
+  }
+
+  isCustomRole(): boolean {
+    return this.roleId !== null;
   }
 
   getPermissionId(): string {
@@ -93,6 +121,7 @@ export class RolePermission {
     return {
       id: this.id,
       role: this.role,
+      roleId: this.roleId,
       permissionId: this.permissionId,
       tenantId: this.tenantId,
       isSystemWide: this.isSystemWide(),

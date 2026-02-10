@@ -6,10 +6,13 @@ export interface CreateCostCenterDTO {
     name?: string;
     description: string;
     kind?: CostCenterKind;
+    kindCategoryId: string;
     type: CostCenterType;
     categoryId?: string;
     assetId?: string;
     activityTypeId?: string;
+    parentId?: string;
+    relatedFieldId?: string;
     acquisitionDate?: Date;
     acquisitionValue?: number;
     currentValue?: number;
@@ -20,10 +23,13 @@ export interface UpdateCostCenterDTO {
     name?: string;
     description?: string;
     kind?: CostCenterKind;
+    kindCategoryId?: string;
     type?: CostCenterType;
     categoryId?: string;
     assetId?: string;
     activityTypeId?: string;
+    parentId?: string;
+    relatedFieldId?: string;
     acquisitionDate?: Date;
     acquisitionValue?: number;
     currentValue?: number;
@@ -36,6 +42,7 @@ export interface CreateMachineWithCostCenterDTO {
     name: string;
     description: string;
     type: CostCenterType;
+    kindCategoryId: string;
     categoryId?: string;
     activityTypeId?: string;
     acquisitionDate?: Date;

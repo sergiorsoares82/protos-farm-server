@@ -76,6 +76,16 @@ export class PermissionService {
   }
 
   /**
+   * Get all permissions for a custom role (by role entity id)
+   */
+  async getRolePermissionsByRoleId(roleId: string, tenantId?: string): Promise<Permission[]> {
+    const rolePermissions = await this.rolePermissionRepository.findByRoleId(roleId, tenantId);
+    const permissionIds = rolePermissions.map(rp => rp.getPermissionId());
+    const allPermissions = await this.permissionRepository.findAll();
+    return allPermissions.filter(p => permissionIds.includes(p.getId()));
+  }
+
+  /**
    * Get role permissions grouped by entity
    */
   async getRolePermissionsGrouped(

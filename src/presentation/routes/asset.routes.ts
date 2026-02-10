@@ -8,6 +8,7 @@ import { AssetRepository } from '../../infrastructure/repositories/AssetReposito
 import { MachineRepository } from '../../infrastructure/repositories/MachineRepository.js';
 import { MachineTypeRepository } from '../../infrastructure/repositories/MachineTypeRepository.js';
 import { CostCenterRepository } from '../../infrastructure/repositories/CostCenterRepository.js';
+import { CostCenterKindCategoryRepository } from '../../infrastructure/repositories/CostCenterKindCategoryRepository.js';
 import { authenticate } from '../middleware/auth.js';
 import { tenantContextMiddleware, requireTenant } from '../../infrastructure/middleware/tenantContext.js';
 import { canViewEntity, canCreateEntity, canEditEntity, canDeleteEntity } from '../middleware/authorize.js';
@@ -23,6 +24,7 @@ export function createAssetRoutes(): Router {
   const machineRepository = new MachineRepository();
   const machineTypeRepository = new MachineTypeRepository();
   const costCenterRepository = new CostCenterRepository();
+  const kindCategoryRepository = new CostCenterKindCategoryRepository();
   const machineService = new MachineService(
     machineRepository,
     machineTypeRepository,
@@ -30,6 +32,7 @@ export function createAssetRoutes(): Router {
   );
   const costCenterService = new CostCenterService(
     costCenterRepository,
+    kindCategoryRepository,
     assetRepository,
   );
   const fullMachineController = new FullMachineController(

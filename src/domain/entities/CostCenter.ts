@@ -8,6 +8,7 @@ export interface CostCenterProps {
     name?: string | undefined;
     description: string;
     kind: CostCenterKind;
+    kindCategoryId?: string | undefined;
     type: CostCenterType;
     hasTechnicalData: boolean;
     acquisitionDate?: Date | undefined;
@@ -16,6 +17,8 @@ export interface CostCenterProps {
     categoryId?: string | undefined;
     assetId?: string | undefined;
     activityTypeId?: string | undefined;
+    parentId?: string | undefined;
+    relatedFieldId?: string | undefined;
     isActive: boolean;
     createdAt: Date;
     updatedAt: Date;
@@ -28,6 +31,7 @@ export class CostCenter {
     private name?: string | undefined;
     private description: string;
     private kind: CostCenterKind;
+    private kindCategoryId?: string | undefined;
     private type: CostCenterType;
     private hasTechnicalData: boolean;
     private acquisitionDate?: Date | undefined;
@@ -36,6 +40,8 @@ export class CostCenter {
     private categoryId?: string | undefined;
     private assetId?: string | undefined;
     private activityTypeId?: string | undefined;
+    private parentId?: string | undefined;
+    private relatedFieldId?: string | undefined;
     private isActive: boolean;
     private readonly createdAt: Date;
     private updatedAt: Date;
@@ -48,6 +54,7 @@ export class CostCenter {
         this.name = props.name;
         this.description = props.description;
         this.kind = props.kind;
+        this.kindCategoryId = props.kindCategoryId;
         this.type = props.type;
         this.hasTechnicalData = props.hasTechnicalData;
         this.acquisitionDate = props.acquisitionDate;
@@ -56,6 +63,8 @@ export class CostCenter {
         this.categoryId = props.categoryId;
         this.assetId = props.assetId;
         this.activityTypeId = props.activityTypeId;
+        this.parentId = props.parentId;
+        this.relatedFieldId = props.relatedFieldId;
         this.isActive = props.isActive;
         this.createdAt = props.createdAt;
         this.updatedAt = props.updatedAt;
@@ -67,10 +76,13 @@ export class CostCenter {
         description: string,
         type: CostCenterType,
         kind: CostCenterKind = CostCenterKind.GENERAL,
+        kindCategoryId?: string,
         name?: string,
         categoryId?: string,
         assetId?: string,
         activityTypeId?: string,
+        parentId?: string,
+        relatedFieldId?: string,
     ): CostCenter {
         const now = new Date();
         return new CostCenter({
@@ -80,11 +92,14 @@ export class CostCenter {
             name,
             description,
             kind,
+            kindCategoryId,
             type,
             hasTechnicalData: false,
             categoryId,
             assetId,
             activityTypeId,
+            parentId,
+            relatedFieldId,
             isActive: true,
             createdAt: now,
             updatedAt: now,
@@ -108,10 +123,13 @@ export class CostCenter {
         description: string,
         type: CostCenterType,
         kind?: CostCenterKind,
+        kindCategoryId?: string,
         name?: string,
         categoryId?: string,
         assetId?: string | undefined,
         activityTypeId?: string | undefined,
+        parentId?: string | undefined,
+        relatedFieldId?: string | undefined,
     ): void {
         if (!code || code.trim().length === 0) {
             throw new Error('Code is required');
@@ -126,17 +144,41 @@ export class CostCenter {
         if (kind !== undefined) {
             this.kind = kind;
         }
+        if (kindCategoryId !== undefined) {
+            this.kindCategoryId = kindCategoryId;
+        }
         if (name !== undefined) {
             this.name = name;
         }
         this.categoryId = categoryId;
         this.assetId = assetId;
         this.activityTypeId = activityTypeId;
+        if (parentId !== undefined) {
+            this.parentId = parentId;
+        }
+        if (relatedFieldId !== undefined) {
+            this.relatedFieldId = relatedFieldId;
+        }
         this.updatedAt = new Date();
     }
 
     setKind(kind: CostCenterKind): void {
         this.kind = kind;
+        this.updatedAt = new Date();
+    }
+
+    setKindCategoryId(kindCategoryId: string | undefined): void {
+        this.kindCategoryId = kindCategoryId;
+        this.updatedAt = new Date();
+    }
+
+    setParentId(parentId: string | undefined): void {
+        this.parentId = parentId;
+        this.updatedAt = new Date();
+    }
+
+    setRelatedFieldId(relatedFieldId: string | undefined): void {
+        this.relatedFieldId = relatedFieldId;
         this.updatedAt = new Date();
     }
 
@@ -182,6 +224,7 @@ export class CostCenter {
     getName(): string | undefined { return this.name; }
     getDescription(): string { return this.description; }
     getKind(): CostCenterKind { return this.kind; }
+    getKindCategoryId(): string | undefined { return this.kindCategoryId; }
     getType(): CostCenterType { return this.type; }
     getHasTechnicalData(): boolean { return this.hasTechnicalData; }
     getAcquisitionDate(): Date | undefined { return this.acquisitionDate; }
@@ -190,6 +233,8 @@ export class CostCenter {
     getCategoryId(): string | undefined { return this.categoryId; }
     getAssetId(): string | undefined { return this.assetId; }
     getActivityTypeId(): string | undefined { return this.activityTypeId; }
+    getParentId(): string | undefined { return this.parentId; }
+    getRelatedFieldId(): string | undefined { return this.relatedFieldId; }
     getIsActive(): boolean { return this.isActive; }
     getCreatedAt(): Date { return this.createdAt; }
     getUpdatedAt(): Date { return this.updatedAt; }
@@ -202,6 +247,7 @@ export class CostCenter {
             name: this.name,
             description: this.description,
             kind: this.kind,
+            kindCategoryId: this.kindCategoryId,
             type: this.type,
             hasTechnicalData: this.hasTechnicalData,
             acquisitionDate: this.acquisitionDate,
@@ -210,6 +256,8 @@ export class CostCenter {
             categoryId: this.categoryId,
             assetId: this.assetId,
             activityTypeId: this.activityTypeId,
+            parentId: this.parentId,
+            relatedFieldId: this.relatedFieldId,
             isActive: this.isActive,
             createdAt: this.createdAt,
             updatedAt: this.updatedAt,

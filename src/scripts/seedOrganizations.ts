@@ -6,6 +6,7 @@ import { OrganizationEntity } from '../infrastructure/database/entities/Organiza
 import { UserEntity } from '../infrastructure/database/entities/UserEntity.js';
 import { ManagementAccountEntity } from '../infrastructure/database/entities/ManagementAccountEntity.js';
 import { CostCenterCategoryEntity } from '../infrastructure/database/entities/CostCenterCategoryEntity.js';
+import { CostCenterKindCategoryEntity } from '../infrastructure/database/entities/CostCenterKindCategoryEntity.js';
 import { AccountType } from '../domain/enums/AccountType.js';
 import { Password } from '../domain/value-objects/Password.js';
 import { UserRole } from '../domain/enums/UserRole.js';
@@ -25,6 +26,7 @@ async function seedOrganizations() {
     const userRepo = AppDataSource.getRepository(UserEntity);
     const accountRepo = AppDataSource.getRepository(ManagementAccountEntity);
     const categoryRepo = AppDataSource.getRepository(CostCenterCategoryEntity);
+    const kindCategoryRepo = AppDataSource.getRepository(CostCenterKindCategoryEntity);
 
     const seedBaseAccountsAndCategories = async (tenantId: string, orgName: string) => {
       const existing = await accountRepo.count({ where: { tenantId } });
@@ -71,6 +73,32 @@ async function seedOrganizations() {
         } else {
           console.log(
             `ℹ️  Cost center category ${def.code} already exists for ${orgName}, skipping.`,
+          );
+        }
+      }
+
+      const defaultKindCategories = [
+        { code: 'MACHINE', name: 'Máquinas', type: 'machine' as const, sortOrder: 0 },
+        { code: 'BUILDING', name: 'Benfeitorias', type: 'building' as const, sortOrder: 1 },
+        { code: 'GENERAL', name: 'Gerais', type: 'general' as const, sortOrder: 2 },
+      ];
+      for (const def of defaultKindCategories) {
+        const existingKind = await kindCategoryRepo.count({
+          where: { tenantId, code: def.code },
+        });
+        if (existingKind === 0) {
+          const kc = new CostCenterKindCategoryEntity();
+          kc.tenantId = tenantId;
+          kc.code = def.code;
+          kc.name = def.name;
+          kc.type = def.type;
+          kc.sortOrder = def.sortOrder;
+          kc.isActive = true;
+          await kindCategoryRepo.save(kc);
+          console.log(`✅ Seeded cost center kind category "${def.name}" (${def.code}) for ${orgName}`);
+        } else {
+          console.log(
+            `ℹ️  Cost center kind category ${def.code} already exists for ${orgName}, skipping.`,
           );
         }
       }

@@ -13,6 +13,7 @@ import { createUserRoutes } from './presentation/routes/user.routes.js';
 import { createDocumentTypeRoutes } from './presentation/routes/documentType.routes.js';
 import { createItemRoutes } from './presentation/routes/item.routes.js';
 import { createCostCenterCategoryRoutes } from './presentation/routes/cost-center-category.routes.js';
+import { createCostCenterKindCategoryRoutes } from './presentation/routes/cost-center-kind-category.routes.js';
 import { createCostCenterRoutes } from './presentation/routes/cost-center.routes.js';
 import { createManagementAccountRoutes } from './presentation/routes/management-account.routes.js';
 import { createWorkLocationRoutes } from './presentation/routes/work-location.routes.js';
@@ -110,6 +111,9 @@ app.use('/api/items', createItemRoutes());
 
 // Cost center categories
 app.use('/api/cost-center-categories', createCostCenterCategoryRoutes());
+
+// Cost center kind categories (Máquinas, Benfeitorias, Gerais, etc.)
+app.use('/api/cost-center-kind-categories', createCostCenterKindCategoryRoutes());
 
 // Cost Center routes
 app.use('/api/cost-centers', createCostCenterRoutes());

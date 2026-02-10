@@ -1,4 +1,4 @@
-import { Repository } from 'typeorm';
+import { IsNull, Repository } from 'typeorm';
 import type { ICostCenterRepository } from '../../domain/repositories/ICostCenterRepository.js';
 import { CostCenter } from '../../domain/entities/CostCenter.js';
 import { CostCenterType } from '../../domain/enums/CostCenterType.js';
@@ -18,7 +18,7 @@ export class CostCenterRepository implements ICostCenterRepository {
         const entities = await this.repo.find({
             where: { tenantId },
             order: { createdAt: 'DESC' },
-            relations: ['category', 'asset', 'activityType'],
+            relations: ['category', 'asset', 'activityType', 'kindCategory'],
         });
 
         return entities.map(this.toDomain);
@@ -27,7 +27,7 @@ export class CostCenterRepository implements ICostCenterRepository {
     async findById(id: string, tenantId: string): Promise<CostCenter | null> {
         const entity = await this.repo.findOne({
             where: { id, tenantId },
-            relations: ['category', 'asset', 'activityType'],
+            relations: ['category', 'asset', 'activityType', 'kindCategory'],
         });
 
         if (!entity) return null;
@@ -37,7 +37,7 @@ export class CostCenterRepository implements ICostCenterRepository {
     async findByCode(code: string, tenantId: string): Promise<CostCenter | null> {
         const entity = await this.repo.findOne({
             where: { code, tenantId },
-            relations: ['category', 'asset', 'activityType'],
+            relations: ['category', 'asset', 'activityType', 'kindCategory'],
         });
 
         if (!entity) return null;
@@ -47,7 +47,7 @@ export class CostCenterRepository implements ICostCenterRepository {
     async findByAssetId(assetId: string, tenantId: string): Promise<CostCenter | null> {
         const entity = await this.repo.findOne({
             where: { tenantId, asset: { id: assetId } },
-            relations: ['category', 'asset', 'activityType'],
+            relations: ['category', 'asset', 'activityType', 'kindCategory'],
         });
 
         if (!entity) return null;
@@ -58,9 +58,43 @@ export class CostCenterRepository implements ICostCenterRepository {
         const entities = await this.repo.find({
             where: { tenantId, isActive: true, category: { code: categoryCode } },
             order: { createdAt: 'DESC' },
-            relations: ['category', 'asset', 'activityType'],
+            relations: ['category', 'asset', 'activityType', 'kindCategory'],
         });
         return entities.map(this.toDomain);
+    }
+
+    async findByKindCategoryId(tenantId: string, kindCategoryId: string): Promise<CostCenter[]> {
+        const entities = await this.repo.find({
+            where: { tenantId, kindCategoryId },
+            order: { createdAt: 'DESC' },
+            relations: ['category', 'asset', 'activityType', 'kindCategory'],
+        });
+        return entities.map(this.toDomain);
+    }
+
+    async findByParentId(tenantId: string, parentId: string | null): Promise<CostCenter[]> {
+        const where = parentId == null
+            ? { tenantId, parentId: IsNull() }
+            : { tenantId, parentId };
+        const entities = await this.repo.find({
+            where,
+            order: { createdAt: 'DESC' },
+            relations: ['category', 'asset', 'activityType', 'kindCategory'],
+        });
+        return entities.map(this.toDomain);
+    }
+
+    async findRoots(tenantId: string): Promise<CostCenter[]> {
+        const entities = await this.repo.find({
+            where: { tenantId, parentId: IsNull() },
+            order: { createdAt: 'DESC' },
+            relations: ['category', 'asset', 'activityType', 'kindCategory'],
+        });
+        return entities.map(this.toDomain);
+    }
+
+    async countByKindCategoryId(tenantId: string, kindCategoryId: string): Promise<number> {
+        return this.repo.count({ where: { tenantId, kindCategoryId } });
     }
 
     async save(costCenter: CostCenter): Promise<CostCenter> {
@@ -71,11 +105,14 @@ export class CostCenterRepository implements ICostCenterRepository {
         entity.name = costCenter.getName() ?? null;
         entity.description = costCenter.getDescription();
         entity.kind = costCenter.getKind();
+        entity.kindCategoryId = costCenter.getKindCategoryId() ?? null;
         entity.type = costCenter.getType();
         entity.hasTechnicalData = costCenter.getHasTechnicalData();
         entity.acquisitionDate = costCenter.getAcquisitionDate() ?? null;
         entity.acquisitionValue = costCenter.getAcquisitionValue() ?? null;
         entity.currentValue = costCenter.getCurrentValue() ?? null;
+        entity.parentId = costCenter.getParentId() ?? null;
+        entity.relatedFieldId = costCenter.getRelatedFieldId() ?? null;
         entity.isActive = costCenter.getIsActive();
         const categoryId = costCenter.getCategoryId();
         if (categoryId) {
@@ -112,6 +149,7 @@ export class CostCenterRepository implements ICostCenterRepository {
             name: entity.name ?? undefined,
             description: entity.description,
             kind: (entity.kind as CostCenterKind) || CostCenterKind.GENERAL,
+            kindCategoryId: entity.kindCategoryId ?? (entity as any).kindCategory?.id ?? undefined,
             type: entity.type as CostCenterType,
             hasTechnicalData: entity.hasTechnicalData || false,
             acquisitionDate: entity.acquisitionDate ?? undefined,
@@ -120,6 +158,8 @@ export class CostCenterRepository implements ICostCenterRepository {
             categoryId: (entity as any).category?.id ?? undefined,
             assetId: (entity as any).asset?.id ?? undefined,
             activityTypeId: (entity as any).activityType?.id ?? undefined,
+            parentId: entity.parentId ?? undefined,
+            relatedFieldId: entity.relatedFieldId ?? undefined,
             isActive: entity.isActive,
             createdAt: entity.createdAt,
             updatedAt: entity.updatedAt,

@@ -6,15 +6,18 @@ import {
   UpdateDateColumn,
   ManyToOne,
   OneToOne,
+  OneToMany,
   JoinColumn,
   Index,
 } from 'typeorm';
 import { OrganizationEntity } from './OrganizationEntity.js';
 import { CostCenterCategoryEntity } from './CostCenterCategoryEntity.js';
+import { CostCenterKindCategoryEntity } from './CostCenterKindCategoryEntity.js';
 import { AssetEntity } from './AssetEntity.js';
 import { ActivityTypeEntity } from './ActivityTypeEntity.js';
 import { MachineEntity } from './MachineEntity.js';
 import { BuildingEntity } from './BuildingEntity.js';
+import { FieldEntity } from './FieldEntity.js';
 
 @Entity('cost_centers')
 export class CostCenterEntity {
@@ -35,7 +38,10 @@ export class CostCenterEntity {
     description!: string;
 
     @Column({ type: 'varchar', length: 50, default: 'GENERAL' })
-    kind!: string; // 'MACHINE', 'BUILDING', 'GENERAL'
+    kind!: string; // 'MACHINE', 'BUILDING', 'GENERAL' (legacy; prefer kindCategoryId)
+
+    @Column({ type: 'uuid', nullable: true, name: 'kind_category_id' })
+    kindCategoryId?: string | null;
 
     @Column({ type: 'varchar', length: 50 })
     type!: string; // 'PRODUCTIVE', 'ADMINISTRATIVE', 'SHARED'
@@ -53,6 +59,14 @@ export class CostCenterEntity {
     @Column({ type: 'decimal', precision: 12, scale: 2, nullable: true, name: 'current_value' })
     currentValue?: number | null;
 
+    @Column({ type: 'uuid', nullable: true, name: 'parent_id' })
+    @Index()
+    parentId?: string | null;
+
+    @Column({ type: 'uuid', nullable: true, name: 'related_field_id' })
+    @Index()
+    relatedFieldId?: string | null;
+
     @Column({ type: 'boolean', default: true, name: 'is_active' })
     isActive!: boolean;
 
@@ -69,6 +83,21 @@ export class CostCenterEntity {
   @ManyToOne(() => CostCenterCategoryEntity, { nullable: true })
   @JoinColumn({ name: 'category_id' })
   category?: CostCenterCategoryEntity | null;
+
+  @ManyToOne(() => CostCenterKindCategoryEntity, { nullable: true })
+  @JoinColumn({ name: 'kind_category_id' })
+  kindCategory?: CostCenterKindCategoryEntity | null;
+
+  @ManyToOne(() => CostCenterEntity, (cc) => cc.children, { onDelete: 'SET NULL', nullable: true })
+  @JoinColumn({ name: 'parent_id' })
+  parent?: CostCenterEntity | null;
+
+  @OneToMany(() => CostCenterEntity, (cc) => cc.parent)
+  children?: CostCenterEntity[];
+
+  @ManyToOne(() => FieldEntity, { onDelete: 'SET NULL', nullable: true })
+  @JoinColumn({ name: 'related_field_id' })
+  relatedField?: FieldEntity | null;
 
   @ManyToOne(() => AssetEntity, { onDelete: 'SET NULL', nullable: true })
   @JoinColumn({ name: 'asset_id' })

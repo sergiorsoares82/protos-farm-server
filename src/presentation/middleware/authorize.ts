@@ -305,7 +305,7 @@ export const requirePermission = (entity: EntityType, action: PermissionAction) 
         user.role,
         entity,
         action,
-        tenant?.id
+        tenant?.tenantId
       );
 
       if (!hasPermission) {

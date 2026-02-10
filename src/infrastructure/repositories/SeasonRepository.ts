@@ -35,6 +35,18 @@ export class SeasonRepository implements ISeasonRepository {
     return this.toDomain(entity);
   }
 
+  async findContainingDate(tenantId: string, date: string): Promise<Season | null> {
+    const entity = await this.repo
+      .createQueryBuilder('s')
+      .where('s.tenant_id = :tenantId', { tenantId })
+      .andWhere('s.start_date <= :date', { date })
+      .andWhere('s.end_date >= :date', { date })
+      .orderBy('s.start_date', 'DESC')
+      .getOne();
+    if (!entity) return null;
+    return this.toDomain(entity);
+  }
+
   async save(season: Season): Promise<Season> {
     const entity = new SeasonEntity();
     entity.id = season.getId();

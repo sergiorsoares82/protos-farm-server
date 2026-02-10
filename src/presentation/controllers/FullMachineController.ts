@@ -42,9 +42,11 @@ export class FullMachineController {
       const costCenterDesc =
         (data.costCenterDescription && data.costCenterDescription.trim()) ||
         asset.getName();
+      const kindCategoryId = await this.costCenterService.getKindCategoryIdByCode(tenantId, 'MACHINE');
       const createCcDto: Parameters<CostCenterService['createCostCenter']>[1] = {
         code: costCenterCode,
         description: costCenterDesc,
+        kindCategoryId,
         type: data.costCenterType,
         assetId: asset.getId(),
       };

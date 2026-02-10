@@ -137,5 +137,44 @@ export class SeasonService {
     await this.getSeason(tenantId, seasonId);
     await this.fieldSeasonRepository.deleteLink(tenantId, seasonId, fieldId);
   }
+
+  /**
+   * Resolves operation context for a field on a given date (annual crops).
+   * Returns the active season, cost center and culture label for that field/date, or null if none.
+   */
+  async getOperationContext(
+    tenantId: string,
+    fieldId: string,
+    date: string,
+  ): Promise<{
+    costCenterId: string;
+    costCenterName: string;
+    seasonName: string;
+    cultureLabel: string;
+  } | null> {
+    if (!this.fieldSeasonRepository || !this.costCenterRepository) {
+      return null;
+    }
+    const season = await this.seasonRepository.findContainingDate(tenantId, date);
+    if (!season) return null;
+    const links = await this.fieldSeasonRepository.getLinksForSeason(season.getId(), tenantId);
+    const link = links.find((l) => l.fieldId === fieldId);
+    if (!link) return null;
+    const costCenter = await this.costCenterRepository.findById(link.costCenterId, tenantId);
+    if (!costCenter) return null;
+    const costCenterName = costCenter.getName() ?? costCenter.getDescription();
+    const parentId = costCenter.getParentId();
+    const cultureLabel = parentId
+      ? (await this.costCenterRepository.findById(parentId, tenantId))?.getName() ??
+        (await this.costCenterRepository.findById(parentId, tenantId))?.getDescription() ??
+        costCenterName
+      : costCenterName;
+    return {
+      costCenterId: costCenter.getId(),
+      costCenterName,
+      seasonName: season.getName(),
+      cultureLabel,
+    };
+  }
 }
 

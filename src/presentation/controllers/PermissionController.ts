@@ -2,6 +2,8 @@ import type { Request, Response } from 'express';
 import { GetAllPermissionsUseCase } from '../../application/use-cases/GetAllPermissionsUseCase.js';
 import { GetRolePermissionsUseCase } from '../../application/use-cases/GetRolePermissionsUseCase.js';
 import { UpdateRolePermissionsUseCase } from '../../application/use-cases/UpdateRolePermissionsUseCase.js';
+import { GetCustomRolePermissionsUseCase } from '../../application/use-cases/GetCustomRolePermissionsUseCase.js';
+import { UpdateCustomRolePermissionsUseCase } from '../../application/use-cases/UpdateCustomRolePermissionsUseCase.js';
 import { CheckPermissionUseCase } from '../../application/use-cases/CheckPermissionUseCase.js';
 import { UserRole } from '../../domain/enums/UserRole.js';
 import { EntityType } from '../../domain/enums/EntityType.js';
@@ -12,6 +14,8 @@ export class PermissionController {
     private getAllPermissionsUseCase: GetAllPermissionsUseCase,
     private getRolePermissionsUseCase: GetRolePermissionsUseCase,
     private updateRolePermissionsUseCase: UpdateRolePermissionsUseCase,
+    private getCustomRolePermissionsUseCase: GetCustomRolePermissionsUseCase,
+    private updateCustomRolePermissionsUseCase: UpdateCustomRolePermissionsUseCase,
     private checkPermissionUseCase: CheckPermissionUseCase
   ) {}
 
@@ -188,6 +192,129 @@ export class PermissionController {
     } catch (error) {
       console.error('Error updating role permissions:', error);
       const message = error instanceof Error ? error.message : 'Failed to update role permissions';
+      res.status(500).json({
+        success: false,
+        error: message,
+      });
+    }
+  }
+
+  /**
+   * GET /api/permissions/roles/custom/:roleId
+   * Get permissions for a custom role (by role entity id)
+   */
+  async getCustomRolePermissions(req: Request, res: Response): Promise<void> {
+    try {
+      const roleId = typeof req.params.roleId === 'string' ? req.params.roleId : req.params.roleId?.[0];
+      const { tenantId: queryTenantId } = req.query;
+      const user = (req as any).user;
+      const tenant = (req as any).tenant;
+
+      if (!roleId || typeof roleId !== 'string') {
+        res.status(400).json({ success: false, error: 'Role ID is required' });
+        return;
+      }
+
+      let targetTenantId: string | undefined;
+      if (user.role === UserRole.SUPER_ADMIN) {
+        targetTenantId = queryTenantId ? (queryTenantId as string) : undefined;
+      } else if (user.role === UserRole.ORG_ADMIN) {
+        targetTenantId = tenant?.id;
+        if (queryTenantId && queryTenantId !== tenant?.id) {
+          res.status(403).json({
+            success: false,
+            error: 'Cannot view permissions for other organizations',
+          });
+          return;
+        }
+      } else {
+        res.status(403).json({
+          success: false,
+          error: 'Insufficient permissions to view custom role permissions',
+        });
+        return;
+      }
+
+      const permissions = await this.getCustomRolePermissionsUseCase.execute(
+        roleId,
+        targetTenantId
+      );
+
+      res.json({
+        success: true,
+        data: {
+          roleId,
+          tenantId: targetTenantId ?? null,
+          permissions: permissions.map(p => p.toJSON()),
+        },
+      });
+    } catch (error) {
+      console.error('Error getting custom role permissions:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to get custom role permissions',
+      });
+    }
+  }
+
+  /**
+   * PUT /api/permissions/roles/custom/:roleId
+   * Update permissions for a custom role
+   * Body: { permissionIds: string[], tenantId?: string }
+   */
+  async updateCustomRolePermissions(req: Request, res: Response): Promise<void> {
+    try {
+      const roleId = typeof req.params.roleId === 'string' ? req.params.roleId : req.params.roleId?.[0];
+      const { permissionIds, tenantId: bodyTenantId } = req.body;
+      const user = (req as any).user;
+      const tenant = (req as any).tenant;
+
+      if (!roleId || typeof roleId !== 'string') {
+        res.status(400).json({ success: false, error: 'Role ID is required' });
+        return;
+      }
+      if (!Array.isArray(permissionIds)) {
+        res.status(400).json({
+          success: false,
+          error: 'permissionIds must be an array',
+        });
+        return;
+      }
+
+      let targetTenantId: string | undefined;
+      if (user.role === UserRole.SUPER_ADMIN) {
+        targetTenantId = bodyTenantId ?? undefined;
+      } else if (user.role === UserRole.ORG_ADMIN) {
+        targetTenantId = tenant?.id;
+        if (bodyTenantId && bodyTenantId !== tenant?.id) {
+          res.status(403).json({
+            success: false,
+            error: 'Cannot update permissions for other organizations',
+          });
+          return;
+        }
+      } else {
+        res.status(403).json({
+          success: false,
+          error: 'Insufficient permissions to update custom role permissions',
+        });
+        return;
+      }
+
+      await this.updateCustomRolePermissionsUseCase.execute({
+        roleId,
+        permissionIds,
+        tenantId: targetTenantId,
+      });
+
+      res.json({
+        success: true,
+        message: `Permissions updated for custom role ${roleId}`,
+      });
+    } catch (error) {
+      console.error('Error updating custom role permissions:', error);
+      const message =
+        error instanceof Error ? error.message : 'Failed to update custom role permissions';
       res.status(500).json({
         success: false,
         error: message,

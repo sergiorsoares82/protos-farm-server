@@ -20,6 +20,7 @@ export interface CreateBuildingWithCostCenterDTO {
   name: string;
   description: string;
   type: string; // CostCenterType
+  kindCategoryId: string;
   categoryId?: string;
   activityTypeId?: string;
   acquisitionDate?: Date;

@@ -34,6 +34,70 @@ export class CostCenterController {
         }
     }
 
+    /** Centros de custo por categoria de tipo (kind category). Usado nas abas do gerenciamento. */
+    async getCostCentersByKindCategory(req: Request, res: Response): Promise<void> {
+        try {
+            const tenantId = req.user!.tenantId;
+            const kindCategoryId = req.params.kindCategoryId;
+            if (!kindCategoryId) {
+                res.status(400).json({ error: 'Kind category ID is required' });
+                return;
+            }
+            const items = await this.costCenterService.getCostCentersByKindCategoryId(tenantId, kindCategoryId);
+            res.json(items);
+        } catch (error) {
+            console.error('Error fetching cost centers by kind category:', error);
+            res.status(500).json({ error: 'Internal server error' });
+        }
+    }
+
+    /** Centros de custo raiz (sem pai) para montar a árvore. */
+    async getRootCostCenters(req: Request, res: Response): Promise<void> {
+        try {
+            const tenantId = req.user!.tenantId;
+            const items = await this.costCenterService.getRootCostCenters(tenantId);
+            res.json(items);
+        } catch (error) {
+            console.error('Error fetching root cost centers:', error);
+            res.status(500).json({ error: 'Internal server error' });
+        }
+    }
+
+    /** Filhos diretos de um centro de custo. */
+    async getChildCostCenters(req: Request, res: Response): Promise<void> {
+        try {
+            const tenantId = req.user!.tenantId;
+            const parentId = req.params.parentId;
+            if (!parentId) {
+                res.status(400).json({ error: 'Parent ID is required' });
+                return;
+            }
+            const items = await this.costCenterService.getChildCostCenters(tenantId, parentId);
+            res.json(items);
+        } catch (error) {
+            console.error('Error fetching child cost centers:', error);
+            res.status(500).json({ error: 'Internal server error' });
+        }
+    }
+
+    /** Árvore de centros de custo com custo direto e custo total no período (query: from, to). */
+    async getTreeWithCosts(req: Request, res: Response): Promise<void> {
+        try {
+            const tenantId = req.user!.tenantId;
+            const from = req.query.from as string;
+            const to = req.query.to as string;
+            if (!from || !to) {
+                res.status(400).json({ error: 'Query parameters from and to (YYYY-MM-DD) are required' });
+                return;
+            }
+            const tree = await this.costCenterService.getTreeWithCosts(tenantId, from, to);
+            res.json(tree);
+        } catch (error) {
+            console.error('Error fetching cost center tree with costs:', error);
+            res.status(500).json({ error: 'Internal server error' });
+        }
+    }
+
     async createCostCenter(req: Request, res: Response): Promise<void> {
         try {
             const tenantId = req.user!.tenantId;

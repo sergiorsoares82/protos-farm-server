@@ -65,4 +65,25 @@ export interface IRolePermissionRepository {
     permissionId: string,
     tenantId?: string
   ): Promise<boolean>;
+
+  // --- Custom role (by role entity id) ---
+
+  /**
+   * Find all role permissions for a custom role (by role entity id)
+   */
+  findByRoleId(roleId: string, tenantId?: string): Promise<RolePermission[]>;
+
+  /**
+   * Delete all role permissions for a custom role
+   */
+  deleteByRoleId(roleId: string, tenantId?: string): Promise<void>;
+
+  /**
+   * Check if a custom role has a specific permission
+   */
+  hasPermissionForRoleId(
+    roleId: string,
+    permissionId: string,
+    tenantId?: string
+  ): Promise<boolean>;
 }
